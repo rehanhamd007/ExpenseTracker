@@ -699,14 +699,9 @@
       <button>6</button>
       <button class="calc-operator">+</button>
 
-      <button>1</button>
-      <button>2</button>
-      <button>3</button>
-      <button class="calc-equals">=</button>
-
       <button style="grid-column: span 2;">0</button>
       <button>.</button>
-      
+      <button class="calc-equals">=</button>
     </div>
   </div>
 
@@ -926,8 +921,8 @@
         if (m.type === 'liquid') {
             m.balance = 0;
         }
+        // Only reset the CC debt tracker for the KPI
         if (m.type === 'credit' && m.name.toLowerCase().includes('credit card')) {
-            // Only track the main CC debt for the KPI if the method is a 'Credit Card'
             creditCardDue = 0;
         }
       });
@@ -949,16 +944,17 @@
             netWorth -= t.amount;
           }
 
-          // Balance Calculation
+          // Balance Calculation & CC Due Tracking
           const method = data.methods.find(m => m.id === t.method);
           if (method) {
             if (method.type === 'liquid') {
               method.balance += t.amount * sign;
             } else if (method.type === 'credit' && method.name.toLowerCase().includes('credit card')) {
-              // This is specifically for the Credit Card DUE KPI
               if (isExpense && !t.isCCPayment) {
+                // Expense on CC increases CC Due
                 creditCardDue += t.amount;
               } else if (isExpense && t.isCCPayment) {
+                // CC Payment decreases CC Due
                 creditCardDue -= t.amount;
               }
             }
@@ -991,11 +987,10 @@
 
       // CC Limit Alert
       ccDueElement.classList.remove('cc-alert-high');
+      ccDueElement.querySelector('h4').textContent = 'CREDIT CARD DUE';
       if (creditCardDue > data.config.ccLimit) {
           ccDueElement.classList.add('cc-alert-high');
           ccDueElement.querySelector('h4').textContent = 'CC LIMIT EXCEEDED!';
-      } else {
-          ccDueElement.querySelector('h4').textContent = 'CREDIT CARD DUE';
       }
       document.getElementById('cc-limit-text').textContent = `Limit: ${formatCurrency(data.config.ccLimit)}`;
 
@@ -1050,31 +1045,18 @@
     }
 
     function calculateNetLiquidity(transactions) {
+      // Use method balance data saved by calculateKPIs
       const liquidMethods = data.methods.filter(m => m.type === 'liquid');
-      const methodBalances = {};
-
-      liquidMethods.forEach(m => methodBalances[m.name] = 0);
-
-      // Re-calculate the running balance based on all transactions
-      transactions
-        .sort((a, b) => a.timestamp - b.timestamp)
-        .forEach(t => {
-          const method = data.methods.find(m => m.id === t.method);
-          if (method && method.type === 'liquid') {
-            const sign = ['income', 'opening_balance'].includes(t.type) ? 1 : -1;
-            methodBalances[method.name] += t.amount * sign;
-          }
-        });
-
+      
       const labels = [];
       const dataPoints = [];
       
-      for (const name in methodBalances) {
-          if (methodBalances[name] !== 0) {
-              labels.push(name);
-              dataPoints.push(Math.round(methodBalances[name]));
+      liquidMethods.forEach(m => {
+          if (m.balance !== 0) {
+              labels.push(m.name);
+              dataPoints.push(Math.round(m.balance));
           }
-      }
+      });
 
       return { labels, data: dataPoints };
     }
@@ -1093,17 +1075,17 @@
             {
               label: 'Income',
               data: monthlyData.incomeData,
-              backgroundColor: '#10b981', // FIX: Use literal hex code
+              backgroundColor: '#10b981', // FIX: Used hex color
             },
             {
               label: 'Expense & Insurance',
               data: monthlyData.expenseData,
-              backgroundColor: '#ef4444', // FIX: Use literal hex code
+              backgroundColor: '#ef4444', // FIX: Used hex color
             },
             {
               label: 'Investment',
               data: monthlyData.investmentData,
-              backgroundColor: '#14b8a6', // FIX: Use literal hex code
+              backgroundColor: '#14b8a6', // FIX: Used hex color
             },
           ]
         },
@@ -1342,8 +1324,8 @@
       const method = document.getElementById('method').value;
       const description = document.getElementById('description').value;
 
-      if (amount <= 0) {
-          alert("Amount must be greater than zero.");
+      if (amount <= 0 || isNaN(amount)) {
+          alert("Amount must be a number greater than zero.");
           return;
       }
       
@@ -1756,14 +1738,13 @@
       calcClear();
     }
     
-    // --- CALCULATOR LOGIC (FIXED) ---
+    // --- CALCULATOR LOGIC (PRESERVED & FIXED) ---
     
     let calcDisplay = '0';
     let firstOperand = null;
     let operator = null;
     let waitingForSecondOperand = false;
 
-    // FIX: Ensures the display is correctly targeted and updated
     function calcUpdateDisplay() {
         const display = document.getElementById('calc-screen');
         if (display) {
@@ -1771,7 +1752,6 @@
         }
     }
 
-    // FIX: Ensures all state variables are reset for 'AC' (All Clear)
     function calcClear() {
         calcDisplay = '0';
         firstOperand = null;
@@ -1780,12 +1760,9 @@
         calcUpdateDisplay();
     }
 
-    // FIX: Rewritten to correctly handle state, preventing '1' -> '11'
     function calcAppend(digit) {
         if (digit === '.') {
-            // Prevent multiple decimal points
             if (calcDisplay.includes('.')) return;
-            // If waiting for second operand, start a new number with a decimal
             if (waitingForSecondOperand) {
                 calcDisplay = '0.';
                 waitingForSecondOperand = false;
@@ -1794,11 +1771,9 @@
             }
         } else {
             if (waitingForSecondOperand) {
-                // Start a new operand (replaces current display)
                 calcDisplay = digit;
                 waitingForSecondOperand = false;
             } else {
-                // Append the digit, ensuring no leading zeros
                 calcDisplay = calcDisplay === '0' ? digit : calcDisplay + digit;
             }
         }
@@ -1809,19 +1784,16 @@
         const inputValue = parseFloat(calcDisplay);
 
         if (operator && waitingForSecondOperand) {
-            // Allows changing the operator before entering the second number
             operator = nextOperator;
             return;
         }
 
         if (firstOperand === null) {
-            // Set the first number
             firstOperand = inputValue;
         } else if (operator) {
-            // Perform the existing calculation
             const result = calcPerformCalculation[operator](firstOperand, inputValue);
             calcDisplay = String(result);
-            firstOperand = result; // The result becomes the new firstOperand
+            firstOperand = result;
         }
 
         waitingForSecondOperand = true;
@@ -1831,7 +1803,7 @@
 
     function calcCalculate() {
       if (operator) {
-        // Treat '=' as applying the operator with the current display value as the second operand
+        // Calculate the result using the stored operator, first operand, and current display value
         const secondOperand = parseFloat(calcDisplay);
         const result = calcPerformCalculation[operator](firstOperand, secondOperand);
         
@@ -1848,7 +1820,7 @@
         calcDisplay = calcDisplay.length > 1 ? calcDisplay.slice(0, -1) : '0';
         calcUpdateDisplay();
     }
-    
+
     const calcPerformCalculation = {
       '/': (first, second) => first / second,
       '*': (first, second) => first * second,
@@ -1860,9 +1832,7 @@
         if (!event.target.matches('button')) return;
 
         const target = event.target;
-        
         if (target.classList.contains('calc-operator')) {
-            // Map display symbols to internal operators
             calcHandleOperator(target.textContent === '÷' ? '/' : target.textContent === '×' ? '*' : target.textContent);
             return;
         }
