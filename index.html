@@ -3,27 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MoneyMirror Financial Dashboard v4.6</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>MoneyMirror Financial Dashboard v5.1 (Restored & Enhanced)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js for Graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Lucide Icons for aesthetic appeal -->
+    <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
-        /* CSS from style.css integrated here */
+        /* --- General Styling --- */
         :root {
-            --primary-color: #007bff;
-            --secondary-color: #6c757d;
-            --success: #28a745;
-            --danger: #dc3545;
-            --warning: #ffc107;
-            --background: #f4f6f8;
+            --primary-color: #3498db; /* Blue */
+            --secondary-color: #2c3e50; /* Dark Blue */
+            --success: #2ecc71; /* Emerald Green */
+            --danger: #e74c3c; /* Alizarin Red */
+            --warning: #f39c12; /* Orange */
+            --background: #f4f6f9; /* Light Gray Background */
             --card-background: #ffffff;
-            --text-color: #212529;
-            --text-muted: #6c757d;
-            --border: #dee2e6;
+            --text-color: #333333;
+            --text-muted: #95a5a6;
+            --border: #e0e0e0;
             --sidebar-width: 280px;
-            --sidebar-background: #2c3e50;
+            --sidebar-background: #34495e;
             --sidebar-text: #ecf0f1;
-            --sidebar-active: #34495e;
+            --sidebar-active: #2980b9;
         }
 
         body {
@@ -36,265 +39,277 @@
             min-height: 100vh;
         }
 
-        /* ------------------ Sidebar ------------------ */
+        /* --- Sidebar --- */
         aside {
             width: var(--sidebar-width);
             background-color: var(--sidebar-background);
             color: var(--sidebar-text);
-            padding: 20px 0;
-            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            box-shadow: 2px 0 15px rgba(0, 0, 0, 0.3);
             position: fixed;
             height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
             z-index: 1000;
         }
 
         .brand {
-            font-size: 20px;
-            font-weight: 700;
-            padding: 0 20px 20px 20px;
+            font-size: 28px;
+            font-weight: 800;
+            padding: 20px 20px 15px 20px;
             color: var(--primary-color);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
 
         .brand span {
-            font-size: 12px;
-            font-weight: 400;
+            font-size: 14px;
+            font-weight: 600;
             color: var(--text-muted);
+            margin-left: 5px;
         }
 
         nav {
             flex-grow: 1;
             padding-top: 20px;
         }
-
-        .nav-group {
-            margin-bottom: 20px;
-        }
-
-        .nav-label {
-            font-size: 10px;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            padding: 5px 20px;
-            letter-spacing: 0.5px;
-            margin-bottom: 5px;
-        }
-
+        
         .nav-item {
             display: flex;
             align-items: center;
-            padding: 12px 20px;
+            padding: 15px 25px;
             cursor: pointer;
-            transition: background-color 0.2s;
-            font-size: 15px;
-            gap: 12px;
+            transition: background-color 0.2s, color 0.2s;
+            font-size: 16px;
+            font-weight: 600;
+            gap: 15px;
+            border-left: 5px solid transparent;
         }
 
         .nav-item:hover {
-            background-color: var(--sidebar-active);
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
         .nav-item.active {
-            background-color: var(--primary-color);
-            color: white;
-            font-weight: 600;
+            background-color: var(--sidebar-active);
+            border-left: 5px solid var(--primary-color);
         }
         
-        .nav-item.active svg {
-            color: white;
-        }
-
         .nav-item svg {
-            color: var(--sidebar-text);
+            width: 20px;
+            height: 20px;
         }
 
         .sidebar-footer {
             padding: 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             font-size: 12px;
+            color: var(--text-muted);
         }
-
-        .sys-stat {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .sys-val {
+        
+        .user-id-display {
+            word-break: break-all;
+            margin-top: 10px;
             font-weight: 600;
-            color: var(--primary-color);
+            color: white;
         }
 
-        /* ------------------ Main Content ------------------ */
+        /* --- Main Content & Header --- */
         main {
             margin-left: var(--sidebar-width);
-            padding: 20px;
+            padding: 30px;
             flex-grow: 1;
+            max-width: calc(100% - var(--sidebar-width));
         }
 
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
         }
-
-        .profile-select label {
-            font-weight: 600;
-            margin-right: 10px;
+        
+        .page-title {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--secondary-color);
         }
-
-        #profileSelect {
-            padding: 8px 12px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .flex-row {
+        
+        .header-actions {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             align-items: center;
         }
 
-        /* ------------------ Widgets & Cards ------------------ */
+        /* --- Buttons --- */
+        .btn {
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background-color: var(--card-background);
+            color: var(--secondary-color);
+            border-color: var(--border);
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--border);
+        }
+
+        /* --- KPI Cards (More Engaging) --- */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 20px;
+            margin-bottom: 30px;
         }
 
         .card {
             background-color: var(--card-background);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
         }
 
         .widget.span-2 {
             grid-column: span 2;
         }
-
+        
         .widget.span-4 {
             grid-column: span 4;
         }
 
-        .card-title {
+        .kpi-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-value {
+            font-size: 36px;
+            font-weight: 800;
+            line-height: 1.2;
+            color: var(--secondary-color);
+        }
+        
+        .kpi-indicator {
+            display: flex;
+            align-items: center;
             font-size: 14px;
             font-weight: 600;
-            color: var(--text-muted);
+            margin-top: 5px;
+            gap: 5px;
+        }
+        
+        .kpi-indicator svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .text-success { color: var(--success); }
+        .text-danger { color: var(--danger); }
+        .text-primary { color: var(--primary-color); }
+        .text-warning { color: var(--warning); }
+        
+        /* Specific KPI Icons */
+        .kpi-icon {
+            float: right;
+            color: var(--primary-color);
+            opacity: 0.6;
+        }
+        .kpi-icon.success { color: var(--success); }
+        .kpi-icon.danger { color: var(--danger); }
+
+
+        /* --- Charts and Data Management --- */
+        .chart-container {
+            padding: 20px;
+            border-radius: 15px;
+            background-color: var(--card-background);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            height: 350px; /* Fixed height for consistency */
+        }
+        
+        .chart-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+        }
+        
+        /* --- Transaction Form --- */
+        .section-header {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .transaction-form .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1.5fr 0.8fr;
+            gap: 15px;
             margin-bottom: 15px;
         }
 
-        .net-worth-display {
-            font-size: 36px;
-            font-weight: 700;
-            color: var(--primary-color);
-        }
-
-        .net-worth-sub {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 5px;
-        }
-
-        .stat-value {
-            font-size: 28px;
-            font-weight: 700;
-        }
-
-        .text-danger {
-            color: var(--danger);
-        }
-
-        /* ------------------ Transaction Form ------------------ */
-        .transaction-form .form-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
         .transaction-form input,
-        .transaction-form select,
-        .transaction-form button {
-            padding: 10px;
+        .transaction-form select {
+            padding: 12px;
             border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 14px;
-            flex-grow: 1;
-        }
-
-        .transaction-form button {
-            cursor: pointer;
-            flex-grow: 0.5;
-        }
-        
-        /* ------------------ Buttons ------------------ */
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .btn-primary:hover {
-            background-color: #0056b3;
-        }
-
-        .btn-outline {
-            background-color: transparent;
-            color: var(--primary-color);
-            border: 1px solid var(--primary-color);
-            padding: 10px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.2s, color 0.2s;
-        }
-
-        .btn-outline:hover {
-            background-color: var(--primary-color);
-            color: white;
-        }
-        
-        .btn-danger {
-            background-color: var(--danger);
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .btn-danger:hover {
-            background-color: #a71d2a;
-        }
-        
-        .full-width {
+            border-radius: 8px;
+            font-size: 15px;
+            background-color: var(--background);
             width: 100%;
+            box-sizing: border-box;
         }
-
-
-        /* ------------------ Transactions Table ------------------ */
+        
+        /* --- Transactions Table --- */
+        .transaction-table {
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: 10px;
+            background-color: var(--card-background);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
         .transaction-table table {
             width: 100%;
             border-collapse: collapse;
         }
 
         .transaction-table th, .transaction-table td {
-            padding: 12px 15px;
+            padding: 15px;
             text-align: left;
             border-bottom: 1px solid var(--border);
             font-size: 14px;
@@ -302,14 +317,13 @@
 
         .transaction-table th {
             background-color: var(--background);
-            font-weight: 600;
-            color: var(--text-color);
+            font-weight: 700;
             text-transform: uppercase;
             font-size: 12px;
-        }
-
-        .transaction-table tbody tr:hover {
-            background-color: #f8f9fa;
+            color: var(--secondary-color);
+            position: sticky;
+            top: 0;
+            z-index: 500;
         }
 
         .transaction-table .delete-btn {
@@ -319,9 +333,10 @@
             cursor: pointer;
             font-size: 18px;
             padding: 0;
+            transition: opacity 0.2s;
         }
-
-        /* ------------------ Modals ------------------ */
+        
+        /* --- Modals (Calculator & Settings) --- */
         .modal {
             position: fixed;
             z-index: 2000;
@@ -329,94 +344,79 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(44, 62, 80, 0.7);
             display: none;
             justify-content: center;
             align-items: center;
+            backdrop-filter: blur(3px);
+            opacity: 0;
+            transition: opacity 0.3s;
         }
 
         .modal.open {
             display: flex;
+            opacity: 1;
         }
 
         .modal-content {
             background-color: var(--card-background);
-            border-radius: 12px;
+            border-radius: 15px;
             width: 90%;
-            max-width: 600px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
-        }
-
-        .modal-small {
             max-width: 400px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+            animation: zoomIn 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        
+        @keyframes zoomIn {
+            from { transform: scale(0.8); }
+            to { transform: scale(1); }
         }
 
-        .action-header {
+        .modal-header {
             background-color: var(--primary-color);
-            padding: 15px 20px;
+            color: white;
+            padding: 15px 25px;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
 
-        .action-header .card-title {
+        .modal-close {
+            background: none;
+            border: none;
             color: white;
-            margin-bottom: 0;
+            font-size: 24px;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .modal-body {
+            padding: 25px;
         }
 
-        .modal-pad {
+        /* --- Calculator Specific Styles --- */
+        #calc-display {
+            background-color: var(--secondary-color);
+            color: white;
             padding: 20px;
+            border-radius: 10px;
+            font-size: 32px;
+            text-align: right;
+            margin-bottom: 15px;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            font-weight: 600;
         }
-        
-        .settings-group {
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px dashed var(--border);
-        }
-        
-        .settings-group:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-        
-        .settings-group h3 {
-            font-size: 16px;
-            margin-top: 0;
-            margin-bottom: 10px;
-        }
-        
-        #newCategoryInput {
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 14px;
-            width: 60%;
-            margin-right: 10px;
-        }
-        
-        #categoryListDisplay span {
-            display: inline-block;
-            background-color: var(--background);
-            padding: 5px 10px;
-            border-radius: 4px;
-            margin: 5px;
-            font-size: 13px;
-        }
-        
-        /* Calculator Styles */
-        #calc-toggle {
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 50%;
-            background-color: var(--background);
-            transition: background-color 0.2s;
-        }
-        
-        #calc-toggle:hover {
-            background-color: var(--border);
-        }
-        
+
         .calc-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -424,932 +424,793 @@
         }
         
         .calc-btn {
-            padding: 15px;
+            padding: 20px 10px;
             font-size: 18px;
             border: none;
-            border-radius: 8px;
-            background-color: #e0e0e0;
+            border-radius: 10px;
+            background-color: var(--background);
+            color: var(--secondary-color);
             cursor: pointer;
+            font-weight: 600;
             transition: background-color 0.1s;
         }
         
         .calc-btn:hover {
-            background-color: #d0d0d0;
+            background-color: var(--border);
         }
         
-        .calc-btn.op-btn {
-            background-color: var(--warning);
+        .calc-btn.operator {
+            background-color: var(--primary-color);
             color: white;
-            font-weight: 700;
+        }
+        .calc-btn.operator:hover {
+            background-color: #2980b9;
         }
         
-        .calc-btn.op-btn:hover {
-            background-color: #cc9c00;
+        .calc-btn.clear {
+            background-color: var(--danger);
+            color: white;
         }
-        
-        .calc-btn.span-2 {
-            grid-column: span 2;
+        .calc-btn.clear:hover {
+            background-color: #c0392b;
+        }
+
+        /* --- Responsive Design (Mobile First) --- */
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .widget.span-2, .widget.span-4 {
+                grid-column: span 2;
+            }
+            .transaction-form .form-row {
+                grid-template-columns: 1fr;
+            }
+            main {
+                margin-left: 0;
+                padding: 15px;
+            }
+            aside {
+                display: none; /* Hide sidebar on small screens for simplicity */
+            }
         }
     </style>
 </head>
 <body>
 
+    <!-- Sidebar Navigation -->
     <aside>
         <div>
             <div class="brand">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
-                MoneyMirror <span>v4.6</span>
+                <i data-lucide="wallet-2"></i> MoneyMirror <span>v5.1</span>
             </div>
-
             <nav>
                 <div class="nav-group">
-                    <div class="nav-label">Core View</div>
-                    <div class="nav-item active">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                        Dashboard
+                    <div class="nav-item active" onclick="scrollToElement('dashboard')">
+                        <i data-lucide="layout-dashboard"></i> Dashboard
                     </div>
-                    <div class="nav-item" id="navAnalytics">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18.7 8l-5 5-2.2-2.2-6.5 6.5"></path></svg>
-                        Advanced Analytics
+                    <div class="nav-item" onclick="scrollToElement('data-management')">
+                        <i data-lucide="dollar-sign"></i> Transactions
                     </div>
-                </div>
-
-                <div class="nav-group">
-                    <div class="nav-label">Data Administration</div>
-                    <div class="nav-item" id="navDataMgmt">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                        Data Management
-                    </div>
-                </div>
-
-                <div class="nav-group">
-                    <div class="nav-label">System & User</div>
-                    <div class="nav-item" id="navSwitchProfile">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                        Switch Profile
-                    </div>
-                    <div class="nav-item" id="navSettings">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                        Settings & Backup
+                    <div class="nav-item" onclick="openModal('settingsModal')">
+                        <i data-lucide="settings"></i> Settings
                     </div>
                 </div>
             </nav>
         </div>
-
         <div class="sidebar-footer">
-            <div class="sys-stat">
-                <span>Current Profile</span>
-                <span class="sys-val" id="profileNameDisplay">--</span>
-            </div>
-            <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v4.6.0 • Sidebar & Data Mgmt Update</div>
+            <p>System Status: <span class="text-success">Connected</span></p>
+            <p>Current User ID:</p>
+            <p class="user-id-display" id="userIdDisplay">Authenticating...</p>
         </div>
     </aside>
+
+    <!-- Main Content Area -->
     <main>
         <header>
-            <div class="profile-select">
-                <label for="profileSelect">Profile:</label>
-                <select id="profileSelect"></select>
-            </div>
-            <div class="flex-row">
-                <button class="btn-outline" id="sampleBtn">Load Sample</button>
-                <div id="calc-toggle">
-                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line><line x1="12" y1="14" x2="12.01" y2="14"></line><line x1="8" y1="10" x2="8.01" y2="10"></line><line x1="16" y1="10" x2="16.01" y2="10"></line></svg>
-                </div>
+            <h1 class="page-title">Financial Overview</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" id="openCalcBtn" onclick="openModal('calculatorModal')">
+                    <i data-lucide="calculator"></i> Calculator
+                </button>
+                <button class="btn btn-primary" id="openSettingsBtn" onclick="openModal('settingsModal')">
+                    <i data-lucide="cog"></i> Configure
+                </button>
             </div>
         </header>
 
-        <section class="dashboard-grid">
-            <div class="widget card span-2">
-                <div class="card-title">Net Worth Overview</div>
-                <div class="net-worth-display" id="netWorthDisplay">0.00</div>
-                <div class="net-worth-sub">Last updated: <span id="lastUpdated">N/A</span></div>
-            </div>
-
-            <div class="widget card">
-                <div class="card-title">Total Income (YTD)</div>
-                <div class="stat-value" id="totalIncome">0.00</div>
-            </div>
-
-            <div class="widget card">
-                <div class="card-title">Total Expenses (YTD)</div>
-                <div class="stat-value text-danger" id="totalExpenses">0.00</div>
-            </div>
-
-            <div class="widget card transaction-form span-2">
-                <div class="card-title">New Transaction</div>
-                <form id="transactionForm">
-                    <div class="form-row">
-                        <input type="text" id="description" placeholder="Description" required>
-                        <select id="type" required>
-                            <option value="">Type</option>
-                            <option value="Income">Income</option>
-                            <option value="Expense">Expense</option>
-                        </select>
-                        <input type="number" id="amount" placeholder="Amount" step="0.01" required>
+        <!-- KPI Cards Section -->
+        <section id="dashboard">
+            <div class="dashboard-grid">
+                
+                <!-- KPI 1: Net Worth -->
+                <div class="card kpi-card">
+                    <div class="kpi-icon"><i data-lucide="wallet-2" width="36" height="36"></i></div>
+                    <p class="kpi-title">Total Net Worth</p>
+                    <p class="kpi-value text-primary" id="netWorthValue">$0.00</p>
+                    <div class="kpi-indicator text-success" id="netWorthIndicator">
+                        <i data-lucide="trending-up"></i> +$0.00 (0%)
                     </div>
-                    <div class="form-row">
-                        <select id="category" required>
-                            <option value="">Category</option>
-                        </select>
-                        <input type="date" id="date" required>
-                        <button type="submit" class="btn-primary">Add Transaction</button>
+                </div>
+
+                <!-- KPI 2: Monthly Cash Flow -->
+                <div class="card kpi-card">
+                    <div class="kpi-icon success"><i data-lucide="activity" width="36" height="36"></i></div>
+                    <p class="kpi-title">Monthly Cash Flow</p>
+                    <p class="kpi-value text-success" id="cashFlowValue">$0.00</p>
+                    <div class="kpi-indicator text-success" id="cashFlowIndicator">
+                        <i data-lucide="check-circle"></i> Surplus
+                    </div>
+                </div>
+
+                <!-- KPI 3: Savings Rate -->
+                <div class="card kpi-card">
+                    <div class="kpi-icon warning"><i data-lucide="piggy-bank" width="36" height="36"></i></div>
+                    <p class="kpi-title">Target Savings Rate</p>
+                    <p class="kpi-value text-warning" id="savingsRateValue">0%</p>
+                    <div class="kpi-indicator text-warning" id="savingsRateIndicator">
+                        <i data-lucide="percent"></i> 20% Target
+                    </div>
+                </div>
+
+                <!-- KPI 4: Debt-to-Asset Ratio -->
+                <div class="card kpi-card">
+                    <div class="kpi-icon danger"><i data-lucide="gauge" width="36" height="36"></i></div>
+                    <p class="kpi-title">Debt-to-Asset Ratio</p>
+                    <p class="kpi-value text-danger" id="debtRatioValue">0%</p>
+                    <div class="kpi-indicator text-danger" id="debtRatioIndicator">
+                        <i data-lucide="alert-triangle"></i> Keep Low
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graphs Side-by-Side (span-4 for the container, span-2 for each chart) -->
+            <div class="dashboard-grid">
+                <!-- Chart 1: Cash Flow Breakdown (Income vs Expense) -->
+                <div class="widget span-2">
+                    <div class="chart-container">
+                        <h2 class="chart-title">Monthly Cash Flow Breakdown</h2>
+                        <canvas id="cashFlowChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Net Worth Trend -->
+                <div class="widget span-2">
+                    <div class="chart-container">
+                        <h2 class="chart-title">Net Worth Trend (6 Months)</h2>
+                        <canvas id="netWorthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Data Management Section (Transactions) -->
+        <section id="data-management">
+            <h2 class="section-header">Manage Transactions</h2>
+
+            <!-- Transaction Input Form -->
+            <div class="card mb-20">
+                <form id="transactionForm">
+                    <div class="transaction-form">
+                        <div class="form-row">
+                            <select id="type" required>
+                                <option value="Income">Income</option>
+                                <option value="Expense">Expense</option>
+                                <option value="Asset">Asset</option>
+                                <option value="Liability">Liability</option>
+                            </select>
+                            <input type="number" id="amount" placeholder="Amount (e.g., 1500.00)" step="0.01" required>
+                            <select id="category" required>
+                                <option value="" disabled selected>Select Category</option>
+                                <!-- Categories populated by JS -->
+                            </select>
+                            <input type="text" id="description" placeholder="Description (e.g., Monthly Salary)" required>
+                            <button type="submit" class="btn btn-primary"><i data-lucide="plus"></i> Add</button>
+                        </div>
                     </div>
                 </form>
             </div>
 
-            <div class="widget card transaction-table span-4">
-                <div class="card-title">Recent Transactions</div>
-                <table id="recentTransactionsTable">
+            <!-- Transactions List Table -->
+            <h3 class="section-header" style="font-size: 20px;">Recent Entries</h3>
+            <div class="transaction-table">
+                <table>
                     <thead>
-                        <tr><th>Date</th><th>Description</th><th>Category</th><th>Type</th><th>Amount</th><th>Action</th></tr>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Description</th>
+                            <th>Action</th>
+                        </tr>
                     </thead>
-                    <tbody>
-                        </tbody>
+                    <tbody id="transactionList">
+                        <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No transactions found.</td></tr>
+                    </tbody>
                 </table>
             </div>
-            
-            <div class="widget card span-2">
-                <div class="card-title">Expense Distribution</div>
-                <canvas id="categoryChart"></canvas>
-            </div>
-            
-            <div class="widget card span-2">
-                <div class="card-title">Net Balance History</div>
-                <canvas id="balanceChart"></canvas>
-            </div>
-
         </section>
 
     </main>
-    <div id="settingsModal" class="modal">
-        <div class="modal-content">
-            <div class="action-header">
-                <div class="card-title">System Settings</div>
-                <button class="btn-outline" id="closeSettings">Close</button>
-            </div>
-            <div class="modal-pad">
-                <div class="settings-group">
-                    <h3>Profile Management</h3>
-                    <button class="btn-outline" id="newProfileBtn">Create New Profile</button>
-                    <button class="btn-outline" id="deleteProfileBtn" style="margin-left: 10px;">Delete Current Profile</button>
-                </div>
-                
-                <div class="settings-group">
-                    <h3>Category Configuration</h3>
-                    <p>Add new categories to the list:</p>
-                    <input type="text" id="newCategoryInput" placeholder="New Category Name">
-                    <button class="btn-primary" id="addCategoryBtn">Add Category</button>
-                    <div id="categoryListDisplay" style="margin-top: 10px;"></div>
-                </div>
 
-                <div class="settings-group">
-                    <h3>Data Operations (Deprecated)</h3>
-                    <p style="color:var(--danger);">These functions are now moved to the **Data Management** panel in the sidebar (v4.6).</p>
-                    <button class="btn-primary" id="importDataBtn" style="display:none;">Import CSV/JSON</button>
-                    <button class="btn-outline" id="exportBtn" style="display:none;">Export Data (CSV)</button>
-                    <button class="btn-danger" id="resetBtn" style="display:none;">Factory Reset</button>
-                </div>
-
-            </div>
-        </div>
-    </div>
-    
-    <div id="calculatorModal" class="modal">
+    <!-- Modal for Calculator -->
+    <div id="calculatorModal" class="modal" onclick="closeModalOnOutsideClick(event, 'calculatorModal')">
         <div class="modal-content modal-small">
-            <div class="action-header" style="border-radius:12px 12px 0 0">
-                <div class="card-title" style="color:white">Financial Calculator</div>
-                <button class="btn-outline" id="closeCalculator" style="background:transparent; color:white; border-color:white; padding:4px 10px">Close</button>
+            <div class="modal-header">
+                <div class="modal-title"><i data-lucide="calculator"></i> Financial Calculator</div>
+                <button class="modal-close" onclick="closeModal('calculatorModal')">&times;</button>
             </div>
-            <div class="modal-pad">
-                <input type="text" id="calcDisplay" value="0" readonly style="font-size:24px; text-align:right; margin-bottom:10px;">
+            <div class="modal-body">
+                <div id="calc-display">0</div>
                 <div class="calc-grid">
-                    <button class="calc-btn op-btn" data-value="AC">AC</button>
-                    <button class="calc-btn op-btn" data-value="P">+/-</button>
-                    <button class="calc-btn op-btn" data-value="%">%</button>
-                    <button class="calc-btn op-btn" data-value="/">/</button>
-                    <button class="calc-btn" data-value="7">7</button>
-                    <button class="calc-btn" data-value="8">8</button>
-                    <button class="calc-btn" data-value="9">9</button>
-                    <button class="calc-btn op-btn" data-value="*">*</button>
-                    <button class="calc-btn" data-value="4">4</button>
-                    <button class="calc-btn" data-value="5">5</button>
-                    <button class="calc-btn" data-value="6">6</button>
-                    <button class="calc-btn op-btn" data-value="-">-</button>
-                    <button class="calc-btn" data-value="1">1</button>
-                    <button class="calc-btn" data-value="2">2</button>
-                    <button class="calc-btn" data-value="3">3</button>
-                    <button class="calc-btn op-btn" data-value="+">+</button>
-                    <button class="calc-btn span-2" data-value="0">0</button>
-                    <button class="calc-btn" data-value=".">.</button>
-                    <button class="calc-btn op-btn" data-value="=">=</button>
+                    <button class="calc-btn clear span-2" onclick="calcClear()">AC</button>
+                    <button class="calc-btn operator" onclick="calcInput('/')">/</button>
+                    <button class="calc-btn operator" onclick="calcInput('*')">x</button>
+                    
+                    <button class="calc-btn" onclick="calcInput('7')">7</button>
+                    <button class="calc-btn" onclick="calcInput('8')">8</button>
+                    <button class="calc-btn" onclick="calcInput('9')">9</button>
+                    <button class="calc-btn operator" onclick="calcInput('-')">-</button>
+                    
+                    <button class="calc-btn" onclick="calcInput('4')">4</button>
+                    <button class="calc-btn" onclick="calcInput('5')">5</button>
+                    <button class="calc-btn" onclick="calcInput('6')">6</button>
+                    <button class="calc-btn operator" onclick="calcInput('+')">+</button>
+                    
+                    <button class="calc-btn" onclick="calcInput('1')">1</button>
+                    <button class="calc-btn" onclick="calcInput('2')">2</button>
+                    <button class="calc-btn" onclick="calcInput('3')">3</button>
+                    <button class="calc-btn span-2" onclick="calcInput('0')">0</button>
+                    <button class="calc-btn" onclick="calcInput('.')">.</button>
+                    <button class="calc-btn operator" onclick="calcCalculate()">=</button>
                 </div>
             </div>
         </div>
     </div>
     
-    <div id="dataMgmtModal" class="modal">
-        <div class="modal-content modal-small">
-            <div class="action-header" style="border-radius:12px 12px 0 0">
-                <div class="card-title" style="color:white">Data Management & Backup</div>
-                <button class="btn-outline" id="closeDataMgmt" style="background:transparent; color:white; border-color:white; padding:4px 10px">Close</button>
+    <!-- Modal for Settings/Configuration -->
+    <div id="settingsModal" class="modal" onclick="closeModalOnOutsideClick(event, 'settingsModal')">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title"><i data-lucide="settings"></i> System Configuration</div>
+                <button class="modal-close" onclick="closeModal('settingsModal')">&times;</button>
             </div>
-            
-            <div class="modal-pad">
-                <h3 style="margin-top:0; font-size:16px;">Import & Export</h3>
-                <p style="font-size:13px; color:var(--text-muted);">Manage your transaction data by importing new records or exporting a backup.</p>
-                <div class="flex-row" style="margin-top:15px; justify-content:space-between">
-                    <button class="btn-primary" id="importDataBtnModal" style="width:48%;">Import CSV/JSON</button>
-                    <button class="btn-outline" id="exportBtnModal" style="width:48%;">Export Data (CSV)</button>
+            <div class="modal-body">
+                <div class="settings-group">
+                    <h3>Default Categories</h3>
+                    <p style="color: var(--text-muted); font-size: 14px;">Manage the categories available for transactions.</p>
+                    <div id="categoryListDisplay" style="margin-bottom: 15px;"></div>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="newCategoryInput" placeholder="Add New Category Name" style="flex-grow: 1; padding: 10px;">
+                        <button class="btn btn-secondary" onclick="addCategory()" style="flex-shrink: 0;"><i data-lucide="plus"></i> Add Category</button>
+                    </div>
                 </div>
-                
-                <div style="border-top:1px solid var(--border); padding-top:20px; margin-top:20px">
-                    <h3 style="margin-top:0; font-size:16px; color:var(--danger);">Danger Zone</h3>
-                    <p style="font-size:13px; color:var(--text-muted);">This action cannot be reversed and will **permanently delete** all data for the current profile.</p>
-                    <button class="btn-danger full-width" id="resetBtnModal">Factory Reset Profile</button>
+
+                <div class="settings-group">
+                    <h3>Data Management</h3>
+                    <button class="btn btn-danger" onclick="confirmResetData()">
+                        <i data-lucide="trash-2"></i> Reset ALL Financial Data
+                    </button>
+                    <p style="color: var(--danger); font-size: 12px; margin-top: 5px;">Warning: This action is permanent and clears all saved transactions.</p>
                 </div>
             </div>
         </div>
     </div>
-
-    <script>
-        // JavaScript logic integrated here
+    
+    <!-- Firebase Initialization and Application Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, query, updateDoc, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        let profiles = JSON.parse(localStorage.getItem('profiles')) || {};
-        let currentProfileName = localStorage.getItem('currentProfile') || null;
-        let currentProfile = currentProfileName ? profiles[currentProfileName] : null;
-        let categories = [];
-        let balanceChartInstance = null;
-        let categoryChartInstance = null;
+        setLogLevel('Debug'); // Enable debug logging for Firebase
 
-        const DOM = {
-            profileSelect: document.getElementById('profileSelect'),
-            netWorthDisplay: document.getElementById('netWorthDisplay'),
-            totalIncome: document.getElementById('totalIncome'),
-            totalExpenses: document.getElementById('totalExpenses'),
-            lastUpdated: document.getElementById('lastUpdated'),
-            transactionForm: document.getElementById('transactionForm'),
-            recentTransactionsTable: document.querySelector('#recentTransactionsTable tbody'),
-            categorySelect: document.getElementById('category'),
-            
-            // Sidebar Navigation
-            navSettings: document.getElementById('navSettings'),
-            settingsModal: document.getElementById('settingsModal'),
-            closeSettings: document.getElementById('closeSettings'),
-            
-            // New Sidebar Item and Modal
-            navDataMgmt: document.getElementById('navDataMgmt'),
-            dataMgmtModal: document.getElementById('dataMgmtModal'),
-            closeDataMgmt: document.getElementById('closeDataMgmt'),
+        // Global Variables for Canvas Environment (MANDATORY)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-            // Data Operations (Logic linked to these hidden elements)
-            importDataBtn: document.getElementById('importDataBtn'),
-            exportBtn: document.getElementById('exportBtn'),
-            resetBtn: document.getElementById('resetBtn'),
-            
-            // New Modal Buttons (User interacts with these)
-            importDataBtnModal: document.getElementById('importDataBtnModal'),
-            exportBtnModal: document.getElementById('exportBtnModal'),
-            resetBtnModal: document.getElementById('resetBtnModal'),
-            
-            // Settings Modal Profile/Category
-            newProfileBtn: document.getElementById('newProfileBtn'),
-            deleteProfileBtn: document.getElementById('deleteProfileBtn'),
-            newCategoryInput: document.getElementById('newCategoryInput'),
-            addCategoryBtn: document.getElementById('addCategoryBtn'),
-            categoryListDisplay: document.getElementById('categoryListDisplay'),
-            
-            // Calculator
-            calcToggle: document.getElementById('calc-toggle'),
-            calculatorModal: document.getElementById('calculatorModal'),
-            closeCalculator: document.getElementById('closeCalculator'),
-            calcDisplay: document.getElementById('calcDisplay'),
+        let app, db, auth, userId = null;
+        let categories = ['Salary', 'Rent', 'Food', 'Utilities', 'Investment', 'Loan'];
+        let transactions = [];
+        let netWorthChartInstance, cashFlowChartInstance;
+        
+        const DB_COLLECTION = `artifacts/${appId}/users`;
+        const CONFIG_DOC = 'config';
+        const TRANSACTIONS_DOC = 'transactions';
+
+        // --- Utility Functions ---
+        const formatCurrency = (value) => {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(value);
         };
-
-        const defaultCategories = ['Salary', 'Investments', 'Groceries', 'Rent', 'Utilities', 'Entertainment'];
-
-        // --- Core Data Functions ---
         
-        function saveProfiles() {
-            localStorage.setItem('profiles', JSON.stringify(profiles));
-            if (currentProfileName) {
-                localStorage.setItem('currentProfile', currentProfileName);
+        const formatPercent = (value) => {
+            return new Intl.NumberFormat('en-US', {
+                style: 'percent',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            }).format(value / 100);
+        };
+        
+        function scrollToElement(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // --- Modal Control ---
+        window.openModal = function(id) {
+            document.getElementById(id).classList.add('open');
+        }
+
+        window.closeModal = function(id) {
+            document.getElementById(id).classList.remove('open');
+        }
+        
+        window.closeModalOnOutsideClick = function(event, id) {
+            const modal = document.getElementById(id);
+            if (event.target === modal) {
+                modal.classList.remove('open');
+            }
+        }
+        
+        window.confirmResetData = function() {
+            // Using a simple custom prompt/modal substitute instead of alert/confirm
+            const result = prompt("Type 'RESET' to confirm deletion of ALL financial data. This action is irreversible.");
+            if (result === 'RESET') {
+                resetAllData();
+            } else if (result !== null) {
+                console.log("Data reset cancelled or confirmation failed.");
             }
         }
 
-        function loadProfile(name) {
-            currentProfileName = name;
-            currentProfile = profiles[name];
-            if (!currentProfile) return;
-            
-            categories = currentProfile.categories;
 
-            updateDOM();
-            saveProfiles();
-        }
-
-        function updateProfileData() {
-            if (!currentProfile) return;
-
-            const now = new Date();
-            currentProfile.lastUpdated = now.toLocaleString();
-            
-            const income = currentProfile.transactions
-                .filter(t => t.type === 'Income')
-                .reduce((sum, t) => sum + t.amount, 0);
-            
-            const expenses = currentProfile.transactions
-                .filter(t => t.type === 'Expense')
-                .reduce((sum, t) => sum + t.amount, 0);
-            
-            currentProfile.netWorth = income - expenses;
-            currentProfile.totalIncome = income;
-            currentProfile.totalExpenses = expenses;
-            
-            saveProfiles();
-        }
-
-        // --- DOM Update Functions ---
-
-        function updateDOM() {
-            if (!currentProfile) {
-                DOM.netWorthDisplay.textContent = 'N/A';
-                DOM.totalIncome.textContent = 'N/A';
-                DOM.totalExpenses.textContent = 'N/A';
-                DOM.lastUpdated.textContent = 'N/A';
-                DOM.profileNameDisplay.textContent = 'No Profile';
-                DOM.recentTransactionsTable.innerHTML = '';
-                updateCategorySelect([]);
-                renderCategoryList([]);
+        // --- Firestore Core Functions ---
+        async function initializeFirebase() {
+            if (!firebaseConfig) {
+                console.error("Firebase configuration is missing.");
+                document.getElementById('userIdDisplay').textContent = "ERROR: Config missing";
                 return;
             }
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                
+                // Auth setup
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                    } else {
+                        // Sign in anonymously if no token is available
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                            userId = auth.currentUser.uid;
+                        } else {
+                            await signInAnonymously(auth);
+                            userId = auth.currentUser.uid;
+                        }
+                    }
+                    if (userId) {
+                        document.getElementById('userIdDisplay').textContent = userId;
+                        setupRealtimeListeners(userId);
+                    }
+                });
 
-            const format = (value) => value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-
-            DOM.netWorthDisplay.textContent = format(currentProfile.netWorth);
-            DOM.totalIncome.textContent = format(currentProfile.totalIncome);
-            DOM.totalExpenses.textContent = format(currentProfile.totalExpenses);
-            DOM.lastUpdated.textContent = currentProfile.lastUpdated;
-            DOM.profileNameDisplay.textContent = currentProfileName;
-            
-            renderTransactions();
-            updateCategorySelect(categories);
-            renderCategoryList(categories);
-            renderCharts(currentProfile.transactions, currentProfile.netWorth);
-        }
-
-        function populateProfileSelect() {
-            DOM.profileSelect.innerHTML = '';
-            const profileNames = Object.keys(profiles);
-            
-            if (profileNames.length === 0) {
-                const option = document.createElement('option');
-                option.textContent = 'No Profiles';
-                option.value = '';
-                DOM.profileSelect.appendChild(option);
-                return;
+            } catch (error) {
+                console.error("Error initializing Firebase:", error);
+                document.getElementById('userIdDisplay').textContent = "ERROR: Init Failed";
             }
+        }
+        
+        function setupRealtimeListeners(currentUserId) {
+            const userConfigDocRef = doc(db, DB_COLLECTION, currentUserId, 'private', CONFIG_DOC);
+            const userTransactionsDocRef = doc(db, DB_COLLECTION, currentUserId, 'private', TRANSACTIONS_DOC);
 
-            profileNames.forEach(name => {
-                const option = document.createElement('option');
-                option.value = name;
-                option.textContent = name;
-                if (name === currentProfileName) {
-                    option.selected = true;
+            // 1. Listen for Config changes (Categories)
+            onSnapshot(userConfigDocRef, (doc) => {
+                if (doc.exists() && doc.data().categories) {
+                    categories = doc.data().categories;
+                } else {
+                    // Initialize with default categories if not present
+                    setDoc(userConfigDocRef, { categories: categories }, { merge: true });
                 }
-                DOM.profileSelect.appendChild(option);
-            });
-        }
+                updateCategoryUI();
+            }, (error) => console.error("Config Listener Error:", error));
 
-        function renderTransactions() {
-            DOM.recentTransactionsTable.innerHTML = '';
-            const recent = currentProfile.transactions
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .slice(0, 10);
-
-            recent.forEach((t, index) => {
-                const row = DOM.recentTransactionsTable.insertRow();
-                row.insertCell().textContent = t.date;
-                row.insertCell().textContent = t.description;
-                row.insertCell().textContent = t.category;
-                row.insertCell().textContent = t.type;
-                const amountCell = row.insertCell();
-                amountCell.textContent = t.amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-                amountCell.style.color = t.type === 'Income' ? var(--success) : var(--danger);
-
-                const actionCell = row.insertCell();
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = '✕';
-                deleteBtn.className = 'delete-btn';
-                deleteBtn.onclick = () => deleteTransaction(t.id);
-                actionCell.appendChild(deleteBtn);
-            });
+            // 2. Listen for Transaction changes
+            onSnapshot(userTransactionsDocRef, (doc) => {
+                if (doc.exists() && doc.data().entries) {
+                    transactions = doc.data().entries;
+                    transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+                } else {
+                    transactions = [];
+                    // Initialize with an empty structure
+                    setDoc(userTransactionsDocRef, { entries: [] }, { merge: true });
+                }
+                renderTransactions();
+                updateKPIs();
+                updateCharts();
+            }, (error) => console.error("Transaction Listener Error:", error));
         }
         
-        function updateCategorySelect(categoryList) {
-            DOM.categorySelect.innerHTML = '<option value="">Category</option>';
-            categoryList.forEach(cat => {
+        async function addTransaction(event) {
+            event.preventDefault();
+            if (!userId) { console.error("User not authenticated."); return; }
+            
+            const type = document.getElementById('type').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const category = document.getElementById('category').value;
+            const description = document.getElementById('description').value;
+            
+            if (isNaN(amount) || amount <= 0) { console.error("Invalid amount."); return; }
+
+            const newEntry = {
+                id: crypto.randomUUID(),
+                date: new Date().toISOString(),
+                type,
+                amount: amount * (type === 'Expense' || type === 'Liability' ? -1 : 1), // Store expenses/liabilities as negative
+                category,
+                description,
+            };
+            
+            const docRef = doc(db, DB_COLLECTION, userId, 'private', TRANSACTIONS_DOC);
+            
+            try {
+                await updateDoc(docRef, {
+                    entries: arrayUnion(newEntry)
+                });
+                document.getElementById('transactionForm').reset();
+            } catch (error) {
+                console.error("Error adding transaction:", error);
+            }
+        }
+        
+        window.deleteTransaction = async function(id) {
+            if (!userId) { console.error("User not authenticated."); return; }
+            
+            const entryToDelete = transactions.find(t => t.id === id);
+            if (!entryToDelete) return;
+            
+            const docRef = doc(db, DB_COLLECTION, userId, 'private', TRANSACTIONS_DOC);
+            
+            try {
+                await updateDoc(docRef, {
+                    entries: arrayRemove(entryToDelete)
+                });
+            } catch (error) {
+                console.error("Error deleting transaction:", error);
+            }
+        }
+        
+        async function resetAllData() {
+            if (!userId) return;
+            const docRef = doc(db, DB_COLLECTION, userId, 'private', TRANSACTIONS_DOC);
+            try {
+                await setDoc(docRef, { entries: [] });
+                alertUser("Success: All financial data has been reset.");
+                closeModal('settingsModal');
+            } catch (error) {
+                console.error("Error resetting data:", error);
+                alertUser("Error: Could not reset data.");
+            }
+        }
+        
+        // --- Category Management ---
+        function updateCategoryUI() {
+            const select = document.getElementById('category');
+            select.innerHTML = '<option value="" disabled selected>Select Category</option>';
+            categories.forEach(cat => {
                 const option = document.createElement('option');
                 option.value = cat;
                 option.textContent = cat;
-                DOM.categorySelect.appendChild(option);
+                select.appendChild(option);
             });
-        }
-        
-        function renderCategoryList(categoryList) {
-            DOM.categoryListDisplay.innerHTML = '';
-            categoryList.forEach(cat => {
-                const span = document.createElement('span');
-                span.textContent = cat;
-                DOM.categoryListDisplay.appendChild(span);
-            });
-        }
-        
-        // --- Transaction Logic ---
-
-        function addTransaction(e) {
-            e.preventDefault();
-            if (!currentProfile) {
-                alert('Please select or create a profile first.');
-                return;
-            }
-
-            const transaction = {
-                id: Date.now(),
-                description: document.getElementById('description').value,
-                type: document.getElementById('type').value,
-                amount: parseFloat(document.getElementById('amount').value),
-                category: document.getElementById('category').value,
-                date: document.getElementById('date').value,
-            };
-
-            currentProfile.transactions.push(transaction);
             
-            DOM.transactionForm.reset();
-            document.getElementById('date').valueAsDate = new Date();
-            
-            updateProfileData();
-            updateDOM();
+            const display = document.getElementById('categoryListDisplay');
+            display.innerHTML = categories.map(cat => `<span>${cat}</span>`).join('');
         }
 
-        function deleteTransaction(id) {
-            if (!confirm('Are you sure you want to delete this transaction?')) return;
-            
-            currentProfile.transactions = currentProfile.transactions.filter(t => t.id !== id);
-            
-            updateProfileData();
-            updateDOM();
-        }
-        
-        // --- Profile Management Logic ---
-        
-        function createNewProfile() {
-            const name = prompt('Enter a name for the new profile:');
-            if (name && name.trim() && !profiles[name]) {
-                profiles[name] = {
-                    transactions: [],
-                    categories: [...defaultCategories],
-                    netWorth: 0,
-                    totalIncome: 0,
-                    totalExpenses: 0,
-                    lastUpdated: new Date().toLocaleString()
-                };
-                loadProfile(name);
-                populateProfileSelect();
-            } else if (name) {
-                alert('Profile name is invalid or already exists.');
-            }
-        }
-
-        function deleteCurrentProfile() {
-            if (!currentProfileName) return;
-            if (confirm(`Are you sure you want to permanently delete the profile: ${currentProfileName}?`)) {
-                delete profiles[currentProfileName];
-                currentProfileName = null;
-                currentProfile = null;
-                localStorage.removeItem('currentProfile');
-                
-                // Try to load the first available profile or reset
-                const profileNames = Object.keys(profiles);
-                if (profileNames.length > 0) {
-                    loadProfile(profileNames[0]);
+        window.addCategory = async function() {
+            const input = document.getElementById('newCategoryInput');
+            const newCat = input.value.trim();
+            if (newCat && !categories.includes(newCat) && userId) {
+                const docRef = doc(db, DB_COLLECTION, userId, 'private', CONFIG_DOC);
+                try {
+                    await updateDoc(docRef, {
+                        categories: arrayUnion(newCat)
+                    });
+                    input.value = '';
+                } catch (error) {
+                    console.error("Error adding category:", error);
                 }
-                
-                populateProfileSelect();
-                updateDOM();
-                alert('Profile deleted.');
             }
         }
-        
-        // --- Category Management Logic ---
-        
-        function addCategory() {
-            const newCat = DOM.newCategoryInput.value.trim();
-            if (newCat && !categories.includes(newCat)) {
-                categories.push(newCat);
-                currentProfile.categories = categories; // Update profile object
-                saveProfiles();
-                DOM.newCategoryInput.value = '';
-                updateCategorySelect(categories);
-                renderCategoryList(categories);
-            } else if (newCat) {
-                alert('Category already exists.');
-            }
-        }
-        
-        // --- Data Import/Export/Reset Logic (Linked to hidden buttons) ---
-        
-        function importData() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.csv, application/json';
-            input.onchange = e => {
-                const file = e.target.files[0];
-                if (!file) return;
 
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const contents = e.target.result;
-                    let importedTransactions;
-
-                    try {
-                        if (file.name.endsWith('.json')) {
-                            importedTransactions = JSON.parse(contents);
-                        } else if (file.name.endsWith('.csv')) {
-                            importedTransactions = parseCSV(contents);
-                        }
-                        
-                        if (Array.isArray(importedTransactions) && importedTransactions.every(t => t.description && t.amount)) {
-                            // Assign new IDs and merge
-                            const newTransactions = importedTransactions.map(t => ({
-                                id: Date.now() + Math.random(),
-                                description: String(t.description).trim(),
-                                type: String(t.type || 'Expense').trim(),
-                                amount: parseFloat(t.amount) || 0,
-                                category: String(t.category || 'Uncategorized').trim(),
-                                date: String(t.date || new Date().toISOString().split('T')[0]).trim(),
-                            }));
-                            
-                            currentProfile.transactions.push(...newTransactions);
-                            alert(`Successfully imported ${newTransactions.length} transactions.`);
-                            updateProfileData();
-                            updateDOM();
-                        } else {
-                            throw new Error("Invalid transaction structure.");
-                        }
-
-                    } catch (error) {
-                        alert('Error processing file. Please ensure the file is valid JSON or CSV. ' + error.message);
-                        console.error(error);
-                    }
-                };
-                reader.readAsText(file);
-            };
-            input.click();
-        }
-
-        function parseCSV(csvText) {
-            const [headerLine, ...dataLines] = csvText.split('\n').filter(line => line.trim() !== '');
-            const headers = headerLine.split(',').map(h => h.trim().toLowerCase());
+        // --- Render Functions ---
+        function renderTransactions() {
+            const list = document.getElementById('transactionList');
+            list.innerHTML = '';
             
-            const mapping = {
-                'description': ['description', 'desc', 'details'],
-                'type': ['type', 'inout'],
-                'amount': ['amount', 'value'],
-                'category': ['category', 'cat'],
-                'date': ['date', 'trans_date']
-            };
-
-            return dataLines.map(line => {
-                const values = line.split(',').map(v => v.trim());
-                const transaction = {};
-                headers.forEach((header, i) => {
-                    for (const key in mapping) {
-                        if (mapping[key].includes(header)) {
-                            transaction[key] = values[i];
-                            break;
-                        }
-                    }
-                });
-                return transaction;
-            });
-        }
-
-        function exportData() {
-            if (!currentProfile || currentProfile.transactions.length === 0) {
-                alert('No data to export.');
+            if (transactions.length === 0) {
+                list.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">No transactions recorded yet.</td></tr>';
                 return;
             }
-            
-            const transactions = currentProfile.transactions.map(t => ({
-                id: t.id,
-                description: t.description,
-                type: t.type,
-                amount: t.amount,
-                category: t.category,
-                date: t.date
-            }));
-
-            // Create CSV content
-            let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "id,description,type,amount,category,date\n";
 
             transactions.forEach(t => {
-                let row = Object.values(t).map(String).join(',');
-                csvContent += row + "\n";
-            });
+                const tr = document.createElement('tr');
+                const sign = t.amount >= 0 ? 1 : -1;
+                const formattedAmount = formatCurrency(Math.abs(t.amount));
+                const amountClass = t.amount >= 0 ? 'text-success' : 'text-danger';
 
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `${currentProfileName}_transactions_${new Date().toISOString().split('T')[0]}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            alert('Data export initiated.');
+                tr.innerHTML = `
+                    <td>${new Date(t.date).toLocaleDateString()}</td>
+                    <td>${t.type}</td>
+                    <td>${t.category}</td>
+                    <td class="${amountClass}">${formattedAmount}</td>
+                    <td>${t.description}</td>
+                    <td><button class="delete-btn" onclick="deleteTransaction('${t.id}')"><i data-lucide="trash-2"></i></button></td>
+                `;
+                list.appendChild(tr);
+            });
+            // Re-render lucide icons after updating the list
+            lucide.createIcons();
         }
 
-        function factoryReset() {
-            if (!currentProfile) return;
-            if (confirm(`WARNING: This will delete ALL transactions for profile ${currentProfileName}. Are you absolutely sure?`)) {
-                 if (prompt('Type "RESET" to confirm permanent deletion:') === 'RESET') {
-                    currentProfile.transactions = [];
-                    updateProfileData();
-                    updateDOM();
-                    alert('Profile successfully reset.');
-                } else {
-                    alert('Reset cancelled.');
-                }
+        function updateKPIs() {
+            if (transactions.length === 0) {
+                // Reset all KPIs to $0.00
+                document.getElementById('netWorthValue').textContent = formatCurrency(0);
+                document.getElementById('cashFlowValue').textContent = formatCurrency(0);
+                document.getElementById('savingsRateValue').textContent = formatPercent(0);
+                document.getElementById('debtRatioValue').textContent = formatPercent(0);
+                return;
+            }
+
+            // 1. Calculate Net Worth
+            const assets = transactions.filter(t => t.type === 'Asset' || (t.type === 'Income' && t.category !== 'Salary')).reduce((sum, t) => sum + t.amount, 0);
+            const liabilities = transactions.filter(t => t.type === 'Liability').reduce((sum, t) => sum + Math.abs(t.amount), 0);
+            const netWorth = assets - liabilities;
+            document.getElementById('netWorthValue').textContent = formatCurrency(netWorth);
+            
+            // 2. Calculate Monthly Cash Flow (Last 30 Days)
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            const recentTransactions = transactions.filter(t => new Date(t.date) > thirtyDaysAgo);
+            
+            const income = recentTransactions.filter(t => t.type === 'Income').reduce((sum, t) => sum + t.amount, 0);
+            const expense = recentTransactions.filter(t => t.type === 'Expense').reduce((sum, t) => sum + t.amount, 0); // already negative
+            const monthlyCashFlow = income + expense;
+
+            document.getElementById('cashFlowValue').textContent = formatCurrency(monthlyCashFlow);
+            document.getElementById('cashFlowValue').className = 'kpi-value ' + (monthlyCashFlow >= 0 ? 'text-success' : 'text-danger');
+            document.getElementById('cashFlowIndicator').innerHTML = monthlyCashFlow >= 0 ? 
+                `<i data-lucide="check-circle"></i> Surplus` : 
+                `<i data-lucide="x-circle"></i> Deficit`;
+            document.getElementById('cashFlowIndicator').className = 'kpi-indicator ' + (monthlyCashFlow >= 0 ? 'text-success' : 'text-danger');
+            
+            // 3. Savings Rate (Assuming 'Investment' category = Savings)
+            const totalIncome = transactions.filter(t => t.type === 'Income').reduce((sum, t) => sum + t.amount, 0);
+            const totalSavings = transactions.filter(t => t.category === 'Investment').reduce((sum, t) => sum + t.amount, 0);
+
+            const savingsRate = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
+            document.getElementById('savingsRateValue').textContent = formatPercent(savingsRate);
+            
+            // 4. Debt-to-Asset Ratio
+            const debtRatio = assets > 0 ? (liabilities / assets) * 100 : 0;
+            document.getElementById('debtRatioValue').textContent = formatPercent(debtRatio);
+            document.getElementById('debtRatioValue').className = 'kpi-value ' + (debtRatio < 50 ? 'text-success' : 'text-danger');
+
+            lucide.createIcons(); // Re-render icons for dynamic indicators
+        }
+        
+        // --- Chart Functions ---
+        function updateCharts() {
+            // Data for Net Worth Trend Chart
+            const netWorthHistory = calculateNetWorthOverTime();
+            
+            if (netWorthChartInstance) {
+                netWorthChartInstance.data.labels = netWorthHistory.labels;
+                netWorthChartInstance.data.datasets[0].data = netWorthHistory.data;
+                netWorthChartInstance.update();
+            } else {
+                renderNetWorthChart(netWorthHistory);
+            }
+
+            // Data for Cash Flow Breakdown Chart (Last 30 days)
+            const cashFlowData = calculateCashFlowBreakdown();
+            
+            if (cashFlowChartInstance) {
+                cashFlowChartInstance.data.labels = cashFlowData.labels;
+                cashFlowChartInstance.data.datasets[0].data = cashFlowData.incomeData;
+                cashFlowChartInstance.data.datasets[1].data = cashFlowData.expenseData;
+                cashFlowChartInstance.update();
+            } else {
+                renderCashFlowChart(cashFlowData);
             }
         }
         
-        // --- Charting Logic ---
+        function calculateNetWorthOverTime() {
+            const sortedTransactions = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+            let runningNetWorth = 0;
+            const history = {}; // { YYYY-MM: netWorth }
 
-        function renderCharts(transactions, netWorth) {
-            // 1. Category Distribution Chart (Pie/Doughnut)
-            const expenseTransactions = transactions.filter(t => t.type === 'Expense');
-            const categoryData = expenseTransactions.reduce((acc, t) => {
-                acc[t.category] = (acc[t.category] || 0) + t.amount;
-                return acc;
-            }, {});
-
-            const categoryLabels = Object.keys(categoryData);
-            const categoryAmounts = Object.values(categoryData);
+            sortedTransactions.forEach(t => {
+                runningNetWorth += t.amount;
+                const dateKey = new Date(t.date).toISOString().substring(0, 7); // YYYY-MM
+                history[dateKey] = runningNetWorth;
+            });
             
-            // Re-render chart if it exists
-            if (categoryChartInstance) categoryChartInstance.destroy();
+            const labels = Object.keys(history).sort().slice(-6);
+            const data = labels.map(label => history[label]);
+            
+            return { labels, data };
+        }
+        
+        function calculateCashFlowBreakdown() {
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            const recentTransactions = transactions.filter(t => new Date(t.date) > thirtyDaysAgo);
 
-            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-            categoryChartInstance = new Chart(categoryCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: categoryLabels,
-                    datasets: [{
-                        data: categoryAmounts,
-                        backgroundColor: categoryLabels.map((_, i) => `hsl(${i * 60}, 70%, 50%)`),
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'right' },
-                        title: { display: true, text: 'Expense Distribution' }
-                    }
+            const categoriesMap = {}; // { category: { income: N, expense: N } }
+            
+            recentTransactions.forEach(t => {
+                if (!categoriesMap[t.category]) {
+                    categoriesMap[t.category] = { income: 0, expense: 0 };
+                }
+                if (t.type === 'Income') {
+                    categoriesMap[t.category].income += t.amount;
+                } else if (t.type === 'Expense') {
+                    categoriesMap[t.category].expense += Math.abs(t.amount); // use absolute value
                 }
             });
             
-            // 2. Net Balance History Chart (Line)
-            const sortedTransactions = transactions.sort((a, b) => new Date(a.date) - new Date(b.date));
-            const dailyBalance = {};
-            let currentBalance = 0;
+            const labels = Object.keys(categoriesMap);
+            const incomeData = labels.map(cat => categoriesMap[cat].income);
+            const expenseData = labels.map(cat => categoriesMap[cat].expense);
+            
+            return { labels, incomeData, expenseData };
+        }
 
-            sortedTransactions.forEach(t => {
-                currentBalance += (t.type === 'Income' ? t.amount : -t.amount);
-                const dateKey = t.date;
-                dailyBalance[dateKey] = currentBalance; 
-            });
-
-            const balanceLabels = Object.keys(dailyBalance);
-            const balanceData = Object.values(dailyBalance);
-
-            if (balanceChartInstance) balanceChartInstance.destroy();
-
-            const balanceCtx = document.getElementById('balanceChart').getContext('2d');
-            balanceChartInstance = new Chart(balanceCtx, {
+        function renderNetWorthChart(data) {
+            const ctx = document.getElementById('netWorthChart').getContext('2d');
+            netWorthChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: balanceLabels,
+                    labels: data.labels,
                     datasets: [{
-                        label: 'Net Balance',
-                        data: balanceData,
-                        borderColor: var(--primary-color),
-                        tension: 0.1,
-                        fill: false
+                        label: 'Net Worth',
+                        data: data.data,
+                        borderColor: varColor('primary-color'),
+                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                        tension: 0.3,
+                        fill: true,
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        x: {
-                            type: 'category',
-                            title: { display: true, text: 'Date' }
-                        },
-                        y: {
-                            title: { display: true, text: 'Balance (USD)' }
-                        }
+                        y: { beginAtZero: false, grid: { color: varColor('border') } },
+                        x: { grid: { display: false } }
                     }
                 }
             });
+        }
+        
+        function renderCashFlowChart(data) {
+            const ctx = document.getElementById('cashFlowChart').getContext('2d');
+            cashFlowChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'Income',
+                            data: data.incomeData,
+                            backgroundColor: varColor('success'),
+                        },
+                        {
+                            label: 'Expense',
+                            data: data.expenseData,
+                            backgroundColor: varColor('danger'),
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, grid: { color: varColor('border') } }
+                    }
+                }
+            });
+        }
+        
+        function varColor(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim();
         }
 
         // --- Calculator Logic ---
-        
         let currentInput = '0';
+        let previousValue = null;
         let operator = null;
-        let firstOperand = null;
-        let waitingForSecondOperand = false;
+        let shouldResetDisplay = true;
 
-        function updateCalcDisplay() {
-            DOM.calcDisplay.value = currentInput;
+        const display = () => document.getElementById('calc-display');
+
+        window.calcClear = function() {
+            currentInput = '0';
+            previousValue = null;
+            operator = null;
+            shouldResetDisplay = true;
+            display().textContent = currentInput;
         }
 
-        function handleDigit(digit) {
-            if (waitingForSecondOperand) {
-                currentInput = digit;
-                waitingForSecondOperand = false;
+        window.calcInput = function(value) {
+            if (shouldResetDisplay) {
+                currentInput = (value === '.') ? '0.' : value;
+                shouldResetDisplay = false;
+            } else if (value === '.') {
+                if (!currentInput.includes('.')) {
+                    currentInput += '.';
+                }
             } else {
-                currentInput = currentInput === '0' ? digit : currentInput + digit;
+                currentInput = currentInput === '0' ? value : currentInput + value;
             }
-            updateCalcDisplay();
-        }
-
-        function handleDecimal() {
-            if (waitingForSecondOperand) {
-                currentInput = '0.';
-                waitingForSecondOperand = false;
-                updateCalcDisplay();
-                return;
-            }
-            if (!currentInput.includes('.')) {
-                currentInput += '.';
-            }
-            updateCalcDisplay();
-        }
-        
-        function handleOperator(nextOperator) {
-            const inputValue = parseFloat(currentInput);
-
-            if (nextOperator === 'AC') {
-                currentInput = '0';
-                firstOperand = null;
-                operator = null;
-                waitingForSecondOperand = false;
-                updateCalcDisplay();
-                return;
-            }
+            display().textContent = currentInput.slice(0, 15); // limit display length
             
-            if (nextOperator === 'P') { // Plus/Minus
-                currentInput = String(inputValue * -1);
-                updateCalcDisplay();
-                return;
+            if (['+', '-', '*', '/'].includes(value)) {
+                operator = value;
+                previousValue = parseFloat(currentInput);
+                shouldResetDisplay = true;
             }
-
-            if (operator && waitingForSecondOperand) {
-                operator = nextOperator;
-                return;
-            }
-
-            if (firstOperand === null) {
-                firstOperand = inputValue;
-            } else if (operator) {
-                const result = performCalculation(operator, firstOperand, inputValue);
-                currentInput = String(result);
-                firstOperand = result;
-            }
-
-            waitingForSecondOperand = true;
-            operator = nextOperator === '=' ? null : nextOperator;
-            updateCalcDisplay();
         }
 
-        function performCalculation(operator, op1, op2) {
+        window.calcCalculate = function() {
+            if (operator === null || previousValue === null) return;
+
+            const currentValue = parseFloat(currentInput);
+            let result = 0;
+
             switch (operator) {
-                case '+': return op1 + op2;
-                case '-': return op1 - op2;
-                case '*': return op1 * op2;
-                case '/': return op1 / op2;
-                case '%': return op1 * (op2 / 100);
-                default: return op2;
+                case '+':
+                    result = previousValue + currentValue;
+                    break;
+                case '-':
+                    result = previousValue - currentValue;
+                    break;
+                case '*':
+                    result = previousValue * currentValue;
+                    break;
+                case '/':
+                    result = previousValue / currentValue;
+                    break;
             }
-        }
-
-        function attachCalculatorListeners() {
-            document.querySelectorAll('.calc-btn').forEach(button => {
-                button.onclick = () => {
-                    const value = button.getAttribute('data-value');
-                    if (['+', '-', '*', '/', '=', 'AC', 'P', '%'].includes(value)) {
-                        handleOperator(value);
-                    } else if (value === '.') {
-                        handleDecimal();
-                    } else {
-                        handleDigit(value);
-                    }
-                };
-            });
+            
+            // Limit to 4 decimal places for currency focus
+            currentInput = parseFloat(result.toFixed(4)).toString(); 
+            previousValue = null;
+            operator = null;
+            shouldResetDisplay = true;
+            display().textContent = currentInput;
         }
 
 
-        // --- Event Listeners and Initialization ---
-
-        function init() {
-            // Set today's date in the form
-            document.getElementById('date').valueAsDate = new Date();
-
-            // Load profiles and set initial state
-            populateProfileSelect();
-            if (currentProfileName) {
-                loadProfile(currentProfileName);
-            } else {
-                updateDOM();
-            }
-
-            // Transaction Form
-            DOM.transactionForm.addEventListener('submit', addTransaction);
-
-            // Profile Select Change
-            DOM.profileSelect.addEventListener('change', (e) => loadProfile(e.target.value));
-
-            // Settings Modal
-            DOM.navSettings.onclick = () => DOM.settingsModal.classList.add('open');
-            DOM.closeSettings.onclick = () => DOM.settingsModal.classList.remove('open');
-            
-            // New Profile Management
-            DOM.newProfileBtn.onclick = createNewProfile;
-            DOM.deleteProfileBtn.onclick = deleteCurrentProfile;
-            DOM.addCategoryBtn.onclick = addCategory;
-            
-            // Calculator Modal
-            DOM.calcToggle.onclick = () => DOM.calculatorModal.classList.add('open');
-            DOM.closeCalculator.onclick = () => DOM.calculatorModal.classList.remove('open');
-            attachCalculatorListeners();
-            
-            // Data Management Modal (New)
-            DOM.navDataMgmt.onclick = () => {
-                if (!currentProfile) return alert('Please select a profile first to manage data.');
-                DOM.dataMgmtModal.classList.add('open'); 
-            };
-            DOM.closeDataMgmt.onclick = () => DOM.dataMgmtModal.classList.remove('open');
-            
-            // Sample Data Button
-            document.getElementById('sampleBtn').onclick = () => {
-                if (currentProfileName && currentProfile.transactions.length > 0) {
-                    if (!confirm('Loading sample data will merge it with your existing transactions. Continue?')) return;
-                }
-                
-                const sampleData = [
-                    { id: Date.now() + 1, description: 'Monthly Salary', type: 'Income', amount: 5500.00, category: 'Salary', date: '2024-10-01' },
-                    { id: Date.now() + 2, description: 'Rent Payment', type: 'Expense', amount: 1500.00, category: 'Rent', date: '2024-10-01' },
-                    { id: Date.now() + 3, description: 'Grocery Store', type: 'Expense', amount: 120.50, category: 'Groceries', date: '2024-10-02' },
-                    { id: Date.now() + 4, description: 'Investment Dividend', type: 'Income', amount: 250.00, category: 'Investments', date: '2024-10-15' },
-                    { id: Date.now() + 5, description: 'Coffee Shop', type: 'Expense', amount: 5.75, category: 'Entertainment', date: '2024-10-18' }
-                ];
-
-                if (!currentProfile) {
-                    createNewProfile('Sample Profile'); // This loads the profile
-                }
-
-                currentProfile.transactions.push(...sampleData);
-                updateProfileData();
-                updateDOM();
-                alert('Sample data loaded.');
-            };
-
-            // Linking New Modal Buttons to Old Logic
-            // The old hidden buttons contain the actual file/reset logic, we just trigger them.
-            DOM.importDataBtnModal.onclick = () => {
-                DOM.dataMgmtModal.classList.remove('open');
-                DOM.importDataBtn.click();
-            };
-
-            DOM.exportBtnModal.onclick = () => {
-                DOM.dataMgmtModal.classList.remove('open');
-                DOM.exportBtn.click();
-            };
-            
-            DOM.resetBtnModal.onclick = () => {
-                DOM.dataMgmtModal.classList.remove('open');
-                DOM.resetBtn.click();
-            };
-            
-            // Actual Data Logic (Attached to the hidden buttons)
-            DOM.importDataBtn.onclick = importData;
-            DOM.exportBtn.onclick = exportData;
-            DOM.resetBtn.onclick = factoryReset;
+        // --- Initialize ---
+        window.onload = function() {
+            initializeFirebase();
+            document.getElementById('transactionForm').addEventListener('submit', addTransaction);
+            // Initial render of icons
+            lucide.createIcons();
         }
 
-        init();
     </script>
 </body>
 </html>
+              
