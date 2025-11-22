@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MoneyMirror — Dashboard v4.2 (Final: CC Date & Chart Metrics)</title>
+  <title>MoneyMirror — Dashboard v4.3 (Final: CC Limit & Import)</title>
   
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -20,7 +20,7 @@
       --primary: #3b82f6;
       --primary-dark: #2563eb;
       --success: #10b981;
-      --danger: #ef4444;
+      --danger: #ef4444; /* Alert color */
       --border: #cbd5e1;
       --warning: #f97316; /* For Credit Card */
       --opening-balance: #6b21a8; /* Purple for OB */
@@ -82,8 +82,18 @@
     .kpi-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
     .trend-up { color: var(--success); font-weight: 600; } 
     .trend-down { color: var(--danger); font-weight: 600; }
-    .cc-danger { color: var(--warning); font-weight: 600; }
+    .cc-danger-color { color: var(--danger); font-weight: 600; }
+    .cc-warning-color { color: var(--warning); font-weight: 600; }
 
+    /* CC Alert Styles */
+    .cc-alert-high { 
+        background: #fee2e2 !important; /* light red */
+        border-color: var(--danger) !important;
+    }
+    .cc-alert-high .cc-danger-color {
+        color: var(--danger) !important;
+    }
+    
     /* Form Styles */
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; display: block; letter-spacing: 0.5px; }
@@ -153,7 +163,7 @@
     <div>
         <div class="brand">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
-            MoneyMirror <span>v4.2</span>
+            MoneyMirror <span>v4.3</span>
         </div>
 
         <nav>
@@ -188,7 +198,7 @@
             <span>Current Profile</span>
             <span class="sys-val" id="profileNameDisplay">--</span>
         </div>
-        <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v4.2.0 • Final Release</div>
+        <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v4.3.0 • CC Limit & Import</div>
     </div>
   </aside>
 
@@ -200,6 +210,7 @@
         </div>
         <div class="flex-row">
             <button class="btn-outline" id="sampleBtn">Load Sample</button>
+            <button class="btn-primary" id="importDataBtn">Import Data (CSV/JSON)</button>
             <button class="btn-outline" id="exportBtn">Export CSV</button>
         </div>
     </div>
@@ -215,11 +226,15 @@
             <div class="kpi-value" id="kpiExpense">₹0</div>
             <div class="kpi-sub" id="momExpense"></div>
         </div>
-        <div class="card kpi-card col-span-1" style="border-color:var(--warning); background:#fffbeb">
-            <div class="card-title" style="color:var(--warning)">Credit Card Due</div>
+        <div class="card kpi-card col-span-1" id="ccCard" style="border-color:var(--warning); background:#fffbeb">
+            <div class="card-title" id="ccTitle" style="color:var(--warning)">Credit Card Due</div>
             <div class="kpi-value" id="kpiCCDue">₹0</div>
-            <div class="kpi-sub" style="color:var(--warning)">
+            <div class="kpi-sub" style="color:var(--warning); margin-top: 6px; position:relative;">
                 <span id="ccPaymentDate">Next Payment: 10th of Jan</span>
+                <span style="font-weight:600; margin-left:10px;">Limit: <span id="ccLimitDisplay">₹13,000</span></span>
+                <div id="ccAlert" class="hidden" style="position:absolute; right:0; top:0; color:var(--danger)">
+                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                </div>
             </div>
         </div>
         <div class="card kpi-card col-span-1">
@@ -434,11 +449,19 @@
                 </div>
                 <div id="incomeList" style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap"></div>
             </div>
+            
+             <div style="margin-bottom:20px">
+                <label style="margin-bottom:8px">Credit Card Limit</label>
+                <div class="flex-row">
+                    <input id="ccLimitInput" type="number" placeholder="Set Limit (e.g. 13000)" />
+                    <button class="btn-primary" id="saveCCLimit">Save Limit</button>
+                </div>
+            </div>
 
             <div style="border-top:1px solid var(--border); padding-top:15px; margin-top:15px">
                 <label style="color:var(--danger)">Danger Zone</label>
                 <div class="flex-row">
-                    <button class="btn-outline" id="importJson">Import JSON Backup</button>
+                    <button class="btn-outline" id="importJson">Import JSON Backup (Deprecated)</button>
                     <button class="btn-danger" id="resetBtn">Factory Reset Profile</button>
                 </div>
             </div>
@@ -453,9 +476,13 @@
 const BASE_STORAGE_KEY = 'mm_v4_data';
 const BASE_METHOD_KEY = 'mm_v4_methods';
 const BASE_INCOME_KEY = 'mm_v4_income';
+const BASE_SETTINGS_KEY = 'mm_v4_settings';
 
 /* Global Profile State */
 let currentProfile = null;
+
+/* Default Settings */
+const DEFAULT_CC_LIMIT = 13000;
 
 /* Dynamic Key Generation */
 const toKey = (name) => name.toLowerCase().replace(/\s/g, '_').replace(/[^a-z0-9_]/g, '');
@@ -463,6 +490,7 @@ const getStorageKey = (baseKey) => `${baseKey}_${toKey(currentProfile)}`;
 const getTxKey = () => getStorageKey(BASE_STORAGE_KEY);
 const getMethodKey = () => getStorageKey(BASE_METHOD_KEY);
 const getIncomeKey = () => getStorageKey(BASE_INCOME_KEY);
+const getSettingsKey = () => getStorageKey(BASE_SETTINGS_KEY);
 
 
 const CANONICAL_METHODS = {
@@ -476,6 +504,7 @@ const CANONICAL_METHODS = {
 let methodNames = {...CANONICAL_METHODS};
 let incomeSources = ['Salary', 'Freelance', 'Interest'];
 let data = [];
+let settings = { ccLimit: DEFAULT_CC_LIMIT };
 
 /* Options */
 const BASE_CATS = ['Food','Travel','Groceries','Medicine','Shopping','Bills','Rent','Entertainment','EMI','Credit Card Payment','Investments','Insurance','Education','Misc'];
@@ -490,6 +519,7 @@ const INVEST_SUB = {
 /* Utils */
 const uid = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
 const fmt = n => '₹' + Number(n||0).toLocaleString('en-IN', {maximumFractionDigits:2});
+const fmtNoSymbol = n => Number(n||0).toLocaleString('en-IN', {maximumFractionDigits:2});
 
 /* Save/Load Logic */
 const saveAll = () => { 
@@ -497,6 +527,7 @@ const saveAll = () => {
   localStorage.setItem(getTxKey(), JSON.stringify(data)); 
   localStorage.setItem(getMethodKey(), JSON.stringify(methodNames)); 
   localStorage.setItem(getIncomeKey(), JSON.stringify(incomeSources)); 
+  localStorage.setItem(getSettingsKey(), JSON.stringify(settings)); 
   // Store the active profile name for next session
   localStorage.setItem('mm_last_profile', currentProfile);
 };
@@ -508,6 +539,7 @@ function loadProfileData() {
   methodNames = JSON.parse(localStorage.getItem(getMethodKey())) || {...CANONICAL_METHODS};
   incomeSources = JSON.parse(localStorage.getItem(getIncomeKey())) || ['Salary', 'Freelance', 'Interest'];
   data = JSON.parse(localStorage.getItem(getTxKey())) || [];
+  settings = JSON.parse(localStorage.getItem(getSettingsKey())) || { ccLimit: DEFAULT_CC_LIMIT };
 
   // 2. Update UI and Render Dashboard
   document.getElementById('profileNameDisplay').textContent = currentProfile;
@@ -565,7 +597,7 @@ function populateSelects(){
 function populateInvSub(){
   const g = formEls.invGroup.value;
   formEls.invSub.innerHTML = '<option value="">Instrument</option>';
-  if(INVEST_SUB[g]) INVEST_SUB[g].forEach(s=> formEls.invSub.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`));
+  if(INVEST_SUB[g]) INVEST_SUB[g].forEach(s=> formEls.invSub.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`).join(''));
 }
 
 function populateOpeningSub(group){
@@ -623,85 +655,108 @@ function adjustForm(){
 /* CRUD Operations */
 let editId = null;
 
-function addEntry(){
+function addEntry(e){
+  // If e is passed, it means we are using this function for saveEdit, so we skip the ID generation
+  const isImport = e && e.id;
+  
   if (!currentProfile) return alert('Please select a profile first.');
-  const amount = Number(formEls.amount.value);
-  const type = formEls.type.value;
+  const amount = Number(formEls.amount.value) || e.amount;
+  const type = formEls.type.value || e.type;
 
   if(!amount || amount <= 0) return alert('Please enter a valid amount');
   
   const entry = {
-    id: uid(),
+    id: isImport ? e.id : uid(),
     type: type,
     amount: amount,
-    date: formEls.date.value || new Date().toISOString().slice(0,10),
-    desc: formEls.desc.value || '',
+    date: formEls.date.value || e.date || new Date().toISOString().slice(0,10),
+    desc: formEls.desc.value || e.desc || '',
     category: '', method: '', incomeSource: '', 
     investmentGroup: '', investmentSub: '', 
     insuranceType: '', insuranceFor: ''
   };
 
   if(type === 'opening_balance') {
-      const opType = formEls.openingType.value;
-      const opSubSelection = formEls.openingSub.value;
+      const opType = formEls.openingType.value || (e.investmentGroup === 'Cash' ? 'Cash' : 'Investment');
+      const opSubSelection = formEls.openingSub.value || (e.investmentGroup ? `${e.investmentGroup}|${e.investmentSub}` : '');
 
-      if (!opSubSelection) return alert('Please select an asset for the opening balance.');
+      if (!opSubSelection && !isImport) return alert('Please select an asset for the opening balance.');
+      
+      let invGroup = e.investmentGroup;
+      let invSub = e.investmentSub;
 
-      if (opType === 'Cash') {
-          entry.investmentGroup = 'Cash';
-          entry.investmentSub = opSubSelection;
+      if(opType === 'Cash') {
+          invGroup = 'Cash';
+          invSub = opSubSelection;
           
-          // Create a canonical ID for the cash account (e.g., 'savings_a/c')
-          const methodId = toKey(opSubSelection); 
+          const methodId = toKey(invSub); 
           entry.method = methodId;
           
-          // Add this new cash account method if it doesn't exist
           if(!methodNames[methodId]) {
-              methodNames[methodId] = opSubSelection;
-              CANONICAL_METHODS[methodId] = opSubSelection;
+              methodNames[methodId] = invSub;
+              CANONICAL_METHODS[methodId] = invSub;
           }
           entry.category = 'N/A';
-          entry.desc = entry.desc || `Initial Cash Balance: ${opSubSelection}`;
+          entry.desc = entry.desc || `Initial Cash Balance: ${invSub}`;
 
       } else if (opType === 'Investment') {
-          const [invGroup, invSub] = opSubSelection.split('|');
-          entry.investmentGroup = invGroup;
-          entry.investmentSub = invSub;
+          if (opSubSelection.includes('|')) {
+            [invGroup, invSub] = opSubSelection.split('|');
+          } else {
+             // For import case, where invGroup and invSub are already separate fields
+             invGroup = e.investmentGroup;
+             invSub = e.investmentSub;
+          }
+          
           entry.category = 'N/A';
           entry.method = 'N/A';
           entry.desc = entry.desc || `Initial Investment: ${invSub}`;
       }
+      
+      entry.investmentGroup = invGroup;
+      entry.investmentSub = invSub;
+      
   } else {
       // Regular Income or Expense
-      if(!formEls.method.value) return alert('Please select a Payment Method.');
+      entry.method = formEls.method.value || e.method;
+      if(!entry.method && !isImport) return alert('Please select a Payment Method.');
       
-      entry.method = formEls.method.value;
-
       if(type === 'income') {
-        if(!formEls.incomeSource.value) return alert('Please select an Income Source.');
-        entry.incomeSource = formEls.incomeSource.value;
-        entry.category = 'N/A'; // Income transactions are categorized by Type, not Expense Category
+        entry.incomeSource = formEls.incomeSource.value || e.incomeSource || '';
+        if(!entry.incomeSource && !isImport) return alert('Please select an Income Source.');
+        entry.category = 'N/A'; 
       }
       
       if(type === 'expense') {
-        if(!formEls.category.value) return alert('Please select a Category.');
-        entry.category = formEls.category.value;
+        entry.category = formEls.category.value || e.category;
+        if(!entry.category && !isImport) return alert('Please select a Category.');
 
-        if(entry.category === 'Investments' && formEls.invGroup.value) {
-          entry.investmentGroup = formEls.invGroup.value;
-          entry.investmentSub = formEls.invSub.value || 'Unspecified';
+        if(entry.category === 'Investments') {
+          entry.investmentGroup = formEls.invGroup.value || e.investmentGroup || 'Unspecified';
+          entry.investmentSub = formEls.invSub.value || e.investmentSub || 'Unspecified';
         }
         if(entry.category === 'Insurance') {
-          entry.insuranceType = formEls.insType.value || 'General';
-          entry.insuranceFor = formEls.insFor.value || 'Self';
+          entry.insuranceType = formEls.insType.value || e.insuranceType || 'General';
+          entry.insuranceFor = formEls.insFor.value || e.insuranceFor || 'Self';
         }
       }
   }
+  
+  // Clean up if not set by form
+  if (!isImport) {
+    if (type !== 'expense') { entry.category = 'N/A'; }
+    if (type !== 'income') { entry.incomeSource = ''; }
+    if (entry.category !== 'Investments' && entry.type !== 'opening_balance') { entry.investmentGroup = entry.investmentSub = ''; }
+    if (entry.category !== 'Insurance') { entry.insuranceType = entry.insuranceFor = ''; }
+  }
+
 
   data.push(entry);
-  saveAll();
-  renderAll();
-  clearForm();
+  if(!isImport) {
+    saveAll();
+    renderAll();
+    clearForm();
+  }
 }
 
 function clearForm(){
@@ -765,10 +820,13 @@ function saveEdit(){
   const idx = data.findIndex(x=>x.id===editId);
   if(idx === -1) return;
   
-  // To keep the data clean, we remove the old entry and add the new one.
-  // We need to re-populate the methods if the old entry was an OB, so we save first.
-  data.splice(idx, 1); 
-  addEntry(); 
+  // Remove the old entry
+  const oldEntry = data.splice(idx, 1)[0]; 
+  
+  // Call addEntry, which reads current form values and adds a new entry (using a new UID if not explicitly passed)
+  // We pass the old entry as a template, but the form values will overwrite it.
+  addEntry(oldEntry); 
+  
   editId = null;
 }
 
@@ -833,15 +891,7 @@ function renderKPIs(){
     const liquidTransactions = data.filter(d => d.investmentGroup === 'Cash' || d.type === 'income' || d.type === 'expense');
     const totalIn = sum(liquidTransactions.filter(d => d.type === 'income' || (d.type === 'opening_balance' && d.investmentGroup === 'Cash')));
     
-    // Exclude investment/insurance/cc-payment from liquid outflow as they are captured elsewhere (Investments/CC Due) 
-    const liquidOut = sum(liquidTransactions.filter(d => 
-        d.type === 'expense' && 
-        d.category !== 'Investments' && 
-        d.category !== 'Insurance' &&
-        d.category !== 'Credit Card Payment'
-    ));
-
-    // Calculate total money spent/moved out of liquid accounts (including investments and CC payments)
+    // Total money spent/moved out of liquid accounts (including investments and CC payments)
     const totalOutflow = sum(liquidTransactions.filter(d => d.type === 'expense')); 
     const netLiquidity = totalIn - totalOutflow;
 
@@ -849,6 +899,23 @@ function renderKPIs(){
     const ccExpenses = sum(data.filter(d => d.method === 'credit_card' && d.type === 'expense'));
     const ccPayments = sum(data.filter(d => d.category === 'Credit Card Payment' && d.type === 'expense'));
     const creditCardDue = ccExpenses - ccPayments;
+
+    // CC Limit Logic
+    const ccLimit = settings.ccLimit || DEFAULT_CC_LIMIT;
+    const limitExceeded = creditCardDue > ccLimit;
+    const ccCard = document.getElementById('ccCard');
+    const ccTitle = document.getElementById('ccTitle');
+    const ccAlert = document.getElementById('ccAlert');
+    
+    if (limitExceeded) {
+        ccCard.classList.add('cc-alert-high');
+        ccTitle.style.color = 'var(--danger)';
+        ccAlert.classList.remove('hidden');
+    } else {
+        ccCard.classList.remove('cc-alert-high');
+        ccTitle.style.color = 'var(--warning)';
+        ccAlert.classList.add('hidden');
+    }
 
     const calcDelta = (cur, prev) => {
         if(prev === 0 && cur === 0) return 0;
@@ -874,6 +941,7 @@ function renderKPIs(){
     // CC KPI Update
     document.getElementById('kpiCCDue').innerText = fmt(creditCardDue);
     document.getElementById('ccPaymentDate').innerText = `Next Payment: 10th of ${getNextPaymentDate()}`;
+    document.getElementById('ccLimitDisplay').innerText = fmtNoSymbol(ccLimit);
 }
 
 function renderTable(){
@@ -1232,7 +1300,7 @@ document.getElementById('sampleBtn').addEventListener('click', () => {
         // Expense (Nov)
         {id:uid(), type:'expense', amount:12000, category:'Rent', method:'savings_a/c', date:'2025-11-25', desc:'House Rent'},
         {id:uid(), type:'expense', amount:4500, category:'Groceries', method:'credit_card', date:'2025-11-28', desc:'Supermarket Run (CC Used)'},
-        {id:uid(), type:'expense', amount:1500, category:'Food', method:'credit_card', date:'2025-12-08', desc:'Dinner out (CC Used)'},
+        {id:uid(), type:'expense', amount:10000, category:'Food', method:'credit_card', date:'2025-12-08', desc:'Dinner out (CC Used)'}, // This + 4500 = 14500, which exceeds the 13k limit, triggering the alert.
         
         // Investment (Expense) (Nov)
         {id:uid(), type:'expense', amount:10000, category:'Investments', method:'savings_a/c', date:'2025-11-05', desc:'SIP November', investmentGroup:'MFs', investmentSub:'Equity Large Cap'},
@@ -1273,6 +1341,9 @@ function renderSettings(){
         </div>
     `).join('');
     document.getElementById('incomeList').innerHTML = incomeSources.map(s=> `<span class="badge" style="background:#e2e8f0">${s}</span>`).join('');
+    
+    // Set current CC limit in input
+    document.getElementById('ccLimitInput').value = settings.ccLimit || DEFAULT_CC_LIMIT;
 }
 
 window.updateMethodName = (id, val) => { methodNames[id] = val; saveAll(); renderAll(); };
@@ -1298,12 +1369,25 @@ document.getElementById('addIncomeBtn').onclick = () => {
     document.getElementById('newIncome').value = '';
 };
 
+document.getElementById('saveCCLimit').onclick = () => {
+    const limit = Number(document.getElementById('ccLimitInput').value);
+    if(limit > 1000) {
+        settings.ccLimit = limit;
+        saveAll();
+        renderKPIs();
+        alert('Credit Card Limit updated successfully!');
+    } else {
+        alert('Please enter a valid credit card limit (must be greater than ₹1,000).');
+    }
+};
+
 document.getElementById('resetBtn').onclick = () => {
     if(!currentProfile) return;
     if(confirm(`WARNING: This will wipe ALL data for the '${currentProfile}' profile. This action cannot be undone. Continue?`)){
         localStorage.removeItem(getTxKey());
         localStorage.removeItem(getMethodKey());
         localStorage.removeItem(getIncomeKey());
+        localStorage.removeItem(getSettingsKey());
         
         // Switch back to profile selection
         currentProfile = null;
@@ -1317,36 +1401,133 @@ document.getElementById('exportBtn').onclick = () => {
     const header = ['id','type','amount','category','method','date','desc','incomeSource','investmentGroup','investmentSub','insuranceType','insuranceFor'];
     const rows = data.map(e => header.map(k => `"${String(e[k]||'').replace(/"/g,'""')}"`).join(','));
     const csv = [header.join(','), ...rows].join('\n');
-    const blob = new Blob([csv], {type: 'text/csv'});
+    const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `moneymirror_backup_${toKey(currentProfile)}_${new Date().toISOString().slice(0,10)}.csv`; a.click();
 };
 
-document.getElementById('importJson').onclick = () => {
+/* --- Import Logic (CSV & JSON) --- */
+
+document.getElementById('importDataBtn').onclick = () => {
     if (!currentProfile) return alert('Please select a profile to import into.');
-    const input = document.createElement('input'); input.type = 'file'; input.accept = 'application/json';
+    const input = document.createElement('input'); 
+    input.type = 'file'; 
+    // Accept CSV, generic text, and JSON
+    input.accept = '.csv, application/json, text/csv, text/plain'; 
+    
     input.onchange = e => {
         const file = e.target.files[0];
+        if (!file) return;
+
         const reader = new FileReader();
         reader.onload = event => {
+            const content = event.target.result;
+            let importedData = [];
+
             try {
-                const json = JSON.parse(event.target.result);
-                let importedData = Array.isArray(json) ? json : (json.data || json.transactions || []);
-                
-                if (importedData.length > 0 && confirm(`Do you want to REPLACE the current data for '${currentProfile}' with ${importedData.length} imported entries?`)) {
-                    data = importedData; 
-                    saveAll(); renderAll(); alert('Data imported successfully!');
-                    settingsModal.classList.remove('open');
-                } else if (importedData.length === 0) {
-                     alert('File contained no recognizable transaction data.');
+                // Try JSON first
+                const json = JSON.parse(content);
+                importedData = Array.isArray(json) ? json : (json.data || json.transactions || []);
+                if (importedData.length > 0) {
+                     processImportedData(importedData);
+                     return;
                 }
-            } catch(err) { alert('Invalid JSON file'); }
+            } catch(jsonErr) {
+                // If JSON fails, try CSV
+                if (file.name.toLowerCase().endsWith('.csv') || file.type === 'text/csv' || file.type === 'text/plain') {
+                    importedData = parseCSV(content);
+                    if (importedData.length > 0) {
+                        processImportedData(importedData);
+                        return;
+                    }
+                }
+            }
+            alert('Could not parse file. Please ensure it is a valid CSV or a JSON array of transactions.');
         };
         reader.readAsText(file);
     };
     input.click();
 };
 
+function parseCSV(csvText) {
+    const lines = csvText.split('\n').filter(line => line.trim() !== '');
+    if (lines.length < 2) return [];
+
+    const headerLine = lines[0].toLowerCase().trim().replace(/"/g, '');
+    const headers = headerLine.split(',');
+
+    const csvData = [];
+    for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].match(/(?:"[^"]*"|[^,])+/g) || []; // Robust split handling quotes
+        
+        if (values.length !== headers.length) continue; // Skip malformed rows
+        
+        const row = {};
+        headers.forEach((h, index) => {
+            row[h.trim()] = values[index].trim().replace(/^"|"$/g, ''); // Clean surrounding quotes
+        });
+        
+        // Map CSV headers to internal data structure (Simplified mapping)
+        const amount = Number(row.amount) || Number(row.value) || Number(row.txn_amount) || 0;
+        if (amount === 0) continue; // Skip zero amount transactions
+
+        // Attempt to auto-map type/category
+        let type = (row.type || row.txn_type || '').toLowerCase();
+        let category = (row.category || row.expense_category || '').trim();
+
+        if (type.includes('credit')) type = 'income'; // common for salary credit
+        if (type.includes('debit')) type = 'expense';
+        if (!type && category.toLowerCase() === 'salary') type = 'income';
+        if (!type) type = 'expense'; // Default to expense
+
+        const tx = {
+            id: uid(),
+            type: type,
+            amount: amount,
+            date: row.date || row.txn_date || new Date().toISOString().slice(0,10),
+            desc: row.desc || row.description || row.narration || '',
+            category: category,
+            method: toKey(row.method || row.account || 'savings_acct'), 
+            incomeSource: row.income_source || '',
+            // Placeholder for advanced fields, which are unlikely in generic CSV
+            investmentGroup: row.inv_group || '',
+            investmentSub: row.inv_sub || '',
+            insuranceType: row.ins_type || '',
+            insuranceFor: row.ins_for || '',
+        };
+
+        // Basic validation and type enforcement for CSV imports
+        if (tx.type === 'expense' && !BASE_CATS.includes(tx.category)) {
+            tx.category = 'Misc'; // Default unrecognized category to Misc
+        }
+        
+        csvData.push(tx);
+    }
+    return csvData;
+}
+
+function processImportedData(importedData){
+    if(importedData.length === 0) return alert('No valid transactions found in the file.');
+
+    if(confirm(`Do you want to REPLACE the current data for '${currentProfile}' with ${importedData.length} imported entries? (Recommended: Factory Reset first to be sure)`)) {
+        data = importedData; 
+        saveAll(); 
+        renderAll(); 
+        alert('Data imported successfully!');
+    } else if (confirm(`Do you want to MERGE the ${importedData.length} entries into the current data? (Duplicates may occur)`)) {
+        // Simple merge (may cause duplicates if UIDs are not unique)
+        data = data.concat(importedData);
+        saveAll();
+        renderAll();
+        alert('Data merged successfully!');
+    }
+}
+
+// Keep deprecated importJson for backward compatibility but redirect to new button
+document.getElementById('importJson').onclick = () => {
+    alert('Please use the main "Import Data (CSV/JSON)" button for better compatibility.');
+    document.getElementById('importDataBtn').click();
+};
 
 /* Init - Check for last profile and load, otherwise show modal */
 window.onload = () => {
