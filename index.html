@@ -1318,10 +1318,18 @@ function getColorPalette(count) {
     return Array.from({ length: count }, (_, i) => colors[i % colors.length]);
 }
 
+/* FIXED: Do NOT remove canvas when no data; keep it for future renders */
 function renderMainChart(months) {
     if (mainChart) mainChart.destroy();
+
+    const ctx = document.getElementById('mainChart').getContext('2d');
+
     if (data.length === 0) {
-        document.getElementById('mainChart').parentNode.innerHTML = '<div style="text-align:center; padding:50px; color:var(--text-muted)">No data available for Cash Flow.</div>';
+        mainChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: [], datasets: [] },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
         return;
     }
 
@@ -1335,12 +1343,11 @@ function renderMainChart(months) {
     labels.forEach(monthKey => {
         const m = monthlyData[monthKey];
         investmentData.push(m.investment || 0);
-        expenseData.push(m.expense - m.investment || 0); // Exclude investment expense from regular expense bar
+        expenseData.push((m.expense - m.investment) || 0); // Exclude investment expense from regular expense bar
         incomeData.push(m.income || 0);
         netCashFlowData.push(m.netCashFlow || 0);
     });
     
-    const ctx = document.getElementById('mainChart').getContext('2d');
     mainChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -1397,12 +1404,8 @@ function renderMainChart(months) {
                 legend: { position: 'top' },
                 tooltip: { callbacks: { label: (context) => {
                     let label = context.dataset.label || '';
-                    if (label) {
-                        label += ': ';
-                    }
-                    if (context.parsed.y !== null) {
-                        label += fmt(context.parsed.y);
-                    }
+                    if (label) { label += ': '; }
+                    if (context.parsed.y !== null) { label += fmt(context.parsed.y); }
                     return label;
                 } } }
             }
@@ -1417,11 +1420,6 @@ function prepareMonthlyData(data, months) {
     const currentYear = today.getFullYear();
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-    let startIndex = months === 'all' ? 0 : 
-                     (currentMonth - (months - 1) + 12) % 12;
-    let startYear = months === 'all' ? new Date(data.sort((a,b)=>new Date(a.date)-new Date(b.date))[0]?.date || today).getFullYear() : 
-                    currentYear - Math.floor((months - 1) / 12);
-    
     // Build array of month keys to ensure chronological order and inclusion of zero months
     const monthKeys = [];
     if (months === 'all') {
@@ -1434,9 +1432,10 @@ function prepareMonthlyData(data, months) {
             currentIterDate.setMonth(currentIterDate.getMonth() + 1);
         }
     } else {
-        for (let i = 0; i < months; i++) {
-            let month = (currentMonth - (months - 1 - i) + 1200) % 12;
-            let year = currentYear - Math.floor((currentMonth - (months - 1 - i)) / 12);
+        const mCount = Number(months); // ensure number
+        for (let i = 0; i < mCount; i++) {
+            let month = (currentMonth - (mCount - 1 - i) + 1200) % 12;
+            let year = currentYear - Math.floor((currentMonth - (mCount - 1 - i)) / 12);
             monthKeys.push(`${year}-${month}`);
         }
     }
@@ -1662,7 +1661,6 @@ document.getElementById('sampleBtn').addEventListener('click', () => {
         // Investments (Using the new unified sub-types)
         {id:uid(), type:'opening_balance', amount:50000, date:'2025-10-31', desc:'Initial Investment in Large Cap MF', investmentGroup:'Mutual_Funds', investmentSub:INVESTMENT_SUBTYPES['Mutual_Funds'], method:'Mutual_Funds', category:'N/A'},
         {id:uid(), type:'opening_balance', amount:25000, date:'2025-10-31', desc:'Initial Investment in Tata Motors Stock', investmentGroup:'Stocks', investmentSub:INVESTMENT_SUBTYPES['Stocks'], method:'Stocks', category:'N/A'},
-        // Credit Card Balance is *not* an asset, so it should not be an opening_balance. It's tracked via expense/payment.
 
         // --- Income (Nov) ---
         {id:uid(), type:'income', amount:150000, incomeSource:'Salary', method:'salary_acct', date:'2025-11-01', desc:'Monthly Salary Deposit'},
@@ -1673,22 +1671,20 @@ document.getElementById('sampleBtn').addEventListener('click', () => {
         {id:uid(), type:'expense', amount:2000, category:'Insurance', method:'savings_acct', date:'2025-11-05', desc:'Monthly Health Premium', insuranceType:'Health', insuranceFor:'Self'},
         {id:uid(), type:'expense', amount:5000, category:'Shopping', method:'savings_acct', date:'2025-11-15', desc:'New clothes'},
         {id:uid(), type:'expense', amount:1500, category:'Entertainment', method:'cash', date:'2025-11-18', desc:'Movie tickets'},
-        // Investment (Expense) (Nov) - Uses new unified sub-type
+        // Investment (Expense) (Nov)
         {id:uid(), type:'expense', amount:10000, category:'Investments', method:'savings_acct', date:'2025-11-20', desc:'SIP November', investmentGroup:'Mutual_Funds', investmentSub:INVESTMENT_SUBTYPES['Mutual_Funds']},
         
         // --- Expenses (Dec) ---
         {id:uid(), type:'expense', amount:12000, category:'Food', method:'credit_card', date:'2025-12-03', desc:'Travel & Stay Booking'},
-        // CC Payment (Expense) - Reduces Bank Balance, reduces CC Due
+        // CC Payment (Expense)
         {id:uid(), type:'expense', amount:4500, category:'Credit Card Payment', method:'savings_acct', date:'2025-12-10', desc:'CC Bill Payment for November'},
-        // Investment (Expense) (Dec) - Uses new unified sub-type
+        // Investment (Expense) (Dec)
         {id:uid(), type:'expense', amount:10000, category:'Investments', method:'savings_acct', date:'2025-12-20', desc:'SIP December', investmentGroup:'Mutual_Funds', investmentSub:INVESTMENT_SUBTYPES['Mutual_Funds']},
     ];
 
-    // Add new methods for sample data
+    // Reset canonical methods and income sources
     methodNames = {...CANONICAL_METHODS}; 
-    // The keys used in sample (savings_acct, salary_acct, cash, credit_card) are already in CANONICAL_METHODS. No need to add extras unless sample data used a custom one.
-
-    incomeSources = ['Salary', 'Freelance', 'Interest']; // Reset income sources
+    incomeSources = ['Salary', 'Freelance', 'Interest'];
 
     data = s;
     saveAll();
@@ -1975,6 +1971,7 @@ function filterDataByRange(data, range) {
     return data.filter(d => new Date(d.date) >= cutoff);
 }
 
+/* FIXED: Keep canvas; render empty chart if no data */
 function renderNetWorthChart(filteredData) {
     const ctx = document.getElementById('chartNetWorth').getContext('2d');
     const chartType = document.getElementById('chart1Type').value;
@@ -1982,11 +1979,10 @@ function renderNetWorthChart(filteredData) {
     const cumulativeData = [];
 
     // Filter and sort all transactions by date
-    const sortedData = filteredData.sort((a, b) => new Date(a.date) - new Date(b.date));
+    const sortedData = filteredData.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
 
     // Calculate cumulative net worth day by day
     let currentNetWorth = 0;
-    // Use a Map to store the net worth for each unique day
     const dailyNetWorth = new Map();
 
     sortedData.forEach(e => {
@@ -1996,30 +1992,16 @@ function renderNetWorthChart(filteredData) {
         if (e.type === 'income' || (e.type === 'opening_balance' && e.investmentGroup !== 'Cash')) { 
              currentNetWorth += amount;
         } else if (e.type === 'opening_balance' && e.investmentGroup === 'Cash') {
-             // Cash OB is tracked in liquidity but is part of Net Worth
              currentNetWorth += amount;
-        }
-
-        // Expense subtracts from net worth
-        else if (e.type === 'expense') {
-            // For net worth calculation, all expenses count as a reduction from total assets
+        } else if (e.type === 'expense') {
             currentNetWorth -= amount;
         }
         
-        const dateKey = e.date; // Use date string as key (YYYY-MM-DD)
-        dailyNetWorth.set(dateKey, currentNetWorth); // Update net worth for this date
+        const dateKey = e.date; // YYYY-MM-DD
+        dailyNetWorth.set(dateKey, currentNetWorth);
     });
 
-    if (dailyNetWorth.size === 0) {
-        if(chartNetWorth) chartNetWorth.destroy();
-        ctx.canvas.parentNode.innerHTML = '<div style="text-align:center; padding:50px; color:var(--text-muted)">No data available for Net Worth calculation.</div>';
-        return;
-    }
-
-    // Now convert the map to ordered arrays for Chart.js
     const dates = Array.from(dailyNetWorth.keys()).sort(); 
-    
-    // Fill in the gaps (if needed, but for line chart, daily points are enough)
     dates.forEach(date => {
         labels.push(date);
         cumulativeData.push(dailyNetWorth.get(date));
@@ -2045,29 +2027,21 @@ function renderNetWorthChart(filteredData) {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-                x: { 
-                    grid: { display: false },
-                    title: { display: true, text: 'Date' }
-                },
+                x: { grid: { display: false }, title: { display: true, text: 'Date' } },
                 y: {
                     title: { display: true, text: 'Net Worth (₹)' },
-                    ticks: {
-                        callback: (value) => fmt(value) // Format Y-axis labels
-                    }
+                    ticks: { callback: (value) => fmt(value) }
                 }
             },
             plugins: {
                 legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: (context) => `Net Worth: ${fmt(context.parsed.y)}`
-                    }
-                }
+                tooltip: { callbacks: { label: (context) => `Net Worth: ${fmt(context.parsed.y)}` } }
             }
         }
     });
 }
 
+/* FIXED: Keep canvas; render empty chart if no data */
 function renderExpenseDistributionChart(filteredData) {
     const ctx = document.getElementById('chartExpenseDistribution').getContext('2d');
     const expenses = filteredData.filter(d => d.type === 'expense' && d.category !== 'Credit Card Payment');
@@ -2077,12 +2051,6 @@ function renderExpenseDistributionChart(filteredData) {
     let labels = [];
     let chartData = [];
 
-    if (expenses.length === 0) {
-        if(chartExpenseDistribution) chartExpenseDistribution.destroy();
-        ctx.canvas.parentNode.innerHTML = '<div style="text-align:center; padding:50px; color:var(--text-muted)">No expense data available for this period.</div>';
-        return;
-    }
-    
     if (expenseDrilldown.active) {
         // Drilldown View: Show sub-categories/instruments
         titleEl.textContent = `${expenseDrilldown.parentCategory} Breakdown`;
@@ -2095,14 +2063,13 @@ function renderExpenseDistributionChart(filteredData) {
             let subKey;
             if (e.category === 'Investments') {
                 subKey = e.investmentSub || 'Uncategorized Investment';
-                // Use the display name from INVESTMENT_SUBTYPES if possible
                 const subTypeKey = Object.keys(INVESTMENT_SUBTYPES).find(k => INVESTMENT_SUBTYPES[k] === subKey);
                 subKey = subTypeKey ? INVESTMENT_SUBTYPES[subTypeKey] : subKey;
 
             } else if (e.category === 'Insurance') {
                 subKey = `${e.insuranceType} (${e.insuranceFor})` || 'Uncategorized Insurance';
             } else {
-                subKey = e.category; // For non-investment/insurance, category is the sub-level
+                subKey = e.category;
             }
 
             subGrouped[subKey] = (subGrouped[subKey] || 0) + Number(e.amount);
@@ -2116,14 +2083,12 @@ function renderExpenseDistributionChart(filteredData) {
         titleEl.textContent = 'Expense Distribution by Category';
         backBtn.classList.add('hidden');
 
-        // Group by category
         const categoryGrouped = {};
         expenses.forEach(e => {
             const cat = e.category || 'Misc';
             categoryGrouped[cat] = (categoryGrouped[cat] || 0) + Number(e.amount);
         });
 
-        // Filter out categories with zero value after initial grouping
         for (const cat in categoryGrouped) {
             if (categoryGrouped[cat] < 5) delete categoryGrouped[cat];
         }
@@ -2131,7 +2096,6 @@ function renderExpenseDistributionChart(filteredData) {
         labels = Object.keys(categoryGrouped);
         chartData = Object.values(categoryGrouped);
 
-        // Store the main view data for drilldown calculation
         expenseDrilldown.parentData = categoryGrouped;
     }
 
@@ -2166,8 +2130,6 @@ function renderExpenseDistributionChart(filteredData) {
                 if (elements.length > 0 && !expenseDrilldown.active) {
                     const index = elements[0].index;
                     const selectedCategory = labels[index];
-                    
-                    // Only drill down into Investments, Insurance
                     const isDrillable = selectedCategory === 'Investments' || selectedCategory === 'Insurance';
                     if (isDrillable) {
                         expenseDrilldown.active = true;
@@ -2284,6 +2246,15 @@ document.getElementById('calc-toggle').onclick = () => {
     calculator.classList.toggle('hidden');
     calcClear(); // Clear calculator on toggle
 };
+
+/* Missing helper: Clear calculator state */
+function calcClear() {
+  calcDisplay = '0';
+  firstOperand = null;
+  operator = null;
+  waitingForSecondOperand = false;
+  calcUpdateDisplay();
+}
 </script>
 
 </body>
