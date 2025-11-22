@@ -7,6 +7,7 @@
   
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
   
   <style>
     :root {
@@ -24,8 +25,9 @@
       --border: #cbd5e1;
       --warning: #f97316; /* For Credit Card */
       --opening-balance: #6b21a8; /* Purple for OB */
-      --investment-in: #14b8a6; /* Teal for Investment inflow */
-      --investment-out: #f59e0b; /* Amber for Investment outflow */
+      --income: #10b981;
+      --expense: #ef4444;
+      --investment: #14b8a6; /* Teal for Investment inflow/outflow */
       --insurance: #84cc16; /* Lime for Insurance */
     }
 
@@ -53,6 +55,9 @@
     .items-center { align-items: center; }
     .grid { display: grid; }
     .hidden { display: none !important; }
+    .w-full { width: 100%; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mt-4 { margin-top: 1rem; }
 
     /* Layout */
     #sidebar {
@@ -226,6 +231,13 @@
     .btn-secondary:hover {
       background-color: var(--border);
     }
+    .btn-danger {
+      background-color: var(--danger);
+      color: white;
+    }
+    .btn-danger:hover {
+      background-color: #c82333;
+    }
     
     /* Data Table */
     #transaction-table-card {
@@ -253,6 +265,15 @@
     }
     .data-table tr:last-child td {
       border-bottom: none;
+    }
+
+    /* List Items in Settings */
+    .list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem;
+        border-bottom: 1px dashed var(--border);
     }
     
     /* Modal */
@@ -592,7 +613,7 @@
         </div>
       </div>
       <div class="card chart-container" style="grid-column: span 4;">
-        <h3>Yearly Category Breakdown (Expenses)</h3>
+        <h3>Yearly Category Breakdown (Expenses) - Click to drilldown</h3>
         <div class="chart-box">
           <canvas id="yearlyCategoryChart"></canvas>
         </div>
@@ -602,20 +623,21 @@
     <div id="view-settings" class="grid-container hidden">
       <div class="card" style="grid-column: span 2;">
         <h3>Profile Management</h3>
-        <button class="btn btn-secondary mt-2" onclick="showProfileModal()">Change Profile</button>
-        <button class="btn btn-danger mt-2" onclick="confirmDeleteProfile()">Delete Current Profile</button>
+        <button class="btn btn-secondary mt-2 w-full" onclick="showProfileModal()">Change Profile</button>
+        <button class="btn btn-danger mt-2 w-full" onclick="confirmDeleteProfile()">Delete Current Profile</button>
       </div>
       <div class="card" style="grid-column: span 2;">
         <h3>Data Management</h3>
-        <input type="file" id="import-file" accept=".json, .csv" class="mt-2"/>
+        <input type="file" id="import-file" accept=".json, .csv" class="mt-2 w-full"/>
         <select id="import-mode" class="mt-2 p-2 w-full">
           <option value="replace">Replace All Data</option>
           <option value="append">Append to Existing Data</option>
         </select>
-        <button class="btn btn-primary mt-2" onclick="handleImport()">Import Data</button>
-        <button class="btn btn-secondary mt-2" onclick="exportData('json')">Export Data (JSON)</button>
-        <button class="btn btn-secondary mt-2" onclick="exportData('csv')">Export Data (CSV)</button>
+        <button class="btn btn-primary mt-2 w-full" onclick="handleImport()">Import Data</button>
+        <button class="btn btn-secondary mt-2 w-full" onclick="exportData('json')">Export Data (JSON)</button>
+        <button class="btn btn-secondary mt-2 w-full" onclick="exportData('csv')">Export Data (CSV)</button>
       </div>
+      
       <div class="card" style="grid-column: span 4;">
         <h3>Configuration</h3>
         <div class="form-grid" style="grid-template-columns: repeat(2, 1fr);">
@@ -628,8 +650,33 @@
             <input type="text" id="default-currency" value="₹" maxlength="3" />
           </div>
         </div>
-        <button class="btn btn-primary mt-2" onclick="saveConfiguration()">Save Config</button>
+        <button class="btn btn-primary mt-2 w-full" onclick="saveConfiguration()">Save Config</button>
       </div>
+
+      <div class="card" style="grid-column: span 2;">
+        <h3>Payment Methods</h3>
+        <div id="payment-method-list">
+          </div>
+        <div class="flex mt-2 gap-2">
+            <input type="text" id="new-method-name" placeholder="Method Name" class="p-2 flex-grow"/>
+            <select id="new-method-type" class="p-2">
+                <option value="liquid">Liquid</option>
+                <option value="credit">Credit</option>
+            </select>
+            <button class="btn btn-primary" onclick="addMethod()">Add</button>
+        </div>
+      </div>
+
+      <div class="card" style="grid-column: span 2;">
+        <h3>Expense/Income Categories</h3>
+        <div id="category-list">
+          </div>
+        <div class="flex mt-2 gap-2">
+            <input type="text" id="new-category-name" placeholder="Category Name" class="p-2 flex-grow"/>
+            <button class="btn btn-primary" onclick="addCategory()">Add</button>
+        </div>
+      </div>
+
     </div>
 
   </div>
@@ -666,7 +713,6 @@
 
   <script>
     // --- GLOBAL STATE & CONFIGURATION ---
-    const STORAGE_KEY = 'mm_v4_data';
     const CONFIG_KEY = 'mm_v4_config';
     const PROFILE_KEY = 'mm_v4_profiles';
 
@@ -686,7 +732,6 @@
 
     // --- UTILITY FUNCTIONS ---
 
-    // FIX 1: Add missing getColorPalette function for charts
     function getColorPalette(count) {
         const colors = [
             '#3b82f6', // primary blue
@@ -706,6 +751,10 @@
     function formatCurrency(amount) {
       if (amount === undefined || amount === null) return `${data.config.currencySymbol}0`;
       return `${data.config.currencySymbol}${Math.round(amount).toLocaleString('en-IN')}`;
+    }
+
+    function generateUniqueId() {
+        return 'id_' + Math.random().toString(36).substring(2, 9);
     }
 
     function saveState() {
@@ -744,9 +793,17 @@
       }
       if (!hasProfiles) {
          select.innerHTML = '<option value="" disabled selected>No profiles found</option>';
+      } else {
+         // Add a placeholder option if profiles exist but none are selected
+         const placeholder = document.createElement('option');
+         placeholder.value = '';
+         placeholder.textContent = '-- Select an existing profile --';
+         placeholder.disabled = true;
+         placeholder.selected = true;
+         select.prepend(placeholder);
       }
 
-      // Check for a 'last_used' profile (not explicitly defined, but a common pattern)
+      // Check for a 'last_used' profile
       const lastProfile = localStorage.getItem('mm_v4_last_profile');
       if (lastProfile && profiles[lastProfile]) {
         select.value = lastProfile;
@@ -799,15 +856,32 @@
       hideProfileModal();
     }
 
+    function confirmDeleteProfile() {
+        if (!currentProfile) {
+            alert("No profile is currently loaded.");
+            return;
+        }
+        if (confirm(`Are you sure you want to delete the profile "${currentProfile}" and ALL its data? This action is permanent.`)) {
+            let profiles = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}');
+            delete profiles[currentProfile];
+            localStorage.setItem(PROFILE_KEY, JSON.stringify(profiles));
+            localStorage.removeItem('mm_v4_last_profile');
+
+            currentProfile = null;
+            data = getDefaultData(); // Reset data to defaults
+            alert(`Profile "${currentProfile}" deleted.`);
+            showProfileModal();
+        }
+    }
 
     function getDefaultData() {
         return {
           transactions: [],
           methods: [
-            { id: 'bank_a', name: 'Bank A (Checking)', type: 'liquid', balance: 0 },
-            { id: 'bank_b', name: 'Bank B (Savings)', type: 'liquid', balance: 0 },
-            { id: 'cash', name: 'Physical Cash', type: 'liquid', balance: 0 },
-            { id: 'credit_card', name: 'Credit Card', type: 'credit', balance: 0 },
+            { id: generateUniqueId(), name: 'Bank A (Checking)', type: 'liquid', balance: 0 },
+            { id: generateUniqueId(), name: 'Bank B (Savings)', type: 'liquid', balance: 0 },
+            { id: generateUniqueId(), name: 'Physical Cash', type: 'liquid', balance: 0 },
+            { id: generateUniqueId(), name: 'Credit Card', type: 'credit', balance: 0 },
           ],
           categories: [
             'Groceries', 'Rent/EMI', 'Transportation', 'Utilities', 'Entertainment', 'Healthcare', 'Salary', 'Freelance', 'Other Income', 'CC Payment'
@@ -819,14 +893,14 @@
     function loadSampleDataAndInit() {
       data = getDefaultData();
       data.transactions = [
-        { id: Date.now() - 10000, type: 'opening_balance', amount: 50000, date: '2024-01-01', method: 'bank_a', category: 'Opening Balance', description: 'Initial balance', timestamp: Date.now() - 10000 },
-        { id: Date.now() - 9000, type: 'income', amount: 80000, date: '2024-05-01', method: 'bank_a', category: 'Salary', description: 'May Salary', timestamp: Date.now() - 9000 },
-        { id: Date.now() - 8000, type: 'expense', amount: 15000, date: '2024-05-05', method: 'bank_a', category: 'Rent/EMI', description: 'Rent Payment', timestamp: Date.now() - 8000 },
-        { id: Date.now() - 7000, type: 'expense', amount: 500, date: '2024-05-10', method: 'cash', category: 'Transportation', description: 'Bus Fare', timestamp: Date.now() - 7000 },
-        { id: Date.now() - 6000, type: 'expense', amount: 3000, date: '2024-05-15', method: 'credit_card', category: 'Groceries', description: 'Supermarket shopping', timestamp: Date.now() - 6000 },
-        { id: Date.now() - 5000, type: 'expense', amount: 10000, date: '2024-05-20', method: 'bank_a', category: 'CC Payment', description: 'Credit Card Bill Payment', timestamp: Date.now() - 5000, isCCPayment: true },
-        { id: Date.now() - 4000, type: 'investment', amount: 5000, date: '2024-06-01', method: 'bank_a', investmentGroup: 'mf', investmentSub: 'Axis Bluechip', description: 'SIP June', timestamp: Date.now() - 4000 },
-        { id: Date.now() - 3000, type: 'expense', amount: 8000, date: '2024-06-05', method: 'credit_card', category: 'Entertainment', description: 'Concert Tickets', timestamp: Date.now() - 3000 },
+        { id: Date.now() - 100000, type: 'opening_balance', amount: 50000, date: '2024-01-01', method: data.methods[0].id, category: 'Opening Balance', description: 'Initial balance', timestamp: Date.now() - 100000 },
+        { id: Date.now() - 90000, type: 'income', amount: 80000, date: '2024-05-01', method: data.methods[0].id, category: 'Salary', description: 'May Salary', timestamp: Date.now() - 90000 },
+        { id: Date.now() - 80000, type: 'expense', amount: 15000, date: '2024-05-05', method: data.methods[0].id, category: 'Rent/EMI', description: 'Rent Payment', timestamp: Date.now() - 80000 },
+        { id: Date.now() - 70000, type: 'expense', amount: 500, date: '2024-05-10', method: data.methods[2].id, category: 'Transportation', description: 'Bus Fare', timestamp: Date.now() - 70000 },
+        { id: Date.now() - 60000, type: 'expense', amount: 3000, date: '2024-05-15', method: data.methods[3].id, category: 'Groceries', description: 'Supermarket shopping', timestamp: Date.now() - 60000 },
+        { id: Date.now() - 50000, type: 'expense', amount: 10000, date: '2024-05-20', method: data.methods[0].id, category: 'CC Payment', description: 'Credit Card Bill Payment', timestamp: Date.now() - 50000, isCCPayment: true },
+        { id: Date.now() - 40000, type: 'investment', amount: 5000, date: '2024-06-01', method: data.methods[0].id, investmentGroup: 'mf', investmentSub: 'Axis Bluechip', description: 'SIP June', timestamp: Date.now() - 40000 },
+        { id: Date.now() - 30000, type: 'expense', amount: 8000, date: '2024-06-05', method: data.methods[3].id, category: 'Entertainment', description: 'Concert Tickets', timestamp: Date.now() - 30000 },
       ];
       currentProfile = 'SampleDataProfile';
       localStorage.setItem('mm_v4_last_profile', currentProfile);
@@ -849,8 +923,12 @@
 
       // Reset liquid method balances for recalculation
       data.methods.forEach(m => {
-        if (m.type === 'liquid' || m.type === 'credit') {
+        if (m.type === 'liquid') {
             m.balance = 0;
+        }
+        if (m.type === 'credit' && m.name.toLowerCase().includes('credit card')) {
+            // Only track the main CC debt for the KPI if the method is a 'Credit Card'
+            creditCardDue = 0;
         }
       });
       
@@ -876,20 +954,16 @@
           if (method) {
             if (method.type === 'liquid') {
               method.balance += t.amount * sign;
-            } else if (method.type === 'credit') {
+            } else if (method.type === 'credit' && method.name.toLowerCase().includes('credit card')) {
+              // This is specifically for the Credit Card DUE KPI
               if (isExpense && !t.isCCPayment) {
-                // CC Expenses increase the DUE amount (negative balance)
                 creditCardDue += t.amount;
               } else if (isExpense && t.isCCPayment) {
-                // CC Payments decrease the DUE amount
                 creditCardDue -= t.amount;
               }
             }
           }
         });
-
-      // Net Worth is calculated cumulatively (Historical Cost)
-      // Liquid Balances are calculated based on all transactions to date
 
       // 2. Calculate Monthly KPIs (Current Month only)
       data.transactions.filter(t => {
@@ -901,7 +975,6 @@
           } else if (t.type === 'expense' && t.category !== 'CC Payment') {
               monthlyExpense += t.amount;
           }
-          // Note: Investments/Insurance are not counted in "Monthly Expense" KPI
       });
       
       // 3. Update UI
@@ -927,7 +1000,7 @@
       document.getElementById('cc-limit-text').textContent = `Limit: ${formatCurrency(data.config.ccLimit)}`;
 
       saveState(); // Save balances back to methods
-      renderCharts();
+      renderCharts(); // Render primary dashboard charts
     }
 
     // --- CHARTING LOGIC ---
@@ -937,7 +1010,6 @@
       const today = new Date();
       let currentDate = new Date(today.getFullYear(), today.getMonth() - filterDuration + 1, 1);
       
-      // FIX 2 RETAINED: Correct loop to include the current month
       while (currentDate <= today) {
         const monthYearKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
         const monthName = currentDate.toLocaleString('default', { month: 'short' });
@@ -962,7 +1034,6 @@
           if (t.type === 'income' || t.type === 'opening_balance') {
             monthlyData[monthYearKey].income += t.amount;
           } else if (t.type === 'expense' || t.type === 'insurance') {
-            // Include insurance in expense for the bar chart comparison
             monthlyData[monthYearKey].expense += t.amount;
           } else if (t.type === 'investment') {
             monthlyData[monthYearKey].investment += t.amount;
@@ -1007,37 +1078,8 @@
 
       return { labels, data: dataPoints };
     }
-
-    function calculateCumulativeNetWorth(transactions) {
-        transactions.sort((a, b) => new Date(a.date) - new Date(b.date) || a.timestamp - b.timestamp);
-        let cumulativeNetWorth = 0;
-        const netWorthHistory = [];
-        const labels = [];
-        
-        transactions.forEach(t => {
-            const sign = ['income', 'opening_balance'].includes(t.type) ? 1 : -1;
-            const isExpense = t.type === 'expense';
-            const isInvestment = t.type === 'investment';
-            const isInsurance = t.type === 'insurance';
-
-            if (sign === 1) {
-                cumulativeNetWorth += t.amount;
-            } else if (isExpense || isInvestment || isInsurance) {
-                cumulativeNetWorth -= t.amount;
-            }
-
-            // Only plot points where the value changes or at the end of a date
-            if (labels.length === 0 || labels[labels.length - 1] !== t.date) {
-                labels.push(t.date);
-                netWorthHistory.push(cumulativeNetWorth);
-            } else {
-                netWorthHistory[netWorthHistory.length - 1] = cumulativeNetWorth;
-            }
-        });
-
-        return { labels, data: netWorthHistory };
-    }
     
+    // --- Dashboard Charts (Monthly Flow and Wallet) ---
     function renderCharts() {
       // 1. Monthly Bar Chart (Cash Flow & Investments)
       const monthlyData = calculateMonthlyData(data.transactions, 6);
@@ -1051,20 +1093,17 @@
             {
               label: 'Income',
               data: monthlyData.incomeData,
-              // FIX: Replaced invalid var(...) function with literal hex code
-              backgroundColor: '#10b981', 
+              backgroundColor: '#10b981', // FIX: Use literal hex code
             },
             {
               label: 'Expense & Insurance',
               data: monthlyData.expenseData,
-              // FIX: Replaced invalid var(...) function with literal hex code
-              backgroundColor: '#ef4444',
+              backgroundColor: '#ef4444', // FIX: Use literal hex code
             },
             {
               label: 'Investment',
               data: monthlyData.investmentData,
-              // FIX: Replaced invalid var(...) function with literal hex code
-              backgroundColor: '#14b8a6',
+              backgroundColor: '#14b8a6', // FIX: Use literal hex code
             },
           ]
         },
@@ -1103,38 +1142,136 @@
           }
         }
       });
-
-      // 3. Cumulative Net Worth (Advanced Analytics)
-      if (currentView === 'analytics') {
-          const cumulativeData = calculateCumulativeNetWorth(data.transactions);
-          const cumulativeCtx = document.getElementById('cumulativeNetWorthChart').getContext('2d');
-          if (charts.cumulativeNetWorthChart) charts.cumulativeNetWorthChart.destroy();
-          charts.cumulativeNetWorthChart = new Chart(cumulativeCtx, {
-              type: 'line',
-              data: {
-                  labels: cumulativeData.labels,
-                  datasets: [{
-                      label: 'Net Worth',
-                      data: cumulativeData.data,
-                      // FIX: Replaced invalid var(...) function with literal hex code
-                      borderColor: '#3b82f6',
-                      backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                      tension: 0.2,
-                      fill: true
-                  }]
-              },
-              options: {
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  scales: {
-                      x: { type: 'time', time: { unit: 'day' } },
-                      y: { beginAtZero: false }
-                  }
-              }
-          });
-      }
     }
 
+    // --- Advanced Analytics Charts ---
+
+    function calculateCumulativeNetWorth(transactions) {
+        transactions.sort((a, b) => new Date(a.date) - new Date(b.date) || a.timestamp - b.timestamp);
+        let cumulativeNetWorth = 0;
+        const netWorthHistory = [];
+        const labels = [];
+        
+        transactions.forEach(t => {
+            const sign = ['income', 'opening_balance'].includes(t.type) ? 1 : -1;
+            const isExpense = t.type === 'expense';
+            const isInvestment = t.type === 'investment';
+            const isInsurance = t.type === 'insurance';
+
+            if (sign === 1) {
+                cumulativeNetWorth += t.amount;
+            } else if (isExpense || isInvestment || isInsurance) {
+                cumulativeNetWorth -= t.amount;
+            }
+
+            // Only plot points where the value changes or at the end of a date
+            if (labels.length === 0 || labels[labels.length - 1] !== t.date) {
+                labels.push(t.date);
+                netWorthHistory.push(cumulativeNetWorth);
+            } else {
+                netWorthHistory[netWorthHistory.length - 1] = cumulativeNetWorth;
+            }
+        });
+
+        return { labels, data: netWorthHistory };
+    }
+
+    function calculateYearlyCategoryData(transactions) {
+        const yearlyData = {};
+        const expenseTransactions = transactions.filter(t => t.type === 'expense' && t.category !== 'CC Payment');
+        
+        expenseTransactions.forEach(t => {
+            const year = new Date(t.date).getFullYear();
+            if (!yearlyData[year]) yearlyData[year] = {};
+            
+            const category = t.category;
+            yearlyData[year][category] = (yearlyData[year][category] || 0) + t.amount;
+        });
+        
+        return yearlyData;
+    }
+
+    function renderYearlyCategoryChart(yearlyData) {
+        const currentYear = new Date().getFullYear();
+        const yearData = yearlyData[currentYear] || {};
+        
+        const labels = Object.keys(yearData);
+        const dataPoints = Object.values(yearData);
+        
+        const yearlyCtx = document.getElementById('yearlyCategoryChart').getContext('2d');
+        if (charts.yearlyCategoryChart) charts.yearlyCategoryChart.destroy();
+        
+        charts.yearlyCategoryChart = new Chart(yearlyCtx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: dataPoints,
+                    backgroundColor: getColorPalette(labels.length),
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right' },
+                    title: { display: true, text: `Yearly Expense Breakdown (${currentYear})` }
+                },
+                onClick: (e, elements) => {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const category = labels[index];
+                        alert(`Drilldown: Showing all transactions for ${category} in ${currentYear}`);
+                        // In a production app, this would filter the transaction table
+                        switchView('transactions'); 
+                    }
+                }
+            }
+        });
+    }
+
+    function renderAdvancedCharts() {
+        if (currentView !== 'analytics') return;
+        
+        // 1. Cumulative Net Worth (Historical Cost)
+        const cumulativeData = calculateCumulativeNetWorth(data.transactions);
+        const cumulativeCtx = document.getElementById('cumulativeNetWorthChart').getContext('2d');
+        if (charts.cumulativeNetWorthChart) charts.cumulativeNetWorthChart.destroy();
+        charts.cumulativeNetWorthChart = new Chart(cumulativeCtx, {
+            type: 'line',
+            data: {
+                labels: cumulativeData.labels,
+                datasets: [{
+                    label: 'Net Worth',
+                    data: cumulativeData.data,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.2,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { 
+                        type: 'time', 
+                        time: { unit: 'day', tooltipFormat: 'MMM D, YYYY' },
+                        title: { display: true, text: 'Date' }
+                    },
+                    y: { 
+                        beginAtZero: false,
+                        title: { display: true, text: 'Net Worth' } 
+                    }
+                }
+            }
+        });
+
+        // 2. Yearly Category Breakdown (Expense Drilldown)
+        const yearlyData = calculateYearlyCategoryData(data.transactions);
+        renderYearlyCategoryChart(yearlyData);
+    }
 
     // --- TRANSACTION & FORM HANDLING ---
     
@@ -1186,7 +1323,11 @@
       
       // Opening Balance is simple, only needs amount, date, method, description
       if (type === 'opening_balance') {
-        document.getElementById('method').value = data.methods.find(m => m.type === 'liquid')?.id || '';
+        // Ensure a liquid method is selected by default
+        const liquidMethod = data.methods.find(m => m.type === 'liquid');
+        if (liquidMethod) {
+            document.getElementById('method').value = liquidMethod.id;
+        }
       }
     }
 
@@ -1307,9 +1448,11 @@
       
       if (viewName === 'transactions') {
         renderTransactionTable();
+        handleTypeChange(); // Ensure form groups are correct on switch
       } else if (viewName === 'analytics') {
-        // Redraw complex chart on view switch
-        renderCharts();
+        renderAdvancedCharts();
+      } else if (viewName === 'settings') {
+        renderSettingsData();
       }
     }
     
@@ -1337,6 +1480,118 @@
       document.getElementById('default-currency').value = data.config.currencySymbol;
     }
 
+    function renderSettingsData() {
+        renderConfiguration();
+        
+        // 1. Render Payment Methods
+        const methodList = document.getElementById('payment-method-list');
+        methodList.innerHTML = '';
+        data.methods.forEach(m => {
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerHTML = `
+                <span>${m.name} (${m.type.charAt(0).toUpperCase() + m.type.slice(1)})</span>
+                <button class="btn btn-danger btn-sm" onclick="deleteMethod('${m.id}')">Delete</button>
+            `;
+            methodList.appendChild(div);
+        });
+
+        // 2. Render Categories
+        const categoryList = document.getElementById('category-list');
+        categoryList.innerHTML = '';
+        data.categories.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerHTML = `
+                <span>${c}</span>
+                <button class="btn btn-danger btn-sm" onclick="deleteCategory('${c}')">Delete</button>
+            `;
+            categoryList.appendChild(div);
+        });
+
+        // Re-populate form options just in case
+        populateFormOptions();
+    }
+
+    function addMethod() {
+        const name = document.getElementById('new-method-name').value.trim();
+        const type = document.getElementById('new-method-type').value;
+
+        if (!name) {
+            alert("Method name cannot be empty.");
+            return;
+        }
+
+        if (data.methods.some(m => m.name.toLowerCase() === name.toLowerCase())) {
+            alert("A method with this name already exists.");
+            return;
+        }
+
+        data.methods.push({
+            id: generateUniqueId(),
+            name: name,
+            type: type,
+            balance: 0 // Will be recalculated from transactions
+        });
+
+        document.getElementById('new-method-name').value = '';
+        updateDashboard();
+        renderSettingsData();
+    }
+
+    function deleteMethod(id) {
+        const method = data.methods.find(m => m.id === id);
+        if (!method) return;
+
+        if (confirm(`Are you sure you want to delete the method "${method.name}"? This will move all its transactions to the first available liquid method.`)) {
+            // Reassign transactions to a default method before deleting
+            const defaultMethod = data.methods.find(m => m.type === 'liquid' && m.id !== id);
+            
+            if (defaultMethod) {
+                data.transactions.forEach(t => {
+                    if (t.method === id) {
+                        t.method = defaultMethod.id;
+                    }
+                });
+            } else {
+                alert("Cannot delete the last available method.");
+                return;
+            }
+
+            data.methods = data.methods.filter(m => m.id !== id);
+            updateDashboard();
+            renderSettingsData();
+        }
+    }
+
+    function addCategory() {
+        const name = document.getElementById('new-category-name').value.trim();
+
+        if (!name) {
+            alert("Category name cannot be empty.");
+            return;
+        }
+
+        if (data.categories.some(c => c.toLowerCase() === name.toLowerCase())) {
+            alert("A category with this name already exists.");
+            return;
+        }
+
+        data.categories.push(name);
+
+        document.getElementById('new-category-name').value = '';
+        updateDashboard();
+        renderSettingsData();
+    }
+
+    function deleteCategory(name) {
+        if (confirm(`Are you sure you want to delete the category "${name}"? This will remove it from future selections, but existing transactions will retain it.`)) {
+            data.categories = data.categories.filter(c => c !== name);
+            updateDashboard();
+            renderSettingsData();
+        }
+    }
+
     // --- DATA IMPORT/EXPORT ---
     
     function handleImport() {
@@ -1350,30 +1605,34 @@
       reader.onload = function(event) {
         try {
           const content = event.target.result;
-          let importedTransactions;
+          let importedData;
           
           if (file.name.endsWith('.json')) {
-            importedTransactions = JSON.parse(content).transactions;
+            importedData = JSON.parse(content);
           } else if (file.name.endsWith('.csv')) {
-            importedTransactions = parseCSV(content);
+             // CSV only imports transactions, must map back to current data structure
+             importedData = { transactions: parseCSV(content) };
           } else {
             alert("Unsupported file type. Please use JSON or CSV.");
             return;
           }
 
           if (importMode === 'replace') {
-            data.transactions = importedTransactions;
-            alert(`Successfully replaced data with ${importedTransactions.length} transactions.`);
+            // Replace everything except config
+            data.transactions = importedData.transactions || [];
+            data.methods = importedData.methods || getDefaultData().methods;
+            data.categories = importedData.categories || getDefaultData().categories;
+            alert(`Successfully replaced data with ${data.transactions.length} transactions.`);
           } else {
             // Simple append - assumes no conflict checking
-            data.transactions = data.transactions.concat(importedTransactions);
-            alert(`Successfully appended ${importedTransactions.length} transactions.`);
+            data.transactions = data.transactions.concat(importedData.transactions || []);
+            alert(`Successfully appended ${importedData.transactions.length || 0} transactions.`);
           }
           
           updateDashboard();
           fileInput.value = ''; // Clear file input
         } catch (error) {
-          alert("Error processing file: " + error.message);
+          alert("Error processing file. Please ensure it is a valid MoneyMirror export format.");
           console.error(error);
         }
       };
@@ -1479,6 +1738,8 @@
       calculateKPIs();
       renderConfiguration();
       renderTransactionTable();
+      // Note: Charts and Settings data are rendered on view switch/explicit call
+      saveState();
     }
     
     function initApplication() {
@@ -1630,8 +1891,8 @@
     });
 
     // Toggle visibility on click
+    const calculator = document.getElementById('calculator');
     document.getElementById('calc-toggle').onclick = () => {
-        const calculator = document.getElementById('calculator');
         calculator.classList.toggle('hidden');
         if (!calculator.classList.contains('hidden')) {
             // Ensure display is correct when opening
