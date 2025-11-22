@@ -686,7 +686,7 @@
 
     // --- UTILITY FUNCTIONS ---
 
-    // FIX 1: Missing getColorPalette function for charts
+    // FIX 1: Add missing getColorPalette function for charts
     function getColorPalette(count) {
         const colors = [
             '#3b82f6', // primary blue
@@ -937,6 +937,7 @@
       const today = new Date();
       let currentDate = new Date(today.getFullYear(), today.getMonth() - filterDuration + 1, 1);
       
+      // FIX 2 RETAINED: Correct loop to include the current month
       while (currentDate <= today) {
         const monthYearKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
         const monthName = currentDate.toLocaleString('default', { month: 'short' });
@@ -1050,17 +1051,20 @@
             {
               label: 'Income',
               data: monthlyData.incomeData,
-              backgroundColor: var('--success', '#10b981'),
+              // FIX: Replaced invalid var(...) function with literal hex code
+              backgroundColor: '#10b981', 
             },
             {
               label: 'Expense & Insurance',
               data: monthlyData.expenseData,
-              backgroundColor: var('--danger', '#ef4444'),
+              // FIX: Replaced invalid var(...) function with literal hex code
+              backgroundColor: '#ef4444',
             },
             {
               label: 'Investment',
               data: monthlyData.investmentData,
-              backgroundColor: var('--investment-in', '#14b8a6'),
+              // FIX: Replaced invalid var(...) function with literal hex code
+              backgroundColor: '#14b8a6',
             },
           ]
         },
@@ -1112,7 +1116,8 @@
                   datasets: [{
                       label: 'Net Worth',
                       data: cumulativeData.data,
-                      borderColor: var('--primary', '#3b82f6'),
+                      // FIX: Replaced invalid var(...) function with literal hex code
+                      borderColor: '#3b82f6',
                       backgroundColor: 'rgba(59, 130, 246, 0.1)',
                       tension: 0.2,
                       fill: true
