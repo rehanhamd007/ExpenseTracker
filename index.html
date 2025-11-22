@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MoneyMirror — Dashboard v3.3 (Profile Ready)</title>
+  <title>MoneyMirror — Dashboard v4.0 (Final: Opening Balance Type)</title>
   
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -22,6 +22,8 @@
       --success: #10b981;
       --danger: #ef4444;
       --border: #cbd5e1;
+      --warning: #f97316; /* For Credit Card */
+      --opening-balance: #6b21a8; /* Purple for OB */
     }
 
     * { box-sizing: border-box; }
@@ -79,10 +81,11 @@
     .kpi-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
     .trend-up { color: var(--success); font-weight: 600; } 
     .trend-down { color: var(--danger); font-weight: 600; }
+    .cc-danger { color: var(--warning); font-weight: 600; }
 
     /* Form Styles */
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    label { font-size: 11px; font-weight: 70-0; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; display: block; letter-spacing: 0.5px; }
+    label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; display: block; letter-spacing: 0.5px; }
     input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 13px; background: #f8fafc; outline: none; transition: border 0.2s; }
     input:focus, select:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
     
@@ -106,7 +109,8 @@
     .badge-expense { background: #fee2e2; color: #991b1b; }
     .badge-inv { background: #e0f2fe; color: #075985; }
     .badge-ins { background: #f3e8ff; color: #6b21a8; }
-    .badge-opening { background: #fffbeb; color: #b45309; }
+    .badge-opening { background: #efe6ff; color: var(--opening-balance); } /* Lighter Purple */
+    .badge-cc { background: #fef3c7; color: #b45309; }
 
     /* Utils */
     .flex-row { display: flex; gap: 10px; align-items: center; }
@@ -148,7 +152,7 @@
     <div>
         <div class="brand">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
-            MoneyMirror <span>v3.3</span>
+            MoneyMirror <span>v4.0</span>
         </div>
 
         <nav>
@@ -167,7 +171,7 @@
             <div class="nav-group">
                 <div class="nav-label">Configuration</div>
                 <div class="nav-item" id="navSwitchProfile">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 4 0 0 0-4-4H8a4 4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                     Switch Profile
                 </div>
                 <div class="nav-item" id="navSettings">
@@ -183,7 +187,7 @@
             <span>Current Profile</span>
             <span class="sys-val" id="profileNameDisplay">--</span>
         </div>
-        <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v3.3.0 • Profile Segregated</div>
+        <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v4.0.0 • Final Release</div>
     </div>
   </aside>
 
@@ -210,15 +214,23 @@
             <div class="kpi-value" id="kpiExpense">₹0</div>
             <div class="kpi-sub" id="momExpense"></div>
         </div>
+        <div class="card kpi-card col-span-1" style="border-color:var(--warning); background:#fffbeb">
+            <div class="card-title" style="color:var(--warning)">Credit Card Due</div>
+            <div class="kpi-value" id="kpiCCDue">₹0</div>
+            <div class="kpi-sub" style="color:var(--warning)">
+                <span id="ccPaymentDate">Next Payment: 10th Dec</span>
+            </div>
+        </div>
         <div class="card kpi-card col-span-1">
             <div class="card-title" style="color:var(--primary)">Net Liquidity</div>
             <div class="kpi-value" id="kpiNet">₹0</div>
             <div class="kpi-sub">Total Available Cash</div>
         </div>
-        <div class="card kpi-card col-span-1">
-            <div class="card-title" style="color:#0ea5e9">Total Investment Value</div>
-            <div class="kpi-value" id="kpiInvest">₹0</div>
-            <div class="kpi-sub" id="momInvest"></div>
+        
+        <div class="card kpi-card col-span-4" style="background:#e0f2fe; border-color:#075985;">
+             <div class="card-title" style="color:#075985">Total Investment Value (Historical Cost)</div>
+             <div class="kpi-value" id="kpiInvest">₹0</div>
+             <div class="kpi-sub" id="momInvest" style="color:#075985"></div>
         </div>
     </div>
 
@@ -245,7 +257,11 @@
                 <div class="form-grid">
                     <div>
                         <label>Type</label>
-                        <select id="type"><option value="expense">Expense</option><option value="income">Income</option></select>
+                        <select id="type">
+                            <option value="expense">Expense</option>
+                            <option value="income">Income</option>
+                            <option value="opening_balance">Opening Balance</option>
+                        </select>
                     </div>
                     <div>
                         <label>Date</label>
@@ -258,35 +274,46 @@
                     <input id="amount" type="number" placeholder="0.00" style="font-weight:700; font-size:16px" step="any" />
                 </div>
 
-                <div class="form-grid">
-                    <div>
-                        <label>Category</label>
-                        <select id="category"></select>
-                    </div>
-                    <div>
-                        <label>Method</label>
-                        <select id="method"></select>
-                    </div>
-                </div>
-
-                <div id="incomeSourceRow" class="hidden">
-                    <label>Source</label>
-                    <select id="incomeSource"></select>
-                </div>
-
-                <div id="investmentRow" class="hidden">
-                    <label>Investment Details</label>
+                <div id="openingBalanceRow" class="">
+                    <label>Asset Type</label>
                     <div class="flex-row">
-                        <select id="invGroup"><option value="">Group</option><option value="MFs">MFs</option><option value="Commodities">Commodities</option><option value="Stocks">Stocks</option></select>
-                        <select id="invSub"><option value="">Instrument</option></select>
+                        <select id="openingType"><option value="Cash">Cash (Liquid)</option><option value="Investment">Investment Asset</option></select>
+                        <select id="openingSub" disabled><option value="">Select Asset</option></select>
                     </div>
                 </div>
 
-                <div id="insuranceRow" class="hidden">
-                    <label>Insurance Details</label>
-                    <div class="flex-row">
-                        <select id="insType"><option value="">Type</option><option value="Health">Health</option><option value="Life">Life</option></select>
-                        <select id="insFor"><option value="">Insured</option><option value="Self">Self</option><option value="Family">Family</option></select>
+
+                <div id="regularFields">
+                    <div class="form-grid">
+                        <div>
+                            <label>Category</label>
+                            <select id="category"></select>
+                        </div>
+                        <div>
+                            <label>Method</label>
+                            <select id="method"></select>
+                        </div>
+                    </div>
+
+                    <div id="incomeSourceRow" class="hidden">
+                        <label>Source</label>
+                        <select id="incomeSource"></select>
+                    </div>
+
+                    <div id="investmentRow" class="hidden">
+                        <label>Investment Details</label>
+                        <div class="flex-row">
+                            <select id="invGroup"><option value="">Group</option><option value="Cash">Cash</option><option value="MFs">MFs</option><option value="Commodities">Commodities</option><option value="Stocks">Stocks</option></select>
+                            <select id="invSub"><option value="">Instrument</option></select>
+                        </div>
+                    </div>
+                    
+                    <div id="insuranceRow" class="hidden">
+                        <label>Insurance Details</label>
+                        <div class="flex-row">
+                            <select id="insType"><option value="">Type</option><option value="Health">Health</option><option value="Life">Life</option></select>
+                            <select id="insFor"><option value="">Insured</option><option value="Self">Self</option><option value="Family">Family</option></select>
+                        </div>
                     </div>
                 </div>
 
@@ -317,9 +344,9 @@
                     <thead>
                         <tr>
                             <th width="12%">Date</th>
-                            <th width="15%">Category</th>
+                            <th width="15%">Type / Category</th>
                             <th width="30%">Description</th>
-                            <th width="15%">Method</th>
+                            <th width="15%">Method / Asset</th>
                             <th width="15%" style="text-align:right">Amount</th>
                             <th width="13%" style="text-align:center">Actions</th>
                         </tr>
@@ -331,7 +358,7 @@
 
         <div class="card col-span-1">
             <div class="card-header">
-                <div class="card-title">Wallet Breakdown</div>
+                <div class="card-title">Wallet Breakdown (Cash & Savings)</div>
             </div>
             <div class="card-body" style="display:flex; flex-direction:column; justify-content:center">
                 <div style="height:200px; position:relative; margin-bottom:15px">
@@ -345,7 +372,7 @@
     <div class="dashboard-grid">
         <div class="card col-span-4">
              <div class="card-header">
-                <div class="card-title">Investment Portfolio</div>
+                <div class="card-title">Investment Portfolio (Historical Cost)</div>
             </div>
             <div class="card-body table-container">
                 <table id="invTable">
@@ -422,9 +449,9 @@
 /* -----------------------------------------------------------
    LOGIC LAYER
    ----------------------------------------------------------- */
-const BASE_STORAGE_KEY = 'mm_v3_data';
-const BASE_METHOD_KEY = 'mm_v3_methods';
-const BASE_INCOME_KEY = 'mm_v3_income';
+const BASE_STORAGE_KEY = 'mm_v4_data';
+const BASE_METHOD_KEY = 'mm_v4_methods';
+const BASE_INCOME_KEY = 'mm_v4_income';
 
 /* Global Profile State */
 let currentProfile = null;
@@ -436,22 +463,28 @@ const getTxKey = () => getStorageKey(BASE_STORAGE_KEY);
 const getMethodKey = () => getStorageKey(BASE_METHOD_KEY);
 const getIncomeKey = () => getStorageKey(BASE_INCOME_KEY);
 
-/* The new system category */
-const SYSTEM_CATEGORY = 'Opening Balance';
 
 const CANONICAL_METHODS = {
   salary_acct: 'Salary Account',
   savings_acct: 'Savings Account',
   cash: 'Cash',
-  savings_cash: 'Savings Cash',
   credit_card: 'Credit Card',
-  amazon_wallet: 'Amazon Wallet'
 };
 
 /* Data Init (These will be dynamically loaded/reloaded) */
 let methodNames = {...CANONICAL_METHODS};
 let incomeSources = ['Salary', 'Freelance', 'Interest'];
 let data = [];
+
+/* Options */
+const BASE_CATS = ['Food','Travel','Groceries','Medicine','Shopping','Bills','Rent','Entertainment','EMI','Credit Card Payment','Investments','Insurance','Education','Misc'];
+
+const INVEST_SUB = {
+  Cash: ['Savings A/C','Current A/C', 'Physical Cash'], // Cash group for Net Liquidity & Wallet
+  MFs: ['Equity Large Cap','Equity Mid Cap','Debt Fund','Liquid Fund', 'ELSS'],
+  Stocks: ['Direct Equity','IPO'],
+  Commodities: ['Silver','SGB','Gold Physical'],
+};
 
 /* Utils */
 const uid = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -489,10 +522,13 @@ document.getElementById('currentDate').innerText = new Date().toLocaleDateString
 const formEls = {
     type: document.getElementById('type'),
     amount: document.getElementById('amount'),
-    category: document.getElementById('category'),
-    method: document.getElementById('method'),
     date: document.getElementById('date'),
     desc: document.getElementById('desc'),
+    
+    // Regular Transaction Fields
+    regularFieldsDiv: document.getElementById('regularFields'),
+    category: document.getElementById('category'),
+    method: document.getElementById('method'),
     incomeRow: document.getElementById('incomeSourceRow'),
     incomeSource: document.getElementById('incomeSource'),
     invRow: document.getElementById('investmentRow'),
@@ -501,31 +537,29 @@ const formEls = {
     insRow: document.getElementById('insuranceRow'),
     insType: document.getElementById('insType'),
     insFor: document.getElementById('insFor'),
+    
+    // Opening Balance Fields
+    openingBalanceRow: document.getElementById('openingBalanceRow'),
+    openingType: document.getElementById('openingType'),
+    openingSub: document.getElementById('openingSub'),
+    
     addBtn: document.getElementById('addBtn'),
     saveBtn: document.getElementById('saveBtn'),
     cancelBtn: document.getElementById('cancelBtn')
-};
-
-/* Options */
-const BASE_CATS = ['Food','Travel','Groceries','Medicine','Shopping','Bills','Rent','Entertainment','EMI','Credit Card Payment','Investments','Insurance','Education','Misc'];
-const INVEST_SUB = {
-  MFs: ['Equity Large Cap','Equity Mid Cap','Debt Fund','Liquid Fund', 'ELSS'],
-  Commodities: ['Silver','SGB','Gold Physical'],
-  Stocks: ['Direct Equity','IPO']
 };
 
 /* --- DOM Manipulation --- */
 
 function populateSelects(){
   const cats = new Set(BASE_CATS);
-  data.forEach(e=> e.category && cats.add(e.category));
+  // Do not dynamically add categories from previous transactions for a cleaner list
+  // data.forEach(e=> e.category && e.type !== 'opening_balance' && cats.add(e.category));
   
-  // Add System Category at the top
-  let options = `<option value="${SYSTEM_CATEGORY}">${SYSTEM_CATEGORY}</option>`;
-  options += Array.from(cats).sort().map(c=>`<option value="${c}">${c}</option>`).join('');
-
-  formEls.category.innerHTML = options;
-  formEls.method.innerHTML = Object.keys(CANONICAL_METHODS).map(id=>`<option value="${id}">${methodNames[id]||CANONICAL_METHODS[id]}</option>`).join('');
+  formEls.category.innerHTML = `<option value="">Select Category</option>` + Array.from(cats).sort().map(c=>`<option value="${c}">${c}</option>`).join('');
+  
+  // Populate methods based on CANONICAL list (including dynamically created methods for cash/savings from OB)
+  formEls.method.innerHTML = Object.keys(methodNames).map(id=>`<option value="${id}">${methodNames[id]}</option>`).join('');
+  
   formEls.incomeSource.innerHTML = incomeSources.map(s=>`<option>${s}</option>`).join('');
 }
 
@@ -535,23 +569,52 @@ function populateInvSub(){
   if(INVEST_SUB[g]) INVEST_SUB[g].forEach(s=> formEls.invSub.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`));
 }
 
+function populateOpeningSub(group){
+    const subSelect = formEls.openingSub;
+    subSelect.innerHTML = '<option value="">Select Asset</option>';
+    if (group === 'Cash') {
+        INVEST_SUB.Cash.forEach(s => subSelect.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`));
+        subSelect.disabled = false;
+        formEls.desc.placeholder = 'E.g., Initial amount in Savings A/C';
+    } else if (group === 'Investment') {
+        subSelect.innerHTML = '<option value="">Select Asset Type</option>';
+        const invGroups = ['MFs', 'Stocks', 'Commodities'];
+        invGroups.forEach(g => subSelect.insertAdjacentHTML('beforeend', `<optgroup label="${g}">${INVEST_SUB[g].map(s => `<option value="${g}|${s}">${s}</option>`).join('')}</optgroup>`));
+        subSelect.disabled = false;
+        formEls.desc.placeholder = 'E.g., Initial investment in Large Cap MF';
+    } else {
+        subSelect.disabled = true;
+    }
+}
+
 function adjustForm(){
   const type = formEls.type.value;
   const cat = formEls.category.value;
   
+  // Hide all dynamic rows first
   formEls.incomeRow.classList.add('hidden');
   formEls.invRow.classList.add('hidden');
   formEls.insRow.classList.add('hidden');
   
-  if(type === 'income') formEls.incomeRow.classList.remove('hidden');
-  // Investment/Insurance details only apply if the entry is an EXPENSE
-  if(type === 'expense') {
-    if(cat === 'Investments') formEls.invRow.classList.remove('hidden');
-    else if(cat === 'Insurance') formEls.insRow.classList.remove('hidden');
-  }
+  // 1. Handle Opening Balance Type
+  if(type === 'opening_balance') {
+      formEls.regularFieldsDiv.classList.add('hidden');
+      formEls.openingBalanceRow.classList.remove('hidden');
+      formEls.desc.placeholder = 'Initial Balance description...';
+      populateOpeningSub(formEls.openingType.value); // Initial population
+  } else {
+      formEls.regularFieldsDiv.classList.remove('hidden');
+      formEls.openingBalanceRow.classList.add('hidden');
+      formEls.desc.placeholder = 'What is this for?';
 
-  // Opening Balance doesn't need source
-  if(cat === SYSTEM_CATEGORY) formEls.incomeRow.classList.add('hidden');
+      // 2. Handle Regular Income/Expense
+      if(type === 'income') {
+          formEls.incomeRow.classList.remove('hidden');
+      } else if(type === 'expense') {
+        if(cat === 'Investments') formEls.invRow.classList.remove('hidden');
+        else if(cat === 'Insurance') formEls.insRow.classList.remove('hidden');
+      }
+  }
 }
 
 /* CRUD Operations */
@@ -560,31 +623,70 @@ let editId = null;
 function addEntry(){
   if (!currentProfile) return alert('Please select a profile first.');
   const amount = Number(formEls.amount.value);
+  const type = formEls.type.value;
+
   if(!amount || amount <= 0) return alert('Please enter a valid amount');
   
   const entry = {
     id: uid(),
-    type: formEls.type.value,
+    type: type,
     amount: amount,
-    category: formEls.category.value,
-    method: formEls.method.value,
     date: formEls.date.value || new Date().toISOString().slice(0,10),
-    desc: formEls.desc.value || ''
+    desc: formEls.desc.value || '',
+    category: '', method: '', incomeSource: '', 
+    investmentGroup: '', investmentSub: '', 
+    insuranceType: '', insuranceFor: ''
   };
 
-  // Only add incomeSource if it's income AND not an opening balance (which is implicitly source-less)
-  if(entry.type === 'income' && entry.category !== SYSTEM_CATEGORY) entry.incomeSource = formEls.incomeSource.value;
-  
-  // Investment/Insurance details are only applied if it's an expense
-  if(entry.type === 'expense') {
-    if(entry.category === 'Investments' && formEls.invGroup.value) {
-      entry.investmentGroup = formEls.invGroup.value;
-      entry.investmentSub = formEls.invSub.value || 'Unspecified';
-    }
-    if(entry.category === 'Insurance') {
-      entry.insuranceType = formEls.insType.value || 'General';
-      entry.insuranceFor = formEls.insFor.value || 'Self';
-    }
+  if(type === 'opening_balance') {
+      const opType = formEls.openingType.value;
+      const opSubSelection = formEls.openingSub.value;
+
+      if (!opSubSelection) return alert('Please select an asset for the opening balance.');
+
+      if (opType === 'Cash') {
+          entry.investmentGroup = 'Cash';
+          entry.investmentSub = opSubSelection;
+          
+          // Create a canonical ID for the cash account (e.g., 'savings_a/c')
+          const methodId = toKey(opSubSelection); 
+          entry.method = methodId;
+          
+          // Add this new cash account method if it doesn't exist
+          if(!methodNames[methodId]) {
+              methodNames[methodId] = opSubSelection;
+              CANONICAL_METHODS[methodId] = opSubSelection;
+          }
+          entry.category = 'N/A';
+          entry.desc = entry.desc || `Initial Cash Balance: ${opSubSelection}`;
+
+      } else if (opType === 'Investment') {
+          const [invGroup, invSub] = opSubSelection.split('|');
+          entry.investmentGroup = invGroup;
+          entry.investmentSub = invSub;
+          entry.category = 'N/A';
+          entry.method = 'N/A';
+          entry.desc = entry.desc || `Initial Investment: ${invSub}`;
+      }
+  } else {
+      // Regular Income or Expense
+      if(!formEls.category.value || !formEls.method.value) return alert('Please select Category and Method.');
+      
+      entry.category = formEls.category.value;
+      entry.method = formEls.method.value;
+
+      if(type === 'income') entry.incomeSource = formEls.incomeSource.value;
+      
+      if(type === 'expense') {
+        if(entry.category === 'Investments' && formEls.invGroup.value) {
+          entry.investmentGroup = formEls.invGroup.value;
+          entry.investmentSub = formEls.invSub.value || 'Unspecified';
+        }
+        if(entry.category === 'Insurance') {
+          entry.insuranceType = formEls.insType.value || 'General';
+          entry.insuranceFor = formEls.insFor.value || 'Self';
+        }
+      }
   }
 
   data.push(entry);
@@ -594,32 +696,50 @@ function addEntry(){
 }
 
 function clearForm(){
-  formEls.amount.value=''; formEls.desc.value=''; formEls.date.value='';
-  formEls.invGroup.value=''; formEls.invSub.innerHTML='<option>Instrument</option>';
+  formEls.amount.value=''; 
+  formEls.desc.value=''; 
+  formEls.date.value='';
+  formEls.invGroup.value=''; 
+  formEls.invSub.innerHTML='<option>Instrument</option>';
+  formEls.category.value = ''; 
+  formEls.type.value = 'expense'; 
+  
+  // Reset Opening Balance fields
+  formEls.openingType.value = 'Cash';
+  formEls.openingSub.innerHTML = '<option value="">Select Asset</option>';
+  formEls.openingSub.disabled = true;
+
   editId = null;
   formEls.addBtn.style.display='block';
   formEls.saveBtn.style.display='none';
   formEls.cancelBtn.style.display='none';
+  adjustForm(); // Re-adjust the form visibility
 }
 
 function loadEdit(id){
   const e = data.find(x=>x.id===id); if(!e) return;
   editId = id;
   
-  // Populate
   formEls.type.value = e.type;
-  formEls.category.value = e.category;
-  
-  adjustForm();
-  
   formEls.amount.value = e.amount;
-  formEls.method.value = e.method;
   formEls.date.value = e.date.slice(0,10);
   formEls.desc.value = e.desc;
   
-  if(e.type==='income' && e.category !== SYSTEM_CATEGORY) formEls.incomeSource.value = e.incomeSource || '';
-  if(e.investmentGroup) { formEls.invGroup.value=e.investmentGroup; populateInvSub(); formEls.invSub.value=e.investmentSub; }
-  if(e.insuranceType) { formEls.insType.value=e.insuranceType; formEls.insFor.value=e.insuranceFor; }
+  adjustForm(); // Adjusts visibility based on type
+  
+  if(e.type === 'opening_balance') {
+      // Simplification: Do not allow complex OB editing on the fly to prevent method/data corruption.
+      // User should delete and re-add if asset class changed.
+      formEls.desc.placeholder = `Editing initial balance entry. Asset: ${e.investmentSub}. Delete and re-add to change asset class.`;
+  } else {
+    // Regular Transaction fields
+    formEls.category.value = e.category;
+    formEls.method.value = e.method;
+    if(e.type==='income') formEls.incomeSource.value = e.incomeSource || '';
+    
+    if(e.investmentGroup) { formEls.invGroup.value=e.investmentGroup; populateInvSub(); formEls.invSub.value=e.investmentSub; }
+    if(e.insuranceType) { formEls.insType.value=e.insuranceType; formEls.insFor.value=e.insuranceFor; }
+  }
 
   // Toggle Buttons
   formEls.addBtn.style.display='none';
@@ -635,6 +755,8 @@ function saveEdit(){
   const idx = data.findIndex(x=>x.id===editId);
   if(idx === -1) return;
   
+  // To keep the data clean, we remove the old entry and add the new one.
+  // We need to re-populate the methods if the old entry was an OB, so we save first.
   data.splice(idx, 1); 
   addEntry(); 
   editId = null;
@@ -650,34 +772,63 @@ function deleteEntry(id){
 
 /* --- Render Engines --- */
 
+function getNextPaymentDate() {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const paymentDay = 10; 
+    
+    let paymentDate = new Date(currentYear, currentMonth, paymentDay);
+
+    // If today is past the 10th, set the payment date to next month's 10th
+    if (today.getDate() > paymentDay) {
+        paymentDate.setMonth(currentMonth + 1);
+    }
+    
+    return paymentDate.toLocaleDateString('en-IN', {month:'short', day:'numeric', year: 'numeric'});
+}
+
 function renderKPIs(){
     const curMonth = new Date().getMonth();
     const curYear = new Date().getFullYear();
     const prevMonth = curMonth === 0 ? 11 : curMonth - 1;
     const prevYear = curMonth === 0 ? curYear - 1 : curYear;
 
-    // IMPORTANT: Filter out the SYSTEM_CATEGORY from monthly calculations
-    const monthlyData = data.filter(d => d.category !== SYSTEM_CATEGORY);
+    // Filter out opening_balance transactions for MoM comparison (Operational Cash Flow)
+    const operationalData = data.filter(d => d.type !== 'opening_balance');
 
     const filterMonth = (d, m, y) => { const dt = new Date(d); return dt.getMonth()===m && dt.getFullYear()===y; };
     const sum = (arr) => arr.reduce((acc,curr) => acc + Number(curr.amount), 0);
 
-    const curData = monthlyData.filter(d => filterMonth(d.date, curMonth, curYear));
-    const prevData = monthlyData.filter(d => filterMonth(d.date, prevMonth, prevYear));
+    const curData = operationalData.filter(d => filterMonth(d.date, curMonth, curYear));
+    const prevData = operationalData.filter(d => filterMonth(d.date, prevMonth, prevYear));
 
+    // Operational Income/Expense
     const inc = sum(curData.filter(d=>d.type==='income'));
     const exp = sum(curData.filter(d=>d.type==='expense'));
     const prevInc = sum(prevData.filter(d=>d.type==='income'));
     const prevExp = sum(prevData.filter(d=>d.type==='expense'));
     
-    // Investment: Total all time principal contribution (Investments are always expenses, so we don't check type)
-    const totalInvested = sum(data.filter(d=>d.category==='Investments'));
+    // Total Investment (Initial Balance + Regular Investments) - Filter out Cash from Investments
+    const allInvestments = data.filter(d => d.investmentGroup && d.investmentGroup !== 'Cash');
+    const totalInvested = sum(allInvestments.map(d=>d.amount));
+    
+    // Monthly Investment (Operational Investment Expense)
     const curInvest = sum(curData.filter(d=>d.category==='Investments'));
     const prevInvest = sum(prevData.filter(d=>d.category==='Investments'));
 
-    // Net Liquidity Calculation: Total Income - Total Expenses (ALL transactions, including Opening Balance)
-    const netLiquidity = sum(data.filter(d=>d.type==='income')) - sum(data.filter(d=>d.type==='expense'));
-    
+    // Net Liquidity Calculation: Total Income - Total Expenses (ALL transactions, INCLUDING Opening Balance Cash)
+    // Wallet breakdown handles this detail better, but this provides a simple liquid net total.
+    const liquidTransactions = data.filter(d => d.investmentGroup === 'Cash' || d.type === 'income' || d.type === 'expense');
+    const totalIn = sum(liquidTransactions.filter(d => d.type === 'income' || (d.type === 'opening_balance' && d.investmentGroup === 'Cash')));
+    const totalOut = sum(liquidTransactions.filter(d => d.type === 'expense'));
+    const netLiquidity = totalIn - totalOut;
+
+    // Credit Card Calculation:
+    const ccExpenses = sum(data.filter(d => d.method === 'credit_card' && d.type === 'expense'));
+    const ccPayments = sum(data.filter(d => d.category === 'Credit Card Payment' && d.type === 'expense'));
+    const creditCardDue = ccExpenses - ccPayments;
+
     const calcDelta = (cur, prev) => {
         if(prev === 0 && cur === 0) return 0;
         if(prev === 0) return cur > 0 ? 100 : 0;
@@ -698,6 +849,10 @@ function renderKPIs(){
     
     document.getElementById('kpiInvest').innerText = fmt(totalInvested);
     document.getElementById('momInvest').innerHTML = `<span class="${invDelta>=0?'trend-up':'trend-down'}">+${fmt(curInvest)}</span> added this month`;
+
+    // CC KPI Update
+    document.getElementById('kpiCCDue').innerText = fmt(creditCardDue);
+    document.getElementById('ccPaymentDate').innerText = `Next Payment: 10th of ${getNextPaymentDate().split(' ')[0]}`;
 }
 
 function renderTable(){
@@ -708,7 +863,12 @@ function renderTable(){
     
     // Filter
     if(search){
-        sorted = sorted.filter(d => d.desc.toLowerCase().includes(search) || d.category.toLowerCase().includes(search) || d.amount.toString().includes(search));
+        sorted = sorted.filter(d => 
+            d.desc.toLowerCase().includes(search) || 
+            d.category.toLowerCase().includes(search) || 
+            d.type.toLowerCase().includes(search) ||
+            d.amount.toString().includes(search)
+        );
     }
 
     sorted = sorted.slice(0, 50); // limit 50 for performance
@@ -720,27 +880,35 @@ function renderTable(){
 
     tbody.innerHTML = sorted.map(e => {
         let badgeClass = 'badge-expense';
+        let mainLabel = e.category;
+        let methodLabel = methodNames[e.method] || e.method;
+        let meta = '';
+        
         if(e.type==='income') {
-            badgeClass = e.category === SYSTEM_CATEGORY ? 'badge-opening' : 'badge-income';
+            badgeClass = 'badge-income';
+            mainLabel = `Income (${e.incomeSource})`;
+        } else if (e.type === 'opening_balance') {
+            badgeClass = 'badge-opening';
+            mainLabel = `Opening Balance`;
+            methodLabel = e.investmentSub;
+            meta = `<br><span style="font-size:11px;color:var(--opening-balance)">${e.investmentGroup} • ${e.investmentSub}</span>`;
         } else if (e.category==='Investments') {
             badgeClass = 'badge-inv';
+            meta = `<br><span style="font-size:11px;color:#64748b">${e.investmentGroup} • ${e.investmentSub}</span>`;
         } else if (e.category==='Insurance') {
             badgeClass = 'badge-ins';
+            meta = `<br><span style="font-size:11px;color:#64748b">${e.insuranceType} • ${e.insuranceFor}</span>`;
+        } else if (e.category==='Credit Card Payment') {
+             badgeClass = 'badge-cc';
         }
-
-        const methodName = methodNames[e.method] || CANONICAL_METHODS[e.method] || e.method;
-        
-        let meta = '';
-        if(e.category==='Investments') meta = `<br><span style="font-size:11px;color:#64748b">${e.investmentGroup} • ${e.investmentSub}</span>`;
-        if(e.category==='Insurance') meta = `<br><span style="font-size:11px;color:#64748b">${e.insuranceType} • ${e.insuranceFor}</span>`;
 
         return `
         <tr>
             <td>${new Date(e.date).toLocaleDateString('en-IN', {month:'short', day:'numeric'})}</td>
-            <td><span class="badge ${badgeClass}">${e.category}</span></td>
+            <td><span class="badge ${badgeClass}">${mainLabel}</span></td>
             <td><div style="font-weight:500">${e.desc || '-'}</div>${meta}</td>
-            <td style="font-size:12px; color:#64748b">${methodName}</td>
-            <td style="text-align:right; font-weight:600; color: ${e.type==='income'?'#166534':'#1e293b'}">${e.type==='income'?'+':'-'} ${fmt(e.amount)}</td>
+            <td style="font-size:12px; color:#64748b">${methodLabel}</td>
+            <td style="text-align:right; font-weight:600; color: ${e.type==='income' || e.type === 'opening_balance' ?'#166534':'#1e293b'}">${e.type==='expense'?'-':'+'} ${fmt(e.amount)}</td>
             <td style="text-align:center">
                 <button onclick="loadEdit('${e.id}')" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px" title="Edit">✎</button>
                 <button onclick="deleteEntry('${e.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:4px" title="Delete">×</button>
@@ -752,13 +920,16 @@ function renderTable(){
 
 function renderInvTable(){
     const t = document.getElementById('invTable').querySelector('tbody');
-    // Only tally investments that are expenses (i.e., money that left the bank)
-    const invs = data.filter(d => d.category === 'Investments' && d.investmentGroup && d.type === 'expense');
+    
+    // Tally all transactions (initial and regular) that are related to Investments (excluding Cash)
+    const invs = data.filter(d => d.investmentGroup && d.investmentGroup !== 'Cash');
     
     const grouped = {};
     invs.forEach(i => {
         const key = i.investmentGroup + '|' + i.investmentSub;
-        grouped[key] = (grouped[key] || 0) + Number(i.amount);
+        // Investment expense or Opening Balance investment both count towards historical cost
+        const amount = Number(i.amount);
+        grouped[key] = (grouped[key] || 0) + amount;
     });
 
     if(Object.keys(grouped).length === 0){
@@ -783,10 +954,9 @@ function renderCharts(){
     const ctxMain = document.getElementById('mainChart').getContext('2d');
     const ctxDonut = document.getElementById('donutChart').getContext('2d');
 
-    // Filter out SYSTEM_CATEGORY for monthly cash flow charts
-    const chartData = data.filter(d => d.category !== SYSTEM_CATEGORY);
+    // 1. Data Prep for Main Chart (Operational Cash Flow - Exclude Opening Balance)
+    const chartData = data.filter(d => d.type !== 'opening_balance');
 
-    // 1. Data Prep for Main Chart (6 Months)
     const labels = [];
     const incData = [];
     const expData = [];
@@ -827,20 +997,34 @@ function renderCharts(){
         }
     });
 
-    // 2. Data Prep for Donut (Balances)
+    // 2. Data Prep for Donut (Balances - Includes all cash/savings/bank accounts)
     const balances = {};
-    Object.keys(CANONICAL_METHODS).forEach(k => balances[k] = 0);
+    
+    // Initialize all methods and cash accounts for calculation
+    Object.keys(methodNames).forEach(k => balances[k] = 0);
+    
     data.forEach(e => {
-        const m = e.method || 'cash';
-        if(balances[m] !== undefined) balances[m] += (e.type==='income'? Number(e.amount) : -Number(e.amount));
+        const m = e.method;
+        if(balances[m] !== undefined || m && m !== 'N/A' && m !== 'credit_card' && m !== 'cash'){ // Ignore CC and Non-Liquid assets in Wallet
+            const amount = Number(e.amount);
+            
+            if (e.type === 'income' || e.type === 'opening_balance') {
+                balances[m] = (balances[m] || 0) + amount;
+            } else if (e.type === 'expense' && m !== 'credit_card') {
+                balances[m] = (balances[m] || 0) - amount;
+            }
+            // Note: Credit card expenses don't reduce the bank balance here, CC Payments do.
+        }
     });
 
     const dLabels = []; const dVals = []; 
-    const palette = ['#3b82f6', '#10b981', '#f59e0b', '#6366f1', '#ec4899', '#64748b'];
+    const palette = ['#3b82f6', '#10b981', '#f59e0b', '#6366f1', '#ec4899', '#64748b', '#06b6d4', '#e879f9'];
     
+    // Only show methods that represent liquid cash/bank accounts and have a non-zero balance
     Object.entries(balances).forEach(([k,v]) => {
-        if(Math.abs(v) > 5) { // Filter tiny amounts
-            dLabels.push(methodNames[k] || CANONICAL_METHODS[k]);
+        // Exclude methods that are explicitly liabilities or non-liquid trackers
+        if(k !== 'credit_card' && k !== 'N/A' && Math.abs(v) > 5) { 
+            dLabels.push(methodNames[k] || k);
             dVals.push(v);
         }
     });
@@ -887,9 +1071,25 @@ document.getElementById('searchTx').addEventListener('keyup', renderTable);
 formEls.addBtn.addEventListener('click', addEntry);
 formEls.saveBtn.addEventListener('click', saveEdit);
 formEls.cancelBtn.addEventListener('click', clearForm);
+
+// Core form listeners
 formEls.type.addEventListener('change', adjustForm);
 formEls.category.addEventListener('change', adjustForm);
 formEls.invGroup.addEventListener('change', populateInvSub);
+
+// Opening Balance listeners
+formEls.openingType.addEventListener('change', () => populateOpeningSub(formEls.openingType.value));
+formEls.openingSub.addEventListener('change', () => {
+    // When an asset is selected for OB, update description hint
+    const type = formEls.openingType.value;
+    const sub = formEls.openingSub.options[formEls.openingSub.selectedIndex].text;
+    if (type === 'Cash') {
+         formEls.desc.value = `Initial Cash Balance in ${sub}`;
+    } else if (type === 'Investment') {
+         formEls.desc.value = `Initial Investment in ${sub}`;
+    }
+});
+
 
 // Profile Selection Logic
 const profileInput = document.getElementById('profileInput');
@@ -942,17 +1142,42 @@ window.selectProfile = (name) => {
 // Sample Data
 document.getElementById('sampleBtn').addEventListener('click', () => {
     if (!currentProfile) return alert('Please select a profile before loading sample data.');
-    if(!confirm(`Add sample data to your active profile (${currentProfile})?`)) return;
+    if(!confirm(`Add sample data to your active profile (${currentProfile})? This will replace your current data.`)) return;
+    
+    // Clear current data first to make sample clean
+    data = [];
+
     const s = [
-        {id:uid(), type:'income', amount:175000, category:SYSTEM_CATEGORY, method:'savings_acct', date:'2025-10-31', desc:'Historic Liquid Savings Balance'},
-        {id:uid(), type:'expense', amount:100000, category:'Investments', method:'savings_acct', date:'2025-10-31', desc:'Historic Investment Principal', investmentGroup:'MFs', investmentSub:'Equity Large Cap'},
-        {id:uid(), type:'income', amount:85000, category:'Salary', method:'salary_acct', date:'2025-11-01', desc:'Monthly Salary (Current Month)'},
-        {id:uid(), type:'expense', amount:12000, category:'Rent', method:'salary_acct', date:'2025-11-01', desc:'House Rent'},
-        {id:uid(), type:'expense', amount:4500, category:'Groceries', method:'credit_card', date:'2025-11-05', desc:'Supermarket Run'},
-        {id:uid(), type:'expense', amount:10000, category:'Investments', method:'savings_acct', date:'2025-11-10', desc:'SIP November', investmentGroup:'MFs', investmentSub:'Equity Large Cap'},
-        {id:uid(), type:'expense', amount:1500, category:'Food', method:'cash', date:'2025-11-15', desc:'Weekend Dinner'}
+        // --- Initial Balances (OB Type) ---
+        // Cash
+        {id:uid(), type:'opening_balance', amount:100000, date:'2025-10-31', desc:'Initial Cash Balance in Savings A/C', investmentGroup:'Cash', investmentSub:'Savings A/C', method:'savings_a/c', category:'N/A'},
+        {id:uid(), type:'opening_balance', amount:5000, date:'2025-10-31', desc:'Initial Cash Balance in Physical Cash', investmentGroup:'Cash', investmentSub:'Physical Cash', method:'physical_cash', category:'N/A'},
+        // Investments
+        {id:uid(), type:'opening_balance', amount:50000, date:'2025-10-31', desc:'Initial Investment in Equity Large Cap', investmentGroup:'MFs', investmentSub:'Equity Large Cap', method:'N/A', category:'N/A'},
+        {id:uid(), type:'opening_balance', amount:100000, date:'2025-10-31', desc:'Initial Investment in Direct Equity', investmentGroup:'Stocks', investmentSub:'Direct Equity', method:'N/A', category:'N/A'},
+        
+        // --- Regular Transactions (Operational Cash Flow) ---
+        // Income
+        {id:uid(), type:'income', amount:85000, category:'Salary', method:'savings_a/c', date:'2025-11-25', desc:'Monthly Salary (Nov)', incomeSource:'Salary'},
+        
+        // Expense
+        {id:uid(), type:'expense', amount:12000, category:'Rent', method:'savings_a/c', date:'2025-11-25', desc:'House Rent'},
+        {id:uid(), type:'expense', amount:4500, category:'Groceries', method:'credit_card', date:'2025-11-28', desc:'Supermarket Run (CC Used)'},
+        {id:uid(), type:'expense', amount:1500, category:'Food', method:'credit_card', date:'2025-12-08', desc:'Dinner out (CC Used)'},
+        
+        // Investment (Expense)
+        {id:uid(), type:'expense', amount:10000, category:'Investments', method:'savings_a/c', date:'2025-12-05', desc:'SIP December', investmentGroup:'MFs', investmentSub:'Equity Large Cap'},
+        
+        // CC Payment (Expense) - Reduces Bank Balance, reduces CC Due
+        {id:uid(), type:'expense', amount:6000, category:'Credit Card Payment', method:'savings_a/c', date:'2025-12-10', desc:'CC Bill Payment for November'},
     ];
-    data = [...data, ...s];
+    
+    // Add new methods for sample data
+    methodNames = {...CANONICAL_METHODS};
+    methodNames['savings_a/c'] = 'Savings A/C';
+    methodNames['physical_cash'] = 'Physical Cash';
+    
+    data = s;
     saveAll();
     renderAll();
 });
@@ -968,10 +1193,10 @@ document.getElementById('closeSettings').onclick = () => settingsModal.classList
 
 function renderSettings(){
     const editor = document.getElementById('methodEditor');
-    editor.innerHTML = Object.keys(CANONICAL_METHODS).map(id => `
+    editor.innerHTML = Object.keys(methodNames).map(id => `
         <div class="flex-row" style="justify-content:space-between">
-            <span style="font-size:12px; color:#64748b">${CANONICAL_METHODS[id]}</span>
-            <input value="${methodNames[id]||''}" onchange="updateMethodName('${id}', this.value)" style="width:180px; padding:4px" />
+            <span style="font-size:12px; color:#64748b">${CANONICAL_METHODS[id]||'Custom'}</span>
+            <input value="${methodNames[id]}" onchange="updateMethodName('${id}', this.value)" style="width:180px; padding:4px" />
         </div>
     `).join('');
     document.getElementById('incomeList').innerHTML = incomeSources.map(s=> `<span class="badge" style="background:#e2e8f0">${s}</span>`).join('');
@@ -983,7 +1208,9 @@ document.getElementById('addMethod').onclick = () => {
     const id = document.getElementById('newMethodId').value.trim();
     const name = document.getElementById('newMethodName').value.trim();
     if(id && name) {
-        CANONICAL_METHODS[id] = id; methodNames[id] = name;
+        const key = toKey(id);
+        CANONICAL_METHODS[key] = name; 
+        methodNames[key] = name; 
         saveAll(); renderSettings(); renderAll();
         document.getElementById('newMethodId').value = '';
         document.getElementById('newMethodName').value = '';
@@ -1019,7 +1246,7 @@ document.getElementById('exportBtn').onclick = () => {
     const csv = [header.join(','), ...rows].join('\n');
     const blob = new Blob([csv], {type: 'text/csv'});
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `moneymirror_backup_${toKey(currentProfile)}.csv`; a.click();
+    const a = document.createElement('a'); a.href = url; a.download = `moneymirror_backup_${toKey(currentProfile)}_${new Date().toISOString().slice(0,10)}.csv`; a.click();
 };
 
 document.getElementById('importJson').onclick = () => {
@@ -1031,7 +1258,6 @@ document.getElementById('importJson').onclick = () => {
         reader.onload = event => {
             try {
                 const json = JSON.parse(event.target.result);
-                // Assumption: Imported JSON contains transaction array
                 let importedData = Array.isArray(json) ? json : (json.data || json.transactions || []);
                 
                 if (importedData.length > 0 && confirm(`Do you want to REPLACE the current data for '${currentProfile}' with ${importedData.length} imported entries?`)) {
