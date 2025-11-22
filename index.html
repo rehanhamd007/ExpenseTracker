@@ -510,30 +510,37 @@
   </main>
   
   <div id="calculator" class="hidden">
-      <div id="calc-display">0</div>
-      <div id="calc-buttons">
-          <button class="calc-clear" onclick="calcClear()">AC</button>
-          <button class="calc-operator" onclick="calcAppend('/')">÷</button>
-          <button class="calc-operator" onclick="calcAppend('*')">×</button>
-          <button onclick="calcAppend('7')">7</button>
-          <button onclick="calcAppend('8')">8</button>
-          <button onclick="calcAppend('9')">9</button>
-          <button class="calc-operator" onclick="calcAppend('-')">-</button>
-          <button onclick="calcAppend('4')">4</button>
-          <button onclick="calcAppend('5')">5</button>
-          <button onclick="calcAppend('6')">6</button>
-          <button class="calc-operator" onclick="calcAppend('+')">+</button>
-          <button onclick="calcAppend('1')">1</button>
-          <button onclick="calcAppend('2')">2</button>
-          <button onclick="calcAppend('3')">3</button>
-          <button class="calc-equals" onclick="calcCalculate()">=</button>
-          <button onclick="calcAppend('0')">0</button>
-          <button onclick="calcAppend('.')">.</button>
-          <button class="calc-operator" onclick="calcBackspace()">&larr;</button>
-      </div>
+  <div id="calc-display">0</div>
+  <div style="display: flex; padding: 10px; gap: 10px;">
+    <!-- Number Pad -->
+    <div style="flex: 3; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+      <button onclick="calcAppend('7')">7</button>
+      <button onclick="calcAppend('8')">8</button>
+      <button onclick="calcAppend('9')">9</button>
+      <button onclick="calcAppend('4')">4</button>
+      <button onclick="calcAppend('5')">5</button>
+      <button onclick="calcAppend('6')">6</button>
+      <button onclick="calcAppend('1')">1</button>
+      <button onclick="calcAppend('2')">2</button>
+      <button onclick="calcAppend('3')">3</button>
+      <button onclick="calcAppend('0')">0</button>
+      <button onclick="calcAppend('.')">.</button>
+      <button class="calc-clear" onclick="calcClear()">AC</button>
+    </div>
+
+    <!-- Operator Pad -->
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+      <button class="calc-operator" onclick="calcHandleOperator('/')">÷</button>
+      <button class="calc-operator" onclick="calcHandleOperator('*')">×</button>
+      <button class="calc-operator" onclick="calcHandleOperator('-')">−</button>
+      <button class="calc-operator" onclick="calcHandleOperator('+')">+</button>
+      <button class="calc-equals" onclick="calcCalculate()">=</button>
+      <button class="calc-operator" onclick="calcBackspace()">←</button>
+    </div>
   </div>
+</div>
 
-
+  
   <div id="profileModal" class="modal open">
     <div class="modal-content modal-small">
         <div class="action-header" style="border-radius:12px 12px 0 0">
@@ -2153,8 +2160,7 @@ function resetExpenseDrilldown() {
 }
 
 
-/* --- Calculator Logic --- */
-const calculator = document.getElementById('calculator');
+/* Calculator Logic */
 let calcDisplay = '0';
 let firstOperand = null;
 let operator = null;
@@ -2169,7 +2175,7 @@ function calcAppend(digit) {
     calcDisplay = digit;
     waitingForSecondOperand = false;
   } else {
-    if(calcDisplay.includes('.') && digit === '.') return;
+    if (digit === '.' && calcDisplay.includes('.')) return;
     calcDisplay = calcDisplay === '0' && digit !== '.' ? digit : calcDisplay + digit;
   }
   calcUpdateDisplay();
@@ -2177,37 +2183,45 @@ function calcAppend(digit) {
 
 function calcHandleOperator(nextOperator) {
   const inputValue = parseFloat(calcDisplay);
-
   if (operator && waitingForSecondOperand) {
     operator = nextOperator;
     return;
   }
-
   if (firstOperand === null) {
     firstOperand = inputValue;
   } else if (operator) {
     const result = calcPerformCalculation[operator](firstOperand, inputValue);
-
     calcDisplay = String(result);
     firstOperand = result;
   }
-
   waitingForSecondOperand = true;
   operator = nextOperator;
   calcUpdateDisplay();
 }
 
 function calcCalculate() {
-  if (operator) {
-    calcHandleOperator(operator); // Re-use the handler to finish the calculation
-    operator = null; // Clear the operator after equals
-  }
+  if (!operator) return;
+  const inputValue = parseFloat(calcDisplay);
+  const result = calcPerformCalculation[operator](firstOperand ?? 0, inputValue);
+  calcDisplay = String(result);
+  firstOperand = result;
+  operator = null;
+  waitingForSecondOperand = false;
+  calcUpdateDisplay();
 }
 
 function calcBackspace() {
-    if (waitingForSecondOperand) return;
-    calcDisplay = calcDisplay.length > 1 ? calcDisplay.slice(0, -1) : '0';
-    calcUpdateDisplay();
+  if (waitingForSecondOperand) return;
+  calcDisplay = calcDisplay.length > 1 ? calcDisplay.slice(0, -1) : '0';
+  calcUpdateDisplay();
+}
+
+function calcClear() {
+  calcDisplay = '0';
+  firstOperand = null;
+  operator = null;
+  waitingForSecondOperand = false;
+  calcUpdateDisplay();
 }
 
 const calcPerformCalculation = {
@@ -2216,45 +2230,6 @@ const calcPerformCalculation = {
   '+': (first, second) => first + second,
   '-': (first, second) => first - second,
 };
-
-document.getElementById('calc-buttons').addEventListener('click', (event) => {
-    if (!event.target.matches('button')) return;
-
-    const target = event.target;
-    if (target.classList.contains('calc-operator')) {
-        calcHandleOperator(target.textContent === '÷' ? '/' : target.textContent === '×' ? '*' : target.textContent);
-        return;
-    }
-    if (target.classList.contains('calc-equals')) {
-        calcCalculate();
-        return;
-    }
-    if (target.classList.contains('calc-clear')) {
-        calcClear();
-        return;
-    }
-    if (target.textContent === '←') {
-        calcBackspace();
-        return;
-    }
-
-    calcAppend(target.textContent);
-});
-
-// Toggle visibility on click
-document.getElementById('calc-toggle').onclick = () => {
-    calculator.classList.toggle('hidden');
-    calcClear(); // Clear calculator on toggle
-};
-
-/* Missing helper: Clear calculator state */
-function calcClear() {
-  calcDisplay = '0';
-  firstOperand = null;
-  operator = null;
-  waitingForSecondOperand = false;
-  calcUpdateDisplay();
-}
 </script>
 
 </body>
