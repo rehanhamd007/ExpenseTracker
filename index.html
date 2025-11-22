@@ -713,6 +713,11 @@ let expenseDrilldown = {
     parentData: null // Store main categories for drilldown to subcategories
 };
 
+/* Helper: resolve CSS variables to actual colors */
+function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
 /* --- Data Persistence & Profile Management (Updated for Firestore) --- */
 
 function saveToLocalStorage() {
@@ -956,16 +961,12 @@ function addEntry(e){
         entry.category = 'N/A'; // Opening Balance is not an expense/income category
 
         if(opType === 'Cash') {
-            // If created via form, opSubSelection is the key from methodNames (e.g., 'savings_acct')
-            // Add the new method to the list if it's a new Cash OB
             if(!methodNames[opSubSelection] && !isImportOrEdit) {
-                // Should only happen if user manually typed a new method/account (not possible with select, but safer to check)
                 methodNames[opSubSelection] = opSubSelection.replace(/_/g, ' ').replace(/(^\w)|(\s\w)/g, m => m.toUpperCase());
             }
             entry.investmentGroup = 'Cash';
             entry.investmentSub = methodNames[opSubSelection] || opSubSelection; // Store the display name
         } else { // Investment Asset
-            // opSubSelection is the key from INVESTMENT_SUBTYPES (e.g., 'Stocks')
             entry.investmentGroup = opSubSelection; // The key (e.g., 'Stocks') acts as a grouping for tracking
             entry.investmentSub = INVESTMENT_SUBTYPES[opSubSelection] || opSubSelection; // Store the display name
         }
@@ -1035,7 +1036,7 @@ function clearForm(){
     formEls.saveBtn.style.display = 'none';
     formEls.cancelBtn.style.display = 'none';
     
-    updateTransactionFormFields(); // Call to reset dynamic fields based on default type='expense'
+    updateTransactionFormFields();
 }
 
 document.getElementById('addBtn').addEventListener('click', addEntry);
@@ -1072,7 +1073,6 @@ function loadEdit(id){
     } else if (entry.type === 'income') {
         formEls.incomeSource.value = entry.incomeSource;
     } else if (entry.type === 'opening_balance') {
-        // Determine if it was Cash or Investment
         const isInvestment = entry.investmentGroup !== 'Cash';
         formEls.openingType.value = isInvestment ? 'Investment' : 'Cash';
         updateTransactionFormFields(); // Update to populate the sub-type dropdown correctly
@@ -1103,11 +1103,9 @@ function getNextPaymentDate() {
     const paymentDay = 10;
     let paymentDate = new Date(currentYear, currentMonth, paymentDay);
 
-    // If today's date is past the payment day (10th), set the payment date to next month's 10th
     if (today.getDate() > paymentDay) {
         paymentDate.setMonth(currentMonth + 1);
     }
-    // Get the name of the month for display
     return paymentDate.toLocaleDateString('en-IN', {month:'long'});
 }
 
@@ -1117,7 +1115,6 @@ function renderKPIs(){
     const prevMonth = curMonth === 0 ? 11 : curMonth - 1;
     const prevYear = curMonth === 0 ? curYear - 1 : curYear;
 
-    // Filter out opening_balance transactions for MoM comparison (Operational Cash Flow)
     const operationalData = data.filter(d => d.type !== 'opening_balance');
     const filterMonth = (d, m, y) => { const dt = new Date(d); return dt.getMonth()===m && dt.getFullYear()===y; };
     const sum = (arr) => arr.reduce((acc,curr) => acc + Number(curr.amount), 0);
@@ -1125,14 +1122,11 @@ function renderKPIs(){
     const curData = operationalData.filter(d => filterMonth(d.date, curMonth, curYear));
     const prevData = operationalData.filter(d => filterMonth(d.date, prevMonth, prevYear));
 
-    // Operational Income/Expense
     const inc = sum(curData.filter(d=>d.type==='income'));
     const exp = sum(curData.filter(d=>d.type==='expense'));
     const prevInc = sum(prevData.filter(d=>d.type==='income'));
     const prevExp = sum(prevData.filter(d=>d.type==='expense'));
 
-    // Total Investment (Historical Cost - Initial Balance + Regular Investment Expense) 
-    // Include 'opening_balance' where investmentGroup is NOT 'Cash'
     const allInvestments = data.filter(d => 
         (d.type === 'opening_balance' && d.investmentGroup !== 'Cash') || 
         (d.type === 'expense' && d.category === 'Investments')
@@ -1142,17 +1136,14 @@ function renderKPIs(){
     const prevInvest = sum(allInvestments.filter(d => filterMonth(d.date, prevMonth, prevYear)));
     const curInvest = sum(allInvestments.filter(d => filterMonth(d.date, curMonth, curYear)));
     
-    // Net Liquidity: Sum of all cash/savings OB + all Income - all Expense (excluding Investments/Insurance/CC Payment)
     const liquidOB = sum(data.filter(d => d.type === 'opening_balance' && d.investmentGroup === 'Cash'));
     const operationalNet = sum(operationalData.filter(d => d.type === 'income')) - sum(operationalData.filter(d => d.type === 'expense'));
     const netLiquidity = liquidOB + operationalNet;
 
-    // Credit Card Due
     const ccExpenses = sum(data.filter(d => d.method === 'credit_card' && d.type === 'expense'));
     const ccPayments = sum(data.filter(d => d.category === 'Credit Card Payment' && d.type === 'expense'));
     const creditCardDue = ccExpenses - ccPayments;
 
-    // CC Limit Logic
     const ccLimit = settings.ccLimit || DEFAULT_CC_LIMIT;
     const limitExceeded = creditCardDue > ccLimit;
     const ccCard = document.getElementById('ccCard');
@@ -1188,7 +1179,6 @@ function renderKPIs(){
     document.getElementById('kpiInvest').innerText = fmt(totalInvested);
     document.getElementById('momInvest').innerHTML = `<span class="${invDelta>=0?'trend-up':'trend-down'}">+${fmt(curInvest)}</span> added this month`;
 
-    // CC KPI Update
     document.getElementById('kpiCCDue').innerText = fmt(creditCardDue);
     document.getElementById('ccPaymentDate').innerText = `Next Payment: 10th of ${getNextPaymentDate()}`;
     document.getElementById('ccLimitDisplay').innerText = fmt(ccLimit);
@@ -1230,11 +1220,11 @@ function getBadge(entry) {
 function renderTable(filterText = '') {
     const tBody = document.getElementById('txBody');
     const filtered = data.filter(e => 
-        e.type.toLowerCase().includes(filterText) ||
-        e.desc.toLowerCase().includes(filterText) ||
-        e.category.toLowerCase().includes(filterText) ||
-        e.method.toLowerCase().includes(filterText) ||
-        e.investmentSub.toLowerCase().includes(filterText)
+        (e.type || '').toLowerCase().includes(filterText) ||
+        (e.desc || '').toLowerCase().includes(filterText) ||
+        (e.category || '').toLowerCase().includes(filterText) ||
+        (e.method || '').toLowerCase().includes(filterText) ||
+        (e.investmentSub || '').toLowerCase().includes(filterText)
     ).sort((a,b) => new Date(b.date) - new Date(a.date));
 
     tBody.innerHTML = filtered.map(e => {
@@ -1276,8 +1266,6 @@ function renderTable(filterText = '') {
 
 function renderInvTable(){
     const t = document.getElementById('invTable').querySelector('tbody');
-    // Tally all transactions (initial and regular) that are related to Investments (excluding Cash)
-    // FIX: Include OB transactions where investmentGroup is NOT 'Cash'
     const invs = data.filter(d => 
         (d.type === 'opening_balance' && d.investmentGroup !== 'Cash') || 
         (d.type === 'expense' && d.category === 'Investments')
@@ -1295,7 +1283,6 @@ function renderInvTable(){
         return acc;
     }, {});
     
-    // Convert to array, sort, and render
     const sortedInvs = Object.values(investmentBreakdown).sort((a,b) => b.amount - a.amount);
     
     t.innerHTML = sortedInvs.map(item => `
@@ -1318,7 +1305,7 @@ function getColorPalette(count) {
     return Array.from({ length: count }, (_, i) => colors[i % colors.length]);
 }
 
-/* --- FIX: Keep canvas and render empty chart if no data --- */
+/* --- FIX: Keep canvas and render empty chart if no data, and align monthly keys with labels --- */
 function renderMainChart(months) {
     if (mainChart) mainChart.destroy();
 
@@ -1333,49 +1320,56 @@ function renderMainChart(months) {
         return;
     }
 
-    const { monthlyData, labels } = prepareMonthlyData(data, months);
+    const { monthlyData, labels, monthKeys } = prepareMonthlyData(data, months);
 
     const investmentData = [];
     const expenseData = [];
     const incomeData = [];
     const netCashFlowData = [];
     
-    labels.forEach(monthKey => {
-        const m = monthlyData[monthKey];
+    // Iterate by monthKeys to ensure mapping consistency with monthlyData
+    monthKeys.forEach((monthKey) => {
+        const m = monthlyData[monthKey] || { income: 0, expense: 0, investment: 0, netCashFlow: 0 };
         investmentData.push(m.investment || 0);
         expenseData.push((m.expense - m.investment) || 0); // Exclude investment expense from regular expense bar
         incomeData.push(m.income || 0);
         netCashFlowData.push(m.netCashFlow || 0);
     });
-    
+
+    // Resolve CSS colors to actual values
+    const colorInvestment = cssVar('--investment-savings') || '#0ea5e9';
+    const colorExpense = cssVar('--danger') || '#ef4444';
+    const colorIncome = cssVar('--success') || '#10b981';
+    const colorNetLine = cssVar('--primary') || '#3b82f6';
+
     mainChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: labels,
+            labels: labels, // labels correspond to monthKeys order
             datasets: [
                 {
                     label: 'Investment',
                     data: investmentData,
-                    backgroundColor: 'var(--investment-savings)',
+                    backgroundColor: colorInvestment,
                     stack: 'ExpenseStack',
                 },
                 {
                     label: 'Expenses',
                     data: expenseData,
-                    backgroundColor: 'var(--danger)',
+                    backgroundColor: colorExpense,
                     stack: 'ExpenseStack',
                 },
                 {
                     label: 'Income',
                     data: incomeData,
-                    backgroundColor: 'var(--success)',
+                    backgroundColor: colorIncome,
                     stack: 'IncomeStack',
                 },
                 {
                     type: 'line',
                     label: 'Net Cash Flow',
                     data: netCashFlowData,
-                    borderColor: 'var(--primary)',
+                    borderColor: colorNetLine,
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
                     yAxisID: 'y1',
                     fill: false,
@@ -1390,13 +1384,13 @@ function renderMainChart(months) {
             maintainAspectRatio: false,
             scales: {
                 x: { stacked: true, grid: { display: false } },
-                y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Income / Expense (₹)', color: 'var(--text-muted)' } },
+                y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Income / Expense (₹)', color: cssVar('--text-muted') || '#64748b' } },
                 y1: { 
                     type: 'linear', 
-                    display: false, // Hide the Net Cash Flow axis
+                    display: false,
                     position: 'right', 
                     grid: { drawOnChartArea: false },
-                    min: Math.min(...netCashFlowData, 0) - 500, // Ensure net cash flow is visible
+                    min: Math.min(...netCashFlowData, 0) - 500,
                     max: Math.max(...netCashFlowData, 0) + 500
                 }
             },
@@ -1404,12 +1398,8 @@ function renderMainChart(months) {
                 legend: { position: 'top' },
                 tooltip: { callbacks: { label: (context) => {
                     let label = context.dataset.label || '';
-                    if (label) {
-                        label += ': ';
-                    }
-                    if (context.parsed.y !== null) {
-                        label += fmt(context.parsed.y);
-                    }
+                    if (label) { label += ': '; }
+                    if (context.parsed.y !== null) { label += fmt(context.parsed.y); }
                     return label;
                 } } }
             }
@@ -1424,7 +1414,6 @@ function prepareMonthlyData(data, months) {
     const currentYear = today.getFullYear();
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-    // Build array of month keys to ensure chronological order and inclusion of zero months
     const monthKeys = [];
     if (months === 'all') {
         const sortedDates = data.map(d => new Date(d.date)).sort((a,b)=>a-b);
@@ -1444,7 +1433,6 @@ function prepareMonthlyData(data, months) {
         }
     }
 
-    // Initialize all months in the range
     monthKeys.forEach(key => {
         monthlyData[key] = { income: 0, expense: 0, investment: 0, netCashFlow: 0 };
     });
@@ -1467,42 +1455,33 @@ function prepareMonthlyData(data, months) {
         }
     });
     
-    // Format the month keys for display labels
     const labels = monthKeys.map(key => {
         const [year, month] = key.split('-');
         return `${monthNames[Number(month)]} ${year % 100}`;
     });
 
-    return { monthlyData, labels };
+    return { monthlyData, labels, monthKeys };
 }
-
 
 function renderDonutChart() {
     if (donutChart) donutChart.destroy();
     
-    // Filter for liquid assets: Cash OBs and all non-CC/non-Investment accounts with non-zero balance
     const liquidAssets = data.filter(d => d.type === 'opening_balance' && d.investmentGroup === 'Cash');
     
-    // Group by method (which is the account/sub-type for liquid assets)
     const liquidBreakdown = liquidAssets.reduce((acc, curr) => {
-        const key = curr.method; // e.g., 'savings_acct'
+        const key = curr.method;
         if (!acc[key]) {
-            acc[key] = { name: curr.investmentSub, amount: 0 }; // Name is the display name (e.g., 'Savings A/C')
+            acc[key] = { name: curr.investmentSub, amount: 0 };
         }
         acc[key].amount += Number(curr.amount);
         return acc;
     }, {});
 
-    // Now factor in the operational cash flow per method
     data.filter(d => d.type !== 'opening_balance').forEach(d => {
         if(d.method === 'credit_card' || d.category === 'Credit Card Payment') return;
         
         const key = d.method;
-        if (!liquidBreakdown[key]) {
-             // Handle cases where an account wasn't set with an OB but has transactions (e.g., if OB was missed)
-             // We'll skip it for donut, assuming all liquid accounts should start with an OB
-             return; 
-        }
+        if (!liquidBreakdown[key]) return;
         
         const amount = Number(d.amount);
         if (d.type === 'income') {
@@ -1512,7 +1491,6 @@ function renderDonutChart() {
         }
     });
 
-    // Clean up negative/zero balances and prepare for chart
     const finalData = Object.values(liquidBreakdown).filter(item => item.amount > 0);
 
     const labels = finalData.map(item => item.name);
@@ -1547,7 +1525,6 @@ function renderDonutChart() {
         }
     });
     
-    // Custom Legend
     const legendDiv = document.getElementById('walletLegend');
     legendDiv.innerHTML = finalData.map((item, index) => `
         <div style="display:flex; justify-content:space-between; font-weight:500;">
@@ -1564,13 +1541,11 @@ function renderDonutChart() {
     }
 }
 
-
 function renderCharts() {
     const months = document.getElementById('mainChartFilter').value;
     renderMainChart(months);
     renderDonutChart();
 }
-
 
 function renderAll(){
     populateSelects();
@@ -1586,19 +1561,15 @@ document.getElementById('searchTx').addEventListener('input', (e) => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Set default date
     const today = new Date().toISOString().slice(0,10);
     document.getElementById('date').value = today;
     
-    // Check for existing profile on load
     const lastProfile = localStorage.getItem('mm_last_profile');
     if (lastProfile) {
         document.getElementById('profileInput').value = lastProfile;
-        // The modal is open by default, the user must click Load or Switch
     } else {
          document.querySelector('main').style.filter = 'blur(5px)';
     }
-    
     showExistingProfiles();
 });
 
@@ -1625,9 +1596,7 @@ function showExistingProfiles() {
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key.startsWith(BASE_STORAGE_KEY + '_')) {
-            // Reconstruct the profile name from the key
             const profileKey = key.substring(BASE_STORAGE_KEY.length + 1);
-            // Simple logic to de-slugify (Capitalize first letter, replace underscores with spaces)
             const profileName = profileKey.replace(/_/g, ' ').replace(/(^\w)|(\s\w)/g, m => m.toUpperCase());
             if (!profiles.includes(profileName)) {
                 profiles.push(profileName);
@@ -1681,13 +1650,12 @@ function generateRandomSample() {
     const monthsIncome = randBetween(2,3);
     for (let i=0;i<monthsIncome;i++){
         entries.push({id:uid(), type:'income', amount: randBetween(90000, 180000), incomeSource:'Salary', method:'salary_acct', date: dateInLastMonths([i+1, i+1]), desc:'Monthly Salary Deposit'});
-        // Optional freelance
         if (Math.random() < 0.4) {
             entries.push({id:uid(), type:'income', amount: randBetween(8000, 30000), incomeSource:'Freelance', method:'savings_acct', date: dateInLastMonths([i+1, i+1]), desc:'Freelance Project'});
         }
     }
 
-    // Expenses across categories in recent months
+    // Expenses
     const expenseCats = ['Rent','Food','Utilities','Shopping','Entertainment','Travel','Health','Insurance'];
     const methodsPool = ['salary_acct','savings_acct','cash','credit_card'];
     const expenseCount = randBetween(8, 14);
@@ -1713,7 +1681,7 @@ function generateRandomSample() {
         entries.push(entry);
     }
 
-    // Investment SIPs (2 months)
+    // Investment SIPs
     const sipMonths = randBetween(1,2);
     for (let i=0;i<sipMonths;i++){
         const subType = pick(['Mutual_Funds','Stocks','ETFs']);
@@ -1728,7 +1696,6 @@ function generateRandomSample() {
         ccTotalSpend += ccAmt;
         entries.push({id:uid(), type:'expense', amount: ccAmt, category: pick(['Food','Shopping','Travel']), method:'credit_card', date: dateInLastMonths([1,3]), desc:'Card spend'});
     }
-    // Payment (may be partial)
     const ccPaymentAmt = Math.floor(ccTotalSpend * pick([0.4,0.6,0.8,1.0]));
     if (ccPaymentAmt > 0) {
         entries.push({id:uid(), type:'expense', amount: ccPaymentAmt, category:'Credit Card Payment', method:'savings_acct', date: dateInLastMonths([0,1]), desc:'CC Bill Payment'});
@@ -1742,11 +1709,10 @@ document.getElementById('sampleBtn').addEventListener('click', () => {
     if (!currentProfile) return alert('Please select a profile before loading sample data.');
     if(!confirm(`Add sample data to your active profile (${currentProfile})? This will replace your current data.`)) return;
 
-    // Reset method names to canonical before loading
     methodNames = {...CANONICAL_METHODS};
     incomeSources = ['Salary','Freelance','Interest'];
 
-    // Generate and assign random sample dataset
+    // Always generate a fresh random dataset
     data = generateRandomSample();
 
     saveAll();
@@ -1786,7 +1752,7 @@ function updateMethodName(id, newName) {
     methodNames[id] = newName.trim();
     saveAll();
     populateSelects();
-    renderSettings(); // Re-render settings to show updates
+    renderSettings();
 }
 
 document.getElementById('addMethod').onclick = () => {
@@ -1870,10 +1836,9 @@ function convertToCSV(data) {
             let value = row[fieldName.replace(/_/g, '')] || row[fieldName];
             if (value === undefined || value === null) return '';
             
-            // Clean up string values for CSV
             if (typeof value === 'string') {
-                value = value.replace(/"/g, '""'); // Escape double quotes
-                if (value.includes(',')) value = `"${value}"`; // Quote if contains commas
+                value = value.replace(/"/g, '""');
+                if (value.includes(',')) value = `"${value}"`;
             }
             return value;
         }).join(','))
@@ -1899,7 +1864,6 @@ document.getElementById('importDataBtn').onclick = () => {
     if (!currentProfile) return alert('Please select a profile to import into.');
     const input = document.createElement('input');
     input.type = 'file';
-    // Accept CSV, generic text, and JSON
     input.accept = '.csv, application/json, text/csv, text/plain';
     
     input.onchange = e => {
@@ -1912,7 +1876,6 @@ document.getElementById('importDataBtn').onclick = () => {
             let importedData = [];
 
             try {
-                // Try JSON first
                 const json = JSON.parse(content);
                 importedData = Array.isArray(json) ? json : (json.data || json.transactions || []);
                 if (importedData.length > 0) {
@@ -1920,7 +1883,6 @@ document.getElementById('importDataBtn').onclick = () => {
                     return;
                 }
             } catch(jsonErr) {
-                // If JSON fails, try CSV
                 if (file.name.toLowerCase().endsWith('.csv') || file.type === 'text/csv' || file.type === 'text/plain') {
                     importedData = parseCSV(content);
                     if (importedData.length > 0) {
@@ -1945,17 +1907,15 @@ function parseCSV(csvText) {
     
     const csvData = [];
     for (let i = 1; i < lines.length; i++) {
-        let rowValues = lines[i].match(/(?:"[^"]*"|[^,])+/g); // Basic attempt to handle quoted commas
+        let rowValues = lines[i].match(/(?:"[^"]*"|[^,])+/g);
 
         if (!rowValues) continue;
         
-        // Remove quotes from values and map to headers
         const row = rowValues.reduce((obj, val, index) => {
             obj[headers[index]] = val.trim().replace(/^"|"$/g, '');
             return obj;
         }, {});
 
-        // Construct transaction object, using sane defaults/mapping
         const tx = {
             id: row.id || uid(),
             type: row.type || 'expense',
@@ -1965,16 +1925,14 @@ function parseCSV(csvText) {
             category: row.category || '',
             method: row.method || 'cash',
             incomeSource: row.incomesource || '', 
-            // Placeholder for advanced fields, which are unlikely in generic CSV
             investmentGroup: row.investmentgroup || '',
             investmentSub: row.investmentsub || '',
             insuranceType: row.insurancetype || '',
             insuranceFor: row.insurancefor || '',
         };
 
-        // Basic validation and type enforcement for CSV imports
         if (tx.type === 'expense' && !BASE_CATS.includes(tx.category)) {
-            tx.category = 'Misc'; // Default unrecognized category to Misc
+            tx.category = 'Misc';
         }
         
         csvData.push(tx);
@@ -1988,17 +1946,15 @@ function processImportedData(importedData){
     const prompt = `Do you want to REPLACE the current data for '${currentProfile}' with ${importedData.length} imported entries?\n\n- OR -\n\nClick Cancel, then click OK to APPEND the imported entries to your existing data.`;
 
     if(confirm(prompt)) {
-        // REPLACE
         data = importedData;
         saveAll();
         renderAll();
         alert('Data imported successfully (Replaced current profile data)!');
     } else if (confirm(`Do you want to APPEND the ${importedData.length} entries to your existing data?`)) {
-        // APPEND
         const existingIds = new Set(data.map(t => t.id));
         const uniqueNewData = importedData.map(t => ({
             ...t,
-            id: existingIds.has(t.id) ? uid() : t.id // Give new ID if imported ID conflicts
+            id: existingIds.has(t.id) ? uid() : t.id
         }));
         data = [...data, ...uniqueNewData];
         saveAll();
@@ -2019,7 +1975,7 @@ function renderAdvancedCharts() {
     const range = document.getElementById('dateFilter').value;
     const filteredData = filterDataByRange(data, range);
     renderNetWorthChart(filteredData);
-    resetExpenseDrilldown(); // Ensures chart starts at top level
+    resetExpenseDrilldown();
     renderExpenseDistributionChart(filteredData);
 }
 
@@ -2028,8 +1984,7 @@ function filterDataByRange(data, range) {
     const months = parseInt(range);
     const cutoff = new Date();
     cutoff.setMonth(cutoff.getMonth() - months);
-    cutoff.setDate(1); // Start from the first day of the cutoff month
-
+    cutoff.setDate(1);
     return data.filter(d => new Date(d.date) >= cutoff);
 }
 
@@ -2040,31 +1995,24 @@ function renderNetWorthChart(filteredData) {
     const labels = [];
     const cumulativeData = [];
 
-    // Filter and sort all transactions by date
     const sortedData = filteredData.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    // Calculate cumulative net worth day by day
     let currentNetWorth = 0;
     const dailyNetWorth = new Map();
 
     sortedData.forEach(e => {
         let amount = Number(e.amount);
 
-        // Income/Opening Balance adds to net worth
         if (e.type === 'income' || (e.type === 'opening_balance' && e.investmentGroup !== 'Cash')) { 
              currentNetWorth += amount;
         } else if (e.type === 'opening_balance' && e.investmentGroup === 'Cash') {
-             // Cash OB is tracked in liquidity but is part of Net Worth
              currentNetWorth += amount;
-        }
-
-        // Expense subtracts from net worth
-        else if (e.type === 'expense') {
+        } else if (e.type === 'expense') {
             currentNetWorth -= amount;
         }
         
-        const dateKey = e.date; // Use date string as key (YYYY-MM-DD)
-        dailyNetWorth.set(dateKey, currentNetWorth); // Update net worth for this date
+        const dateKey = e.date;
+        dailyNetWorth.set(dateKey, currentNetWorth);
     });
 
     const dates = Array.from(dailyNetWorth.keys()).sort(); 
@@ -2093,15 +2041,10 @@ function renderNetWorthChart(filteredData) {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-                x: { 
-                    grid: { display: false },
-                    title: { display: true, text: 'Date' }
-                },
+                x: { grid: { display: false }, title: { display: true, text: 'Date' } },
                 y: {
                     title: { display: true, text: 'Net Worth (₹)' },
-                    ticks: {
-                        callback: (value) => fmt(value) // Format Y-axis labels
-                    }
+                    ticks: { callback: (value) => fmt(value) }
                 }
             },
             plugins: {
@@ -2136,7 +2079,6 @@ function renderExpenseDistributionChart(filteredData) {
     }
     
     if (expenseDrilldown.active) {
-        // Drilldown View: Show sub-categories/instruments
         titleEl.textContent = `${expenseDrilldown.parentCategory} Breakdown`;
         backBtn.classList.remove('hidden');
 
@@ -2147,14 +2089,13 @@ function renderExpenseDistributionChart(filteredData) {
             let subKey;
             if (e.category === 'Investments') {
                 subKey = e.investmentSub || 'Uncategorized Investment';
-                // Use the display name from INVESTMENT_SUBTYPES if possible
                 const subTypeKey = Object.keys(INVESTMENT_SUBTYPES).find(k => INVESTMENT_SUBTYPES[k] === subKey);
                 subKey = subTypeKey ? INVESTMENT_SUBTYPES[subTypeKey] : subKey;
 
             } else if (e.category === 'Insurance') {
                 subKey = `${e.insuranceType} (${e.insuranceFor})` || 'Uncategorized Insurance';
             } else {
-                subKey = e.category; // For non-investment/insurance, category is the sub-level
+                subKey = e.category;
             }
 
             subGrouped[subKey] = (subGrouped[subKey] || 0) + Number(e.amount);
@@ -2164,26 +2105,21 @@ function renderExpenseDistributionChart(filteredData) {
         chartData = Object.values(subGrouped);
 
     } else {
-        // Main View: Show top-level categories
         titleEl.textContent = 'Expense Distribution by Category';
         backBtn.classList.add('hidden');
 
-        // Group by category
         const categoryGrouped = {};
         expenses.forEach(e => {
             const cat = e.category || 'Misc';
             categoryGrouped[cat] = (categoryGrouped[cat] || 0) + Number(e.amount);
         });
 
-        // Filter out categories with zero value after initial grouping
         for (const cat in categoryGrouped) {
             if (categoryGrouped[cat] < 5) delete categoryGrouped[cat];
         }
 
         labels = Object.keys(categoryGrouped);
         chartData = Object.values(categoryGrouped);
-
-        // Store the main view data for drilldown calculation
         expenseDrilldown.parentData = categoryGrouped;
     }
 
@@ -2218,8 +2154,6 @@ function renderExpenseDistributionChart(filteredData) {
                 if (elements.length > 0 && !expenseDrilldown.active) {
                     const index = elements[0].index;
                     const selectedCategory = labels[index];
-                    
-                    // Only drill down into Investments, Insurance
                     const isDrillable = selectedCategory === 'Investments' || selectedCategory === 'Insurance';
                     if (isDrillable) {
                         expenseDrilldown.active = true;
@@ -2241,7 +2175,6 @@ function resetExpenseDrilldown() {
         renderExpenseDistributionChart(filteredData);
     }
 }
-
 
 /* --- Calculator Logic --- */
 const calculator = document.getElementById('calculator');
@@ -2289,8 +2222,8 @@ function calcHandleOperator(nextOperator) {
 
 function calcCalculate() {
   if (operator) {
-    calcHandleOperator(operator); // Re-use the handler to finish the calculation
-    operator = null; // Clear the operator after equals
+    calcHandleOperator(operator);
+    operator = null;
   }
 }
 
@@ -2300,7 +2233,6 @@ function calcBackspace() {
     calcUpdateDisplay();
 }
 
-// Missing in original: define calcClear to avoid errors and ensure toggle reset
 function calcClear() {
   calcDisplay = '0';
   firstOperand = null;
@@ -2340,10 +2272,9 @@ document.getElementById('calc-buttons').addEventListener('click', (event) => {
     calcAppend(target.textContent);
 });
 
-// Toggle visibility on click
 document.getElementById('calc-toggle').onclick = () => {
     calculator.classList.toggle('hidden');
-    calcClear(); // Clear calculator on toggle
+    calcClear();
 };
 </script>
 
