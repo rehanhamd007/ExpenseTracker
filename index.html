@@ -3,197 +3,343 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MoneyMirror — Clean v3</title>
+  <title>MoneyMirror — Executive Dashboard</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  
   <style>
-    body{font-family:Inter,system-ui,Arial;margin:0;background:#f4f7fb;color:#0b1220}
-    header{background:linear-gradient(90deg,#1f2b6c,#27408f);color:white;padding:12px 18px;display:flex;align-items:center;gap:12px}
-    .container{max-width:1100px;margin:18px auto;padding:0 18px}
-    .grid{display:grid;grid-template-columns:1fr 360px;gap:16px}
-    .card{background:white;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(10,20,50,0.06)}
-    .row{display:flex;gap:8px;align-items:center}
-    input,select,button{padding:8px;border-radius:8px;border:1px solid #e6eef9}
-    button{cursor:pointer;background:#1f2b6c;color:white;border:none}
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:8px;border-bottom:1px solid #f1f5f9;text-align:left;font-size:13px}
-    .muted{color:#64748b;font-size:12px}
-    .small{font-size:12px}
-    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(3,6,23,0.45);z-index:80}
-    .modal.open{display:flex}
-    .modal-card{background:white;padding:14px;border-radius:10px;width:720px;max-width:94%}
-    @media (max-width:900px){ .grid{grid-template-columns:1fr} }
+    :root {
+      --sidebar-bg: #0f172a;
+      --sidebar-text: #94a3b8;
+      --sidebar-active: #38bdf8;
+      --bg-color: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --primary: #3b82f6;
+      --success: #10b981;
+      --danger: #ef4444;
+      --border: #e2e8f0;
+    }
+
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg-color); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
+
+    /* --- Layout --- */
+    aside { width: 260px; background: var(--sidebar-bg); display: flex; flex-direction: column; padding: 20px; color: white; flex-shrink: 0; transition: all 0.3s; }
+    main { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; position: relative; }
+
+    /* --- Typography & Components --- */
+    .brand { font-size: 20px; font-weight: 700; color: white; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; }
+    .brand span { color: var(--sidebar-active); }
+    
+    .nav-item { padding: 12px; border-radius: 8px; color: var(--sidebar-text); cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+    .nav-item.active { background: rgba(56, 189, 248, 0.1); color: var(--sidebar-active); }
+    
+    .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    .col-span-1 { grid-column: span 1; }
+    .col-span-2 { grid-column: span 2; }
+    .col-span-3 { grid-column: span 3; }
+    .col-span-4 { grid-column: span 4; }
+
+    .card { background: var(--card-bg); border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); display: flex; flex-direction: column; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .card-title { font-size: 15px; font-weight: 600; color: var(--text-main); }
+    
+    /* KPI Styles */
+    .kpi-value { font-size: 28px; font-weight: 700; margin-top: 4px; letter-spacing: -0.5px; }
+    .kpi-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+    .trend-up { color: var(--success); font-weight: 600; } 
+    .trend-down { color: var(--danger); font-weight: 600; }
+
+    /* Form Styles */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; display: block; }
+    input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 13px; background: #f8fafc; outline: none; transition: border 0.2s; }
+    input:focus, select:focus { border-color: var(--primary); background: white; }
+    
+    button { padding: 10px 16px; border-radius: 6px; border: none; font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.2s; }
+    .btn-primary { background: var(--sidebar-bg); color: white; }
+    .btn-primary:hover { background: #1e293b; }
+    .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-main); }
+    .btn-outline:hover { background: #f8fafc; border-color: #cbd5e1; }
+    .btn-danger { background: #fee2e2; color: #991b1b; }
+    
+    /* Tables */
+    .table-container { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: 11px; color: var(--text-muted); padding: 12px; border-bottom: 1px solid var(--border); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    
+    /* Chips */
+    .badge { padding: 4px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block; }
+    .badge-income { background: #dcfce7; color: #166534; }
+    .badge-expense { background: #fee2e2; color: #991b1b; }
+    .badge-inv { background: #e0f2fe; color: #075985; }
+    .badge-ins { background: #f3e8ff; color: #6b21a8; }
+
+    /* Utils */
+    .flex-row { display: flex; gap: 10px; align-items: center; }
+    .full-width { width: 100%; }
+    .hidden { display: none !important; }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+    /* Modal */
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+    .modal.open { display: flex; animation: fadeIn 0.2s ease-out; }
+    .modal-content { background: white; width: 600px; max-width: 90%; padding: 24px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* Responsive */
+    @media(max-width: 1100px) {
+        .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+        .col-span-3, .col-span-4 { grid-column: span 2; }
+    }
+    @media(max-width: 768px) {
+        body { flex-direction: column; height: auto; overflow: auto; }
+        aside { width: 100%; padding: 15px; flex-direction: row; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+        aside .brand { margin-bottom: 0; font-size: 18px; }
+        aside nav { display: none !important; } /* Simplify mobile nav for now */
+        .dashboard-grid { grid-template-columns: 1fr; }
+        .col-span-1, .col-span-2, .col-span-3, .col-span-4 { grid-column: span 1; }
+        #mobileMenuBtn { display: block; }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <div style="font-weight:700">MoneyMirror</div>
-    <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-      <div id="netBadge" class="muted">Net: ₹0</div>
-      <button id="settingsBtn" class="small">Settings</button>
-      <button id="backupBtn" class="small">Backup</button>
+
+  <aside>
+    <div class="brand">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
+        MoneyMirror <span>v3</span>
     </div>
-  </header>
-
-  <main class="container">
-    <div class="grid">
-      <div>
-        <!-- Top summary -->
-        <div class="card" style="margin-bottom:12px">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <div class="small muted">Total Inflow</div>
-              <div id="totalInflow" style="font-weight:800;font-size:18px">₹0</div>
-            </div>
-            <div>
-              <div class="small muted">Total Outflow</div>
-              <div id="totalOutflow" style="font-weight:800;font-size:18px">₹0</div>
-            </div>
-            <div>
-              <div class="small muted">Net</div>
-              <div id="netVal" style="font-weight:800;font-size:18px">₹0</div>
-            </div>
-          </div>
-          <div id="momArea" class="muted small" style="margin-top:10px"></div>
-        </div>
-
-        <!-- Add entry -->
-        <div class="card" style="margin-bottom:12px">
-          <div style="font-weight:700;margin-bottom:8px">Add / Edit Entry</div>
-          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
-            <div>
-              <label class="small">Type</label><br>
-              <select id="type"><option value="expense">Expense</option><option value="income">Income</option></select>
-            </div>
-            <div>
-              <label class="small">Amount</label><br>
-              <input id="amount" type="number" />
-            </div>
-            <div>
-              <label class="small">Category</label><br>
-              <select id="category"></select>
-            </div>
-            <div>
-              <label class="small">Method</label><br>
-              <select id="method"></select>
-            </div>
-            <div>
-              <label class="small">Date</label><br>
-              <input id="date" type="date" />
-            </div>
-            <div>
-              <label class="small">Description</label><br>
-              <input id="desc" />
-            </div>
-            <!-- Income source row -->
-            <div id="incomeSourceRow" style="display:none">
-              <label class="small">Income Source</label><br>
-              <select id="incomeSource"></select>
-            </div>
-            <!-- Investment row -->
-            <div id="investmentRow" style="display:none">
-              <label class="small">Investment Group / Type</label><br>
-              <div style="display:flex;gap:6px">
-                <select id="invGroup"><option value="">Group</option><option value="MFs">MFs</option><option value="Commodities">Commodities</option><option value="Stocks">Stocks</option></select>
-                <select id="invSub"><option value="">Type</option></select>
-              </div>
-            </div>
-            <!-- Insurance row -->
-            <div id="insuranceRow" style="display:none">
-              <label class="small">Insurance Type / For</label><br>
-              <div style="display:flex;gap:6px">
-                <select id="insType"><option value="">Type</option><option value="Health">Health</option><option value="Life">Life</option></select>
-                <select id="insFor"><option value="">For</option><option value="Self">Self</option><option value="Family">Family</option></select>
-              </div>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:10px">
-            <button id="addBtn">Add</button>
-            <button id="saveBtn" style="display:none;background:#059669">Save</button>
-            <button id="cancelBtn" class="small" style="background:#94a3b8">Cancel</button>
-            <button id="sampleBtn" class="small" style="background:#64748b">Add Sample</button>
-          </div>
-        </div>
-
-        <!-- Charts -->
-        <div class="card" style="margin-bottom:12px">
-          <div style="display:flex;gap:12px;align-items:center">
-            <div style="flex:1">
-              <div class="small muted">Expenses by Category (6 months)</div>
-              <canvas id="barChart" style="width:100%;height:220px"></canvas>
-            </div>
-            <div style="width:260px">
-              <div class="small muted">Investments Distribution</div>
-              <canvas id="invPie" style="width:100%;height:220px"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <!-- Transactions table -->
-        <div class="card">
-          <div style="font-weight:700;margin-bottom:8px">Transactions</div>
-          <div style="max-height:360px;overflow:auto">
-            <table>
-              <thead><tr><th>Type</th><th>Amt</th><th>Category</th><th>Method</th><th>Date</th><th>Desc</th><th>Act</th></tr></thead>
-              <tbody id="txBody"></tbody>
-            </table>
-          </div>
-        </div>
+    <nav style="display:flex; flex-direction:column; flex:1">
+      <div class="nav-item active">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        Overview
       </div>
-
-      <div>
-        <!-- Right column: Invest summary & balances -->
-        <div class="card" style="margin-bottom:12px">
-          <div style="font-weight:700">Investments Summary</div>
-          <div id="invSummary" class="muted small" style="margin-top:6px"></div>
-          <table style="margin-top:8px">
-            <thead><tr><th>Instrument</th><th>Amt</th><th>MoM</th></tr></thead>
-            <tbody id="invTable"></tbody>
-          </table>
-        </div>
-
-        <div class="card" style="margin-bottom:12px">
-          <div style="font-weight:700">Account Balances</div>
-          <div id="balancesArea" style="margin-top:8px"></div>
-        </div>
-
-        <div class="card">
-          <div style="font-weight:700">Quick Actions</div>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <button id="exportCsv">Export CSV</button>
-            <button id="importJson" class="small">Import JSON</button>
-            <button id="reset" class="small" style="background:#dc2626">Reset</button>
-          </div>
-        </div>
+      <div class="nav-item" id="navSettings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Settings
       </div>
+    </nav>
+    <div style="margin-top:auto; font-size:11px; opacity:0.5">
+        Data stored locally on device
     </div>
+  </aside>
+
+  <main>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div>
+            <h1 style="margin:0; font-size:24px; font-weight:700">Financial Overview</h1>
+            <div style="font-size:13px; color:var(--text-muted); margin-top:4px" id="currentDate"></div>
+        </div>
+        <div class="flex-row">
+            <button class="btn-outline" id="sampleBtn">Load Sample</button>
+            <button class="btn-outline" id="exportBtn">Export CSV</button>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card col-span-1">
+            <div class="card-title" style="color:var(--success)">Total Income</div>
+            <div class="kpi-value" id="kpiIncome">₹0</div>
+            <div class="kpi-sub" id="momIncome"></div>
+        </div>
+        <div class="card col-span-1">
+            <div class="card-title" style="color:var(--danger)">Total Expenses</div>
+            <div class="kpi-value" id="kpiExpense">₹0</div>
+            <div class="kpi-sub" id="momExpense"></div>
+        </div>
+        <div class="card col-span-1">
+            <div class="card-title" style="color:var(--primary)">Net Balance</div>
+            <div class="kpi-value" id="kpiNet">₹0</div>
+            <div class="kpi-sub">Total Available Liquidity</div>
+        </div>
+        <div class="card col-span-1">
+            <div class="card-title" style="color:#0ea5e9">Investments</div>
+            <div class="kpi-value" id="kpiInvest">₹0</div>
+            <div class="kpi-sub" id="momInvest"></div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card col-span-3">
+            <div class="card-header">
+                <div class="card-title">Income & Expense Flow (6 Months)</div>
+            </div>
+            <div style="height:280px; width:100%; position:relative">
+                <canvas id="mainChart"></canvas>
+            </div>
+        </div>
+        <div class="card col-span-1">
+            <div class="card-header">
+                <div class="card-title">Wallet Breakdown</div>
+            </div>
+            <div style="height:220px; position:relative; margin-bottom:10px">
+                <canvas id="donutChart"></canvas>
+            </div>
+            <div id="walletLegend" style="font-size:11px; color:var(--text-muted); display:flex; flex-wrap:wrap; gap:8px;"></div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card col-span-1" style="border-top: 4px solid var(--sidebar-bg)">
+            <div class="card-header">
+                <div class="card-title">Add / Edit Entry</div>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <div class="form-grid">
+                    <div>
+                        <label>Type</label>
+                        <select id="type"><option value="expense">Expense</option><option value="income">Income</option></select>
+                    </div>
+                    <div>
+                        <label>Date</label>
+                        <input id="date" type="date" />
+                    </div>
+                </div>
+
+                <div>
+                    <label>Amount (₹)</label>
+                    <input id="amount" type="number" placeholder="0.00" style="font-weight:700" step="any" />
+                </div>
+
+                <div class="form-grid">
+                    <div>
+                        <label>Category</label>
+                        <select id="category"></select>
+                    </div>
+                    <div>
+                        <label>Paid Via</label>
+                        <select id="method"></select>
+                    </div>
+                </div>
+
+                <div id="incomeSourceRow" class="hidden">
+                    <label>Source</label>
+                    <select id="incomeSource"></select>
+                </div>
+
+                <div id="investmentRow" class="hidden">
+                    <label>Investment Details</label>
+                    <div class="flex-row">
+                        <select id="invGroup"><option value="">Group</option><option value="MFs">MFs</option><option value="Commodities">Commodities</option><option value="Stocks">Stocks</option></select>
+                        <select id="invSub"><option value="">Instrument</option></select>
+                    </div>
+                </div>
+
+                <div id="insuranceRow" class="hidden">
+                    <label>Insurance Details</label>
+                    <div class="flex-row">
+                        <select id="insType"><option value="">Type</option><option value="Health">Health</option><option value="Life">Life</option></select>
+                        <select id="insFor"><option value="">Insured</option><option value="Self">Self</option><option value="Family">Family</option></select>
+                    </div>
+                </div>
+
+                <div>
+                    <label>Description</label>
+                    <input id="desc" placeholder="Details (optional)" />
+                </div>
+
+                <div style="display:flex; gap:8px; margin-top:8px">
+                    <button id="addBtn" class="btn-primary full-width">Add Entry</button>
+                    <button id="saveBtn" class="btn-primary full-width" style="display:none; background:var(--success)">Update Entry</button>
+                    <button id="cancelBtn" class="btn-outline" style="display:none">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card col-span-3">
+            <div class="card-header">
+                <div class="card-title">Recent Transactions</div>
+                <div class="flex-row">
+                     <input type="text" id="searchTx" placeholder="Search entries..." style="padding:6px; width:180px">
+                </div>
+            </div>
+            <div class="table-container">
+                <table id="mainTable">
+                    <thead>
+                        <tr>
+                            <th width="12%">Date</th>
+                            <th width="15%">Category</th>
+                            <th width="30%">Description</th>
+                            <th width="15%">Method</th>
+                            <th width="15%" style="text-align:right">Amount</th>
+                            <th width="13%" style="text-align:center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="txBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card col-span-4">
+             <div class="card-header">
+                <div class="card-title">Investment Portfolio</div>
+            </div>
+            <div class="table-container">
+                <table id="invTable">
+                    <thead><tr><th>Asset Class</th><th>Sub-Class</th><th style="text-align:right">Current Invested Value</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
   </main>
 
-  <!-- Settings modal -->
-  <div id="settingsModal" class="modal"><div class="modal-card">
-    <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-weight:700">Settings</div><button id="closeSettings" class="small">Close</button></div>
-    <div style="margin-top:8px">
-      <div style="font-weight:600;margin-bottom:6px">Payment method display names</div>
-      <div id="methodEditor" style="display:grid;gap:8px"></div>
-      <div style="margin-top:8px">
-        <input id="newMethodId" placeholder="new method id (e.g., upi)" />
-        <input id="newMethodName" placeholder="display name (PhonePe)" />
-        <button id="addMethod" class="small">Add</button>
-      </div>
+  <div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <div class="card-header">
+            <div class="card-title">Configuration</div>
+            <button class="btn-outline" id="closeSettings">Close</button>
+        </div>
+        
+        <div style="margin-bottom:20px">
+            <label style="margin-bottom:8px">Payment Method Labels</label>
+            <div id="methodEditor" style="display:flex; flex-direction:column; gap:8px; max-height:200px; overflow-y:auto; border:1px solid var(--border); padding:10px; border-radius:6px;"></div>
+            <div class="flex-row" style="margin-top:10px">
+                <input id="newMethodId" placeholder="ID (e.g. sbi_upi)" />
+                <input id="newMethodName" placeholder="Display Name (e.g. SBI UPI)" />
+                <button class="btn-primary" id="addMethod">Add</button>
+            </div>
+        </div>
+
+        <div style="margin-bottom:20px">
+            <label style="margin-bottom:8px">Income Sources</label>
+            <div class="flex-row">
+                <input id="newIncome" placeholder="New Source Name" />
+                <button class="btn-primary" id="addIncomeBtn">Add</button>
+            </div>
+            <div id="incomeList" style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap"></div>
+        </div>
+
+        <div style="border-top:1px solid var(--border); padding-top:15px; margin-top:15px">
+            <label style="color:var(--danger)">Danger Zone</label>
+            <div class="flex-row">
+                <button class="btn-outline" id="importJson">Import JSON Backup</button>
+                <button class="btn-danger" id="resetBtn">Factory Reset Data</button>
+            </div>
+        </div>
     </div>
-    <div style="margin-top:12px">
-      <div style="font-weight:600;margin-bottom:6px">Income sources</div>
-      <div style="display:flex;gap:8px">
-        <input id="newIncome" placeholder="source name (e.g., Freelance)" />
-        <button id="addIncomeBtn" class="small">Add</button>
-      </div>
-      <div id="incomeList" class="muted small" style="margin-top:8px"></div>
-    </div>
-  </div></div>
+  </div>
 
 <script>
-/* ---------------------------
-   Lightweight, clean data model
-   --------------------------- */
+/* -----------------------------------------------------------
+   LOGIC LAYER
+   ----------------------------------------------------------- */
 const STORAGE_KEY = 'mm_v3_data';
 const METHOD_KEY = 'mm_v3_methods';
 const INCOME_KEY = 'mm_v3_income';
@@ -207,358 +353,485 @@ const CANONICAL_METHODS = {
   amazon_wallet: 'Amazon Wallet'
 };
 
-let methodNames = JSON.parse(localStorage.getItem(METHOD_KEY) || 'null') || {
-  salary_acct: 'HDFC',
-  savings_acct: 'BoM',
-  cash: 'Cash',
-  savings_cash: 'Savings Cash',
-  credit_card: 'Credit Card',
-  amazon_wallet: 'Amazon Wallet'
-};
+/* Data Init */
+let methodNames = JSON.parse(localStorage.getItem(METHOD_KEY)) || {...CANONICAL_METHODS};
+let incomeSources = JSON.parse(localStorage.getItem(INCOME_KEY)) || ['Salary', 'Freelance', 'Interest'];
+let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
-let incomeSources = JSON.parse(localStorage.getItem(INCOME_KEY) || 'null') || ['Salary'];
-
-let data = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null') || [];
-
-/* Utility */
-const uid = () => Date.now() + Math.floor(Math.random()*8999);
+/* Utils */
+const uid = () => Date.now().toString(36) + Math.random().toString(36).substr(2);
 const fmt = n => '₹' + Number(n||0).toLocaleString('en-IN', {maximumFractionDigits:2});
-const saveAll = () => { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); localStorage.setItem(METHOD_KEY, JSON.stringify(methodNames)); localStorage.setItem(INCOME_KEY, JSON.stringify(incomeSources)); };
-
-/* Normalize older entries: try to map their method strings to canonical id if possible */
-function normalizeExistingData(){
-  const reverseMap = {};
-  for(const k in methodNames) reverseMap[methodNames[k]] = k;
-  for(const id in CANONICAL_METHODS) reverseMap[CANONICAL_METHODS[id]] = id; // also accept default labels
-  data = data.map(e => {
-    if(e && e.method){
-      if(CANONICAL_METHODS[e.method]) return e; // already canonical
-      const maybe = reverseMap[e.method];
-      if(maybe) e.method = maybe;
-    }
-    return e;
-  });
-}
-normalizeExistingData();
-
-/* DOM refs */
-const totalInflowEl = document.getElementById('totalInflow');
-const totalOutflowEl = document.getElementById('totalOutflow');
-const netValEl = document.getElementById('netVal');
-const momArea = document.getElementById('momArea');
-const txBody = document.getElementById('txBody');
-const balancesArea = document.getElementById('balancesArea');
-const invSummary = document.getElementById('invSummary');
-const invTable = document.getElementById('invTable');
-
-const typeEl = document.getElementById('type');
-const amountEl = document.getElementById('amount');
-const categoryEl = document.getElementById('category');
-const methodEl = document.getElementById('method');
-const dateEl = document.getElementById('date');
-const descEl = document.getElementById('desc');
-const incomeRow = document.getElementById('incomeSourceRow');
-const incomeEl = document.getElementById('incomeSource');
-
-const invRow = document.getElementById('investmentRow');
-const invGroup = document.getElementById('invGroup');
-const invSub = document.getElementById('invSub');
-
-const insRow = document.getElementById('insuranceRow');
-const insType = document.getElementById('insType');
-const insFor = document.getElementById('insFor');
-
-const addBtn = document.getElementById('addBtn');
-const saveBtn = document.getElementById('saveBtn');
-const cancelBtn = document.getElementById('cancelBtn');
-const sampleBtn = document.getElementById('sampleBtn');
-
-/* Charts single instances */
-let barChart = null;
-let invPie = null;
-
-/* Categories list */
-const BASE_CATS = ['Food','Travel','Groceries','Medicine','Shopping','Bills','Rent','Misc','Salary','Credit Card Payment','Investments','Insurance'];
-
-/* Investments taxonomy */
-const INVEST_SUB = {
-  MFs: ['Equity','Bonds','Debt','Liquid'],
-  Commodities: ['Silver','Gold (ETF)','Gold (Physical)'],
-  Stocks: ['Stocks']
+const saveAll = () => { 
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); 
+  localStorage.setItem(METHOD_KEY, JSON.stringify(methodNames)); 
+  localStorage.setItem(INCOME_KEY, JSON.stringify(incomeSources)); 
 };
 
-/* Populate selects */
+/* Header Date */
+document.getElementById('currentDate').innerText = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+/* Form Elements */
+const formEls = {
+    type: document.getElementById('type'),
+    amount: document.getElementById('amount'),
+    category: document.getElementById('category'),
+    method: document.getElementById('method'),
+    date: document.getElementById('date'),
+    desc: document.getElementById('desc'),
+    incomeRow: document.getElementById('incomeSourceRow'),
+    incomeSource: document.getElementById('incomeSource'),
+    invRow: document.getElementById('investmentRow'),
+    invGroup: document.getElementById('invGroup'),
+    invSub: document.getElementById('invSub'),
+    insRow: document.getElementById('insuranceRow'),
+    insType: document.getElementById('insType'),
+    insFor: document.getElementById('insFor'),
+    addBtn: document.getElementById('addBtn'),
+    saveBtn: document.getElementById('saveBtn'),
+    cancelBtn: document.getElementById('cancelBtn')
+};
+
+/* Options */
+const BASE_CATS = ['Food','Travel','Groceries','Medicine','Shopping','Bills','Rent','Entertainment','EMI','Credit Card Payment','Investments','Insurance','Education','Misc'];
+const INVEST_SUB = {
+  MFs: ['Equity Large Cap','Equity Mid Cap','Debt Fund','Liquid Fund', 'ELSS'],
+  Commodities: ['Silver','SGB','Gold Physical'],
+  Stocks: ['Direct Equity','IPO']
+};
+
+/* --- DOM Manipulation --- */
+
 function populateSelects(){
   const cats = new Set(BASE_CATS);
   data.forEach(e=> e.category && cats.add(e.category));
-  categoryEl.innerHTML = Array.from(cats).map(c=>`<option value="${c}">${c}</option>`).join('');
-  methodEl.innerHTML = Object.keys(CANONICAL_METHODS).map(id=>`<option value="${id}">${methodNames[id]||CANONICAL_METHODS[id]}</option>`).join('');
-  incomeEl.innerHTML = incomeSources.map(s=>`<option>${s}</option>`).join('');
+  
+  formEls.category.innerHTML = Array.from(cats).map(c=>`<option value="${c}">${c}</option>`).join('');
+  formEls.method.innerHTML = Object.keys(CANONICAL_METHODS).map(id=>`<option value="${id}">${methodNames[id]||CANONICAL_METHODS[id]}</option>`).join('');
+  formEls.incomeSource.innerHTML = incomeSources.map(s=>`<option>${s}</option>`).join('');
 }
-populateSelects();
 
-/* inv sub populate */
 function populateInvSub(){
-  const g = invGroup.value;
-  invSub.innerHTML = '<option value="">Type</option>';
-  if(INVEST_SUB[g]) INVEST_SUB[g].forEach(s=> invSub.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`));
+  const g = formEls.invGroup.value;
+  formEls.invSub.innerHTML = '<option value="">Instrument</option>';
+  if(INVEST_SUB[g]) INVEST_SUB[g].forEach(s=> formEls.invSub.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`));
 }
 
-/* Adjust form visibility */
 function adjustForm(){
-  if(typeEl.value === 'income') incomeRow.style.display = 'block'; else incomeRow.style.display = 'none';
-  if(categoryEl.value === 'Investments') invRow.style.display = 'block'; else invRow.style.display = 'none';
-  if(categoryEl.value === 'Insurance') insRow.style.display = 'block'; else insRow.style.display = 'none';
+  const type = formEls.type.value;
+  const cat = formEls.category.value;
+  
+  formEls.incomeRow.classList.add('hidden');
+  formEls.invRow.classList.add('hidden');
+  formEls.insRow.classList.add('hidden');
+
+  if(type === 'income') formEls.incomeRow.classList.remove('hidden');
+  else if(cat === 'Investments') formEls.invRow.classList.remove('hidden');
+  else if(cat === 'Insurance') formEls.insRow.classList.remove('hidden');
 }
 
-/* Add entry */
+/* CRUD Operations */
 let editId = null;
+
 function addEntry(){
-  const type = typeEl.value;
-  const amount = Number(amountEl.value);
-  const category = categoryEl.value;
-  const method = methodEl.value;
-  const date = dateEl.value || new Date().toISOString().slice(0,10);
-  const desc = descEl.value || '';
-  if(!amount || amount <= 0) return alert('Enter valid amount');
-  const entry = { id: uid(), type, amount, category, method, date, desc };
-  if(type === 'income') entry.incomeSource = incomeEl.value || 'Salary';
-  if(category === 'Investments' && invGroup.value) { entry.investmentGroup = invGroup.value; entry.investmentSub = invSub.value || ''; }
-  if(category === 'Insurance') { entry.insuranceType = insType.value || ''; entry.insuranceFor = insFor.value || ''; }
+  const amount = Number(formEls.amount.value);
+  if(!amount || amount <= 0) return alert('Please enter a valid amount');
+  
+  const entry = {
+    id: uid(),
+    type: formEls.type.value,
+    amount: amount,
+    category: formEls.category.value,
+    method: formEls.method.value,
+    date: formEls.date.value || new Date().toISOString().slice(0,10),
+    desc: formEls.desc.value || ''
+  };
+
+  if(entry.type === 'income') entry.incomeSource = formEls.incomeSource.value;
+  if(entry.category === 'Investments' && formEls.invGroup.value) {
+    entry.investmentGroup = formEls.invGroup.value;
+    entry.investmentSub = formEls.invSub.value || 'Unspecified';
+  }
+  if(entry.category === 'Insurance') {
+    entry.insuranceType = formEls.insType.value || 'General';
+    entry.insuranceFor = formEls.insFor.value || 'Self';
+  }
+
   data.push(entry);
-  saveAll(); renderAll(); clearForm();
+  saveAll();
+  renderAll();
+  clearForm();
 }
 
 function clearForm(){
-  amountEl.value=''; descEl.value=''; dateEl.value=''; invGroup.value=''; invSub.innerHTML='<option value="">Type</option>'; insType.value=''; insFor.value='';
+  formEls.amount.value=''; formEls.desc.value=''; formEls.date.value='';
+  formEls.invGroup.value=''; formEls.invSub.innerHTML='<option>Instrument</option>';
+  editId = null;
+  formEls.addBtn.style.display='block';
+  formEls.saveBtn.style.display='none';
+  formEls.cancelBtn.style.display='none';
 }
 
-/* Edit flow */
-function openEdit(id){
+function loadEdit(id){
   const e = data.find(x=>x.id===id); if(!e) return;
   editId = id;
-  typeEl.value = e.type; amountEl.value = e.amount; categoryEl.value = e.category; methodEl.value = e.method; dateEl.value = e.date.slice(0,10); descEl.value = e.desc||'';
-  if(e.incomeSource) { incomeEl.value = e.incomeSource; }
-  if(e.investmentGroup){ invGroup.value = e.investmentGroup; populateInvSub(); invSub.value = e.investmentSub || ''; }
-  if(e.category === 'Insurance'){ insType.value = e.insuranceType || ''; insFor.value = e.insuranceFor || ''; }
+  
+  // Populate
+  formEls.type.value = e.type;
+  formEls.category.value = e.category;
+  
+  // Need to adjust form visibility BEFORE setting specific fields
   adjustForm();
-  addBtn.style.display='none'; saveBtn.style.display='inline-block';
+  
+  formEls.amount.value = e.amount;
+  formEls.method.value = e.method;
+  formEls.date.value = e.date.slice(0,10);
+  formEls.desc.value = e.desc;
+  
+  if(e.type==='income') formEls.incomeSource.value = e.incomeSource || '';
+  if(e.investmentGroup) { formEls.invGroup.value=e.investmentGroup; populateInvSub(); formEls.invSub.value=e.investmentSub; }
+  if(e.insuranceType) { formEls.insType.value=e.insuranceType; formEls.insFor.value=e.insuranceFor; }
+
+  // Toggle Buttons
+  formEls.addBtn.style.display='none';
+  formEls.saveBtn.style.display='block';
+  formEls.cancelBtn.style.display='block';
+  
+  // Scroll to form
+  formEls.addBtn.scrollIntoView({behavior: "smooth", block: "center"});
 }
+
 function saveEdit(){
   if(!editId) return;
-  const idx = data.findIndex(x=>x.id===editId); if(idx===-1) return;
-  const amount = Number(amountEl.value); if(!amount || amount<=0) return alert('Enter valid amount');
-  data[idx].type = typeEl.value; data[idx].amount = amount; data[idx].category = categoryEl.value; data[idx].method = methodEl.value; data[idx].date = dateEl.value || new Date().toISOString().slice(0,10); data[idx].desc = descEl.value||'';
-  if(data[idx].type==='income') data[idx].incomeSource = incomeEl.value||'Salary'; else delete data[idx].incomeSource;
-  if(data[idx].category==='Investments' && invGroup.value){ data[idx].investmentGroup = invGroup.value; data[idx].investmentSub = invSub.value||''; } else { delete data[idx].investmentGroup; delete data[idx].investmentSub; }
-  if(data[idx].category==='Insurance'){ data[idx].insuranceType = insType.value||''; data[idx].insuranceFor = insFor.value||''; } else { delete data[idx].insuranceType; delete data[idx].insuranceFor; }
-  editId = null; saveAll(); renderAll(); clearForm(); addBtn.style.display='inline-block'; saveBtn.style.display='none';
+  const idx = data.findIndex(x=>x.id===editId);
+  if(idx === -1) return;
+  
+  // Remove old, Add new (Simplest way to ensure structure updates)
+  data.splice(idx, 1); 
+  addEntry(); // This handles save and render
+  editId = null;
 }
+
 function deleteEntry(id){
-  if(!confirm('Delete this entry?')) return;
-  data = data.filter(x=>x.id!==id); saveAll(); renderAll();
+    if(confirm('Are you sure you want to delete this transaction?')){
+        data = data.filter(x => x.id !== id);
+        saveAll();
+        renderAll();
+    }
 }
 
-/* Render transactions */
-function renderTransactions(){
-  txBody.innerHTML = data.slice().sort((a,b)=> new Date(b.date) - new Date(a.date)).map(e=>{
-    const methodLabel = methodNames[e.method] || CANONICAL_METHODS[e.method] || e.method;
-    const ins = e.category==='Insurance' ? `<div class="muted small">(${e.insuranceType||''} • ${e.insuranceFor||''})</div>` : '';
-    const inv = e.investmentGroup ? `<div class="muted small">${e.investmentGroup} › ${e.investmentSub}</div>` : '';
-    return `<tr>
-      <td>${e.type}</td>
-      <td style="font-weight:700">${fmt(e.amount)}</td>
-      <td>${e.category}${inv}${ins}</td>
-      <td>${methodLabel}</td>
-      <td>${new Date(e.date).toLocaleDateString()}</td>
-      <td>${e.desc||''}</td>
-      <td><button onclick="openEdit(${e.id})" class="small">Edit</button> <button onclick="deleteEntry(${e.id})" class="small" style="background:#dc2626">Del</button></td>
-    </tr>`;
-  }).join('');
+/* --- Render Engines --- */
+
+function renderKPIs(){
+    const curMonth = new Date().getMonth();
+    const curYear = new Date().getFullYear();
+    const prevMonth = curMonth === 0 ? 11 : curMonth - 1;
+    const prevYear = curMonth === 0 ? curYear - 1 : curYear;
+
+    const filterMonth = (d, m, y) => { const dt = new Date(d); return dt.getMonth()===m && dt.getFullYear()===y; };
+    const sum = (arr) => arr.reduce((acc,curr) => acc + Number(curr.amount), 0);
+
+    const curData = data.filter(d => filterMonth(d.date, curMonth, curYear));
+    const prevData = data.filter(d => filterMonth(d.date, prevMonth, prevYear));
+
+    const inc = sum(curData.filter(d=>d.type==='income'));
+    const exp = sum(curData.filter(d=>d.type==='expense'));
+    const prevInc = sum(prevData.filter(d=>d.type==='income'));
+    const prevExp = sum(prevData.filter(d=>d.type==='expense'));
+    
+    // Investment: Total all time vs Monthly contribution
+    const invest = sum(data.filter(d=>d.category==='Investments'));
+    const curInvest = sum(curData.filter(d=>d.category==='Investments'));
+    const prevInvest = sum(prevData.filter(d=>d.category==='Investments'));
+
+    const calcDelta = (cur, prev) => {
+        if(prev === 0 && cur === 0) return 0;
+        if(prev === 0) return cur > 0 ? 100 : 0;
+        return ((cur - prev) / prev * 100).toFixed(1);
+    }
+
+    const incDelta = calcDelta(inc, prevInc);
+    const expDelta = calcDelta(exp, prevExp);
+    const invDelta = calcDelta(curInvest, prevInvest);
+
+    document.getElementById('kpiIncome').innerText = fmt(inc);
+    document.getElementById('momIncome').innerHTML = `<span class="${incDelta>=0?'trend-up':'trend-down'}">${incDelta}%</span> vs last month`;
+    
+    document.getElementById('kpiExpense').innerText = fmt(exp);
+    // For expenses, higher is red (down trend visually)
+    document.getElementById('momExpense').innerHTML = `<span class="${expDelta<=0?'trend-up':'trend-down'}">${expDelta}%</span> vs last month`;
+
+    document.getElementById('kpiNet').innerText = fmt(inc - exp);
+    
+    document.getElementById('kpiInvest').innerText = fmt(invest);
+    document.getElementById('momInvest').innerHTML = `<span class="${invDelta>=0?'trend-up':'trend-down'}">+${fmt(curInvest)}</span> added this month`;
 }
 
-/* Compute balances */
-function computeBalances(){
-  const balances = {};
-  for(const id in CANONICAL_METHODS) balances[id] = 0;
-  data.forEach(e=>{
-    const m = e.method || 'cash';
-    if(!(m in balances)) balances[m] = 0;
-    balances[m] += (e.type==='income' ? Number(e.amount) : -Number(e.amount));
-  });
-  return balances;
+function renderTable(){
+    const tbody = document.getElementById('txBody');
+    const search = document.getElementById('searchTx').value.toLowerCase();
+    
+    // Sort Date Descending
+    let sorted = [...data].sort((a,b) => new Date(b.date) - new Date(a.date));
+    
+    // Filter
+    if(search){
+        sorted = sorted.filter(d => d.desc.toLowerCase().includes(search) || d.category.toLowerCase().includes(search) || d.amount.toString().includes(search));
+    }
+
+    sorted = sorted.slice(0, 50); // limit 50 for performance
+    
+    if(sorted.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#94a3b8">No transactions found</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = sorted.map(e => {
+        const badgeClass = e.type==='income' ? 'badge-income' : (e.category==='Investments' ? 'badge-inv' : (e.category==='Insurance'?'badge-ins':'badge-expense'));
+        const methodName = methodNames[e.method] || CANONICAL_METHODS[e.method] || e.method;
+        
+        let meta = '';
+        if(e.category==='Investments') meta = `<br><span style="font-size:11px;color:#64748b">${e.investmentGroup} • ${e.investmentSub}</span>`;
+        if(e.category==='Insurance') meta = `<br><span style="font-size:11px;color:#64748b">${e.insuranceType} • ${e.insuranceFor}</span>`;
+
+        return `
+        <tr>
+            <td>${new Date(e.date).toLocaleDateString('en-IN', {month:'short', day:'numeric'})}</td>
+            <td><span class="badge ${badgeClass}">${e.category}</span></td>
+            <td><div style="font-weight:500">${e.desc || '-'}</div>${meta}</td>
+            <td style="font-size:12px; color:#64748b">${methodName}</td>
+            <td style="text-align:right; font-weight:600; color: ${e.type==='income'?'#166534':'#1e293b'}">${e.type==='income'?'+':'-'} ${fmt(e.amount)}</td>
+            <td style="text-align:center">
+                <button onclick="loadEdit('${e.id}')" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px" title="Edit">✎</button>
+                <button onclick="deleteEntry('${e.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:4px" title="Delete">×</button>
+            </td>
+        </tr>
+        `;
+    }).join('');
 }
 
-/* MoM stats */
-function monthRange(offset){
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + offset;
-  const start = new Date(year, month, 1);
-  const end = new Date(year, month+1, 0, 23,59,59,999);
-  return {start, end};
-}
-function sumRange(start,end,filterFn){
-  return data.filter(e=> new Date(e.date) >= start && new Date(e.date) <= end).filter(filterFn||(()=>true)).reduce((s,e)=> s + Number(e.amount), 0);
-}
-function computeMoM(){
-  const cur = monthRange(0), prev = monthRange(-1);
-  const curIn = sumRange(cur.start, cur.end, e=>e.type==='income');
-  const prevIn = sumRange(prev.start, prev.end, e=>e.type==='income');
-  const curOut = sumRange(cur.start, cur.end, e=>e.type==='expense');
-  const prevOut = sumRange(prev.start, prev.end, e=>e.type==='expense');
-  const p = (a,b)=>(b===0? (a===0?0:100) : Math.round(((a-b)/b)*10000)/100);
-  return {curIn,prevIn,curOut,prevOut, inPct:p(curIn,prevIn), outPct:p(curOut,prevOut)};
-}
-
-/* Investments summary & MoM */
-function investmentsSummary(){
-  const invs = data.filter(e=> e.category==='Investments' && e.investmentGroup);
-  const totals = {};
-  invs.forEach(e=> { const k = `${e.investmentGroup} › ${e.investmentSub}`; totals[k] = (totals[k]||0)+Number(e.amount); });
-  const cur = monthRange(0), prev = monthRange(-1);
-  const curSum = data.filter(e=> e.category==='Investments' && new Date(e.date)>=cur.start && new Date(e.date)<=cur.end).reduce((s,e)=>s+Number(e.amount),0);
-  const prevSum = data.filter(e=> e.category==='Investments' && new Date(e.date)>=prev.start && new Date(e.date)<=prev.end).reduce((s,e)=>s+Number(e.amount),0);
-  const pct = prevSum===0 ? (curSum===0?0:100) : Math.round(((curSum-prevSum)/prevSum)*10000)/100;
-  return {totals,curSum,prevSum,pct};
-}
-
-/* Render investments table and pie */
-function renderInvestments(){
-  const inv = investmentsSummary();
-  invSummary.innerText = `Total invested: ${fmt(Object.values(inv.totals).reduce((s,v)=>s+v,0))} • This month: ${fmt(inv.curSum)} (${inv.pct>=0?'+':''}${inv.pct}%) vs ${fmt(inv.prevSum)}`;
-  invTable.innerHTML = Object.keys(inv.totals).map(k=> {
-    const amt = inv.totals[k];
-    return `<tr><td>${k}</td><td>${fmt(amt)}</td><td class="small">${fmt(0)}</td></tr>`;
-  }).join('');
-  const labels = Object.keys(inv.totals);
-  const vals = Object.values(inv.totals);
-  if(invPie) invPie.destroy();
-  const ctx = document.getElementById('invPie').getContext('2d');
-  invPie = new Chart(ctx, { type:'pie', data:{labels, datasets:[{data:vals}] }, options:{plugins:{legend:{position:'bottom'}}} });
-}
-
-/* Render charts (bar) */
-function renderCharts(){
-  const months = [];
-  const now = new Date();
-  for(let i=5;i>=0;i--){
-    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
-    months.push(d.toLocaleString('en-US',{month:'short',year:'numeric'}));
-  }
-  const cats = BASE_CATS.slice(0,8);
-  const datasets = cats.map((cat,idx) => {
-    const dataArr = months.map((m,mi)=>{
-      const d = new Date(now.getFullYear(), now.getMonth()-(5-mi), 1);
-      const start = new Date(d.getFullYear(), d.getMonth(), 1);
-      const end = new Date(d.getFullYear(), d.getMonth()+1, 0,23,59,59,999);
-      return data.filter(e=> e.category===cat && new Date(e.date)>=start && new Date(e.date)<=end).reduce((s,x)=> s + Number(x.amount || 0), 0);
+function renderInvTable(){
+    const t = document.getElementById('invTable').querySelector('tbody');
+    const invs = data.filter(d => d.category === 'Investments' && d.investmentGroup);
+    
+    const grouped = {};
+    invs.forEach(i => {
+        const key = i.investmentGroup + '|' + i.investmentSub;
+        grouped[key] = (grouped[key] || 0) + Number(i.amount);
     });
-    return { label: cat, data: dataArr, stack:'s', backgroundColor: `hsl(${(idx*47)%360} 70% 50% / 1)` };
-  });
-  if(barChart) barChart.destroy();
-  const ctx = document.getElementById('barChart').getContext('2d');
-  barChart = new Chart(ctx, { type:'bar', data:{labels:months, datasets}, options:{scales:{x:{stacked:true}, y:{stacked:true, ticks:{callback:v=>fmt(v)}}}, plugins:{legend:{position:'bottom'}} } });
+
+    if(Object.keys(grouped).length === 0){
+        t.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#94a3b8">No investments recorded</td></tr>';
+        return;
+    }
+
+    t.innerHTML = Object.entries(grouped).map(([key, val]) => {
+        const [grp, sub] = key.split('|');
+        return `<tr>
+            <td style="font-weight:600">${grp}</td>
+            <td>${sub}</td>
+            <td style="text-align:right; font-family:monospace; font-weight:600">${fmt(val)}</td>
+        </tr>`;
+    }).join('');
 }
 
-/* Render balances */
-function renderBalances(){
-  const bal = computeBalances();
-  balancesArea.innerHTML = Object.keys(bal).map(id=> `<div style="padding:6px;background:#fbfdff;border-radius:8px;margin-bottom:6px">${methodNames[id]||CANONICAL_METHODS[id]}: <strong>${fmt(bal[id])}</strong></div>`).join('');
+let mainChart = null;
+let donutChart = null;
+
+function renderCharts(){
+    const ctxMain = document.getElementById('mainChart').getContext('2d');
+    const ctxDonut = document.getElementById('donutChart').getContext('2d');
+
+    // 1. Data Prep for Main Chart (6 Months)
+    const labels = [];
+    const incData = [];
+    const expData = [];
+    
+    for(let i=5; i>=0; i--){
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        const m = d.getMonth();
+        const y = d.getFullYear();
+        labels.push(d.toLocaleString('default', { month: 'short' }));
+        
+        const filter = e => new Date(e.date).getMonth()===m && new Date(e.date).getFullYear()===y;
+        
+        incData.push(data.filter(e => e.type==='income' && filter(e)).reduce((a,b)=>a+Number(b.amount),0));
+        expData.push(data.filter(e => e.type==='expense' && filter(e)).reduce((a,b)=>a+Number(b.amount),0));
+    }
+
+    if(mainChart) mainChart.destroy();
+    
+    mainChart = new Chart(ctxMain, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                { label: 'Income', data: incData, backgroundColor: '#10b981', borderRadius: 4, order: 2 },
+                { label: 'Expense', data: expData, backgroundColor: '#ef4444', borderRadius: 4, order: 3 },
+                { label: 'Net', data: incData.map((v,i)=>v-expData[i]), type:'line', borderColor:'#3b82f6', tension:0.3, borderWidth:2, pointRadius:3, order: 1 }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { callback: v => v >= 1000 ? '₹'+v/1000+'k' : v } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    // 2. Data Prep for Donut (Balances)
+    const balances = {};
+    Object.keys(CANONICAL_METHODS).forEach(k => balances[k] = 0);
+    data.forEach(e => {
+        const m = e.method || 'cash';
+        if(balances[m] !== undefined) balances[m] += (e.type==='income'? Number(e.amount) : -Number(e.amount));
+    });
+
+    const dLabels = []; const dVals = []; 
+    const palette = ['#3b82f6', '#10b981', '#f59e0b', '#6366f1', '#ec4899', '#64748b'];
+    
+    Object.entries(balances).forEach(([k,v]) => {
+        if(v > 5) { // Filter tiny amounts
+            dLabels.push(methodNames[k] || CANONICAL_METHODS[k]);
+            dVals.push(v);
+        }
+    });
+
+    if(donutChart) donutChart.destroy();
+    
+    donutChart = new Chart(ctxDonut, {
+        type: 'doughnut',
+        data: {
+            labels: dLabels,
+            datasets: [{ data: dVals, backgroundColor: palette, borderWidth:0, hoverOffset:4 }]
+        },
+        options: {
+            cutout: '70%',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }
+        }
+    });
+    
+    // Custom Legend
+    document.getElementById('walletLegend').innerHTML = dLabels.map((l,i) => 
+        `<div style="display:flex; align-items:center; gap:4px">
+            <div style="width:8px; height:8px; border-radius:50%; background:${palette[i%palette.length]}"></div>
+            <span>${l}: <b>${fmt(dVals[i])}</b></span>
+        </div>`
+    ).join('');
 }
 
-/* Render summary */
-function renderSummary(){
-  const inflow = data.filter(e=> e.type==='income').reduce((s,e)=>s+Number(e.amount),0);
-  const outflow = data.filter(e=> e.type==='expense').reduce((s,e)=>s+Number(e.amount),0);
-  totalInflowEl.innerText = fmt(inflow);
-  totalOutflowEl.innerText = fmt(outflow);
-  netValEl.innerText = fmt(inflow - outflow);
-  document.getElementById('netBadge').innerText = 'Net: ' + fmt(inflow - outflow);
-  const mom = computeMoM();
-  momArea.innerHTML = `This month Inflow: <strong>${fmt(mom.curIn)}</strong> (${mom.inPct>=0?'+':''}${mom.inPct}%) vs ${fmt(mom.prevIn)} — Outflow: <strong>${fmt(mom.curOut)}</strong> (${mom.outPct>=0?'+':''}${mom.outPct}%) vs ${fmt(mom.prevOut)}`;
-}
-
-/* Main render */
 function renderAll(){
-  populateSelects();
-  renderTransactions();
-  renderCharts();
-  renderInvestments();
-  renderSummary();
-  renderBalances();
+    populateSelects();
+    renderKPIs();
+    renderTable();
+    renderInvTable();
+    renderCharts();
 }
 
-/* Event wiring */
-addBtn.addEventListener('click', addEntry);
-saveBtn.addEventListener('click', saveEdit);
-cancelBtn.addEventListener('click', ()=>{ editId=null; clearForm(); addBtn.style.display='inline-block'; saveBtn.style.display='none'; });
-categoryEl.addEventListener('change', adjustForm);
-typeEl.addEventListener('change', adjustForm);
-invGroup.addEventListener('change', populateInvSub);
-sampleBtn.addEventListener('click', ()=>{
-  const s = [
-    {id:uid(), type:'income', amount:50000, category:'Salary', method:'salary_acct', date:new Date().toISOString().slice(0,10), desc:'Salary credit', incomeSource:'Salary'},
-    {id:uid(), type:'expense', amount:4000, category:'Food', method:'cash', date:new Date().toISOString().slice(0,10), desc:'Dinner'},
-    {id:uid(), type:'expense', amount:5000, category:'Investments', method:'savings_acct', date:new Date().toISOString().slice(0,10), desc:'SIP', investmentGroup:'MFs', investmentSub:'Equity'},
-    {id:uid(), type:'expense', amount:1500, category:'Insurance', method:'savings_acct', date:new Date().toISOString().slice(0,10), desc:'Health premium', insuranceType:'Health', insuranceFor:'Self'}
-  ];
-  data = data.concat(s); saveAll(); renderAll();
+/* --- Listeners & Settings --- */
+
+document.getElementById('searchTx').addEventListener('keyup', renderTable);
+
+formEls.addBtn.addEventListener('click', addEntry);
+formEls.saveBtn.addEventListener('click', saveEdit);
+formEls.cancelBtn.addEventListener('click', clearForm);
+formEls.type.addEventListener('change', adjustForm);
+formEls.category.addEventListener('change', adjustForm);
+formEls.invGroup.addEventListener('change', populateInvSub);
+
+// Sample Data
+document.getElementById('sampleBtn').addEventListener('click', () => {
+    if(!confirm("Add sample data to your existing data?")) return;
+    const s = [
+        {id:uid(), type:'income', amount:85000, category:'Salary', method:'salary_acct', date:new Date().toISOString(), desc:'Monthly Salary'},
+        {id:uid(), type:'expense', amount:12000, category:'Rent', method:'salary_acct', date:new Date().toISOString(), desc:'House Rent'},
+        {id:uid(), type:'expense', amount:4500, category:'Groceries', method:'credit_card', date:new Date().toISOString(), desc:'Supermarket Run'},
+        {id:uid(), type:'expense', amount:10000, category:'Investments', method:'savings_acct', date:new Date().toISOString(), desc:'SIP August', investmentGroup:'MFs', investmentSub:'Equity Large Cap'},
+        {id:uid(), type:'expense', amount:1500, category:'Food', method:'cash', date:new Date().toISOString(), desc:'Weekend Dinner'}
+    ];
+    data = [...data, ...s];
+    saveAll();
+    renderAll();
 });
 
-/* Settings modal wiring */
-const settingsBtn = document.getElementById('settingsBtn');
-const settingsModal = document.getElementById('settingsModal');
-const methodEditor = document.getElementById('methodEditor');
-const closeSettings = document.getElementById('closeSettings');
-const addMethodBtn = document.getElementById('addMethod');
-const newMethodId = document.getElementById('newMethodId');
-const newMethodName = document.getElementById('newMethodName');
-const addIncomeBtn = document.getElementById('addIncomeBtn');
-const newIncome = document.getElementById('newIncome');
-const incomeList = document.getElementById('incomeList');
+// Settings Modal
+const modal = document.getElementById('settingsModal');
+document.getElementById('navSettings').onclick = () => { modal.classList.add('open'); renderSettings(); };
+document.getElementById('closeSettings').onclick = () => modal.classList.remove('open');
 
-function openSettings(){ settingsModal.classList.add('open'); renderMethodEditor(); renderIncomeList(); }
-function closeSettingsModal(){ settingsModal.classList.remove('open'); }
-settingsBtn.addEventListener('click', openSettings); closeSettings.addEventListener('click', closeSettingsModal);
-
-function renderMethodEditor(){
-  methodEditor.innerHTML = Object.keys(CANONICAL_METHODS).map(id=>{
-    return `<div style="display:flex;gap:8px;align-items:center"><div style="width:160px">${CANONICAL_METHODS[id]}</div>
-      <input data-id="${id}" class="method-input" value="${methodNames[id]||''}" />
-      <button class="small" onclick="resetMethod('${id}')">Reset</button></div>`;
-  }).join('');
-  setTimeout(()=>{ document.querySelectorAll('.method-input').forEach(inp=>{
-    inp.addEventListener('change', ()=>{ methodNames[inp.dataset.id] = inp.value || CANONICAL_METHODS[inp.dataset.id]; saveAll(); renderAll(); renderMethodEditor(); });
-  }); }, 10);
+function renderSettings(){
+    const editor = document.getElementById('methodEditor');
+    editor.innerHTML = Object.keys(CANONICAL_METHODS).map(id => `
+        <div class="flex-row" style="justify-content:space-between">
+            <span style="font-size:12px; color:#64748b">${CANONICAL_METHODS[id]}</span>
+            <input value="${methodNames[id]||''}" onchange="updateMethodName('${id}', this.value)" style="width:180px; padding:4px" />
+        </div>
+    `).join('');
+    document.getElementById('incomeList').innerHTML = incomeSources.map(s=> `<span class="badge" style="background:#e2e8f0">${s}</span>`).join('');
 }
-function resetMethod(id){ methodNames[id] = CANONICAL_METHODS[id]; saveAll(); renderAll(); renderMethodEditor(); }
 
-addMethodBtn.addEventListener('click', ()=>{
-  const id = newMethodId.value.trim(); const name = newMethodName.value.trim();
-  if(!id || !name) return alert('Provide id and display name');
-  CANONICAL_METHODS[id] = id; methodNames[id] = name; saveAll(); renderMethodEditor(); renderAll(); newMethodId.value=''; newMethodName.value='';
-});
+window.updateMethodName = (id, val) => { methodNames[id] = val; saveAll(); renderAll(); };
 
-addIncomeBtn.addEventListener('click', ()=>{
-  const v = newIncome.value.trim(); if(!v) return alert('Enter name'); if(!incomeSources.includes(v)) incomeSources.push(v); saveAll(); renderIncomeList(); populateSelects(); newIncome.value='';
-});
-function renderIncomeList(){ incomeList.innerHTML = incomeSources.map(s=>`<div>${s}</div>`).join(''); }
+document.getElementById('addMethod').onclick = () => {
+    const id = document.getElementById('newMethodId').value.trim();
+    const name = document.getElementById('newMethodName').value.trim();
+    if(id && name) {
+        CANONICAL_METHODS[id] = id; methodNames[id] = name;
+        saveAll(); renderSettings(); renderAll();
+        document.getElementById('newMethodId').value = '';
+        document.getElementById('newMethodName').value = '';
+    }
+};
 
-/* Export / Import / Reset */
-document.getElementById('exportCsv').addEventListener('click', ()=>{
-  const rows = [['type','amount','category','method','date','desc','incomeSource','investmentGroup','investmentSub','insuranceType','insuranceFor']];
-  data.forEach(r=> rows.push([r.type,r.amount,r.category,r.method,r.date,(r.desc||''), r.incomeSource||'', r.investmentGroup||'', r.investmentSub||'', r.insuranceType||'', r.insuranceFor||'']));
-  const csv = rows.map(r=> r.map(c=> `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob = new Blob([csv], {type:'text/csv'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'mm_export.csv'; a.click(); URL.revokeObjectURL(url);
-});
-document.getElementById('importJson').addEventListener('click', ()=>{
-  const inp = document.createElement('input'); inp.type='file'; inp.accept='application/json';
-  inp.onchange = e=>{ const f=e.target.files[0]; const r=new FileReader(); r.onload = ()=>{ try{ const obj = JSON.parse(r.result); if(obj.data) data=obj.data; saveAll(); renderAll(); alert('Imported'); } catch(err){ alert('Invalid JSON'); } }; r.readAsText(f); }; inp.click();
-});
-document.getElementById('reset').addEventListener('click', ()=>{ if(confirm('Reset ALL data?')){ data=[]; methodNames={salary_acct:'HDFC',savings_acct:'BoM',cash:'Cash',savings_cash:'Savings Cash',credit_card:'Credit Card',amazon_wallet:'Amazon Wallet'}; incomeSources=['Salary']; saveAll(); renderAll(); } });
+document.getElementById('addIncomeBtn').onclick = () => {
+    const val = document.getElementById('newIncome').value.trim();
+    if(val && !incomeSources.includes(val)) {
+        incomeSources.push(val); saveAll(); renderSettings(); populateSelects();
+    }
+    document.getElementById('newIncome').value = '';
+};
 
-/* Initial render */
+document.getElementById('resetBtn').onclick = () => {
+    if(confirm('WARNING: This will wipe ALL your data nicely. Continue?')){
+        localStorage.clear();
+        location.reload();
+    }
+};
+
+document.getElementById('exportBtn').onclick = () => {
+    const header = ['id','type','amount','category','method','date','desc','incomeSource','investmentGroup','investmentSub','insuranceType','insuranceFor'];
+    const rows = data.map(e => header.map(k => `"${String(e[k]||'').replace(/"/g,'""')}"`).join(','));
+    const csv = [header.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'moneymirror_backup.csv'; a.click();
+};
+
+document.getElementById('importJson').onclick = () => {
+    const input = document.createElement('input'); input.type = 'file'; input.accept = 'application/json';
+    input.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = event => {
+            try {
+                const json = JSON.parse(event.target.result);
+                if(Array.isArray(json)) data = json; // Handle simple array
+                else if(json.data) data = json.data; // Handle object wrapper
+                saveAll(); renderAll(); alert('Data imported successfully!');
+                modal.classList.remove('open');
+            } catch(err) { alert('Invalid JSON file'); }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+};
+
+/* Init */
 renderAll();
 
 </script>
