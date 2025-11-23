@@ -5,17 +5,15 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>MoneyMirror — v4.9 (Google Sign-In, full dashboard)</title>
 
-  <!-- Fonts & Charts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@1,400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
   <script>
-    // --- Firebase Config ---
+    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyCAZvHT6dG61ISR57AJoZh8GSO7nY_mEGc",
       authDomain: "moneymirror-22543.firebaseapp.com",
@@ -30,30 +28,27 @@
     let auth = null;
     let USE_FIRESTORE = false;
     const FIRESTORE_COLLECTION_NAME = 'moneymirror_v4_transactions';
-    let currentProfile = null; // Google displayName/email
+    let currentProfile = null;
 
     try {
       const app = firebase.initializeApp(firebaseConfig);
       db = app.firestore();
       auth = app.auth();
       USE_FIRESTORE = true;
-      console.log("Firebase initialized:", db.app.options.projectId);
+      console.log("Firebase initialized.");
     } catch (e) {
-      console.warn("Firebase init failed, using LocalStorage:", e);
+      console.warn("Firebase init failed, falling back to LocalStorage:", e);
     }
 
-    // --- Auth helpers ---
     async function signInWithGoogle() {
       if (!auth) return alert('Auth not initialized. Please refresh.');
       const provider = new firebase.auth.GoogleAuthProvider();
-
       try {
-        // Try popup
         const result = await auth.signInWithPopup(provider);
         const user = result.user;
         onUserSignedIn(user);
-      } catch (popupErr) {
-        console.warn("Popup sign-in failed:", popupErr?.message || popupErr);
+      } catch (err) {
+        console.error("Login failed:", err);
         alert('Sign-in popup blocked. Allow popups and try again.');
       }
     }
@@ -62,12 +57,9 @@
       currentProfile = user.displayName || user.email || 'User';
       localStorage.setItem('mm_last_profile', currentProfile);
       document.getElementById('profileNameDisplay').textContent = currentProfile;
-
-      // Show dashboard
       document.getElementById('authGate').style.display = 'none';
       document.querySelector('main').style.filter = 'none';
       document.getElementById('logoutBtn').style.display = 'block';
-
       loadProfileData();
     }
 
@@ -83,11 +75,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      // Attach handlers
       document.getElementById('loginBtn').addEventListener('click', signInWithGoogle);
       document.getElementById('logoutBtn').addEventListener('click', signOutUser);
-
-      // Auth state listener
       if (auth) {
         auth.onAuthStateChanged(user => {
           if (user) onUserSignedIn(user);
@@ -149,7 +138,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       color: white;
       text-align: center;
       padding: 0 24px;
@@ -166,11 +155,6 @@
     .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-main); }
     .btn-outline:hover { background: #f8fafc; border-color: #94a3b8; }
     .btn-danger { background: #fee2e2; color: #991b1b; }
-
-    /* Layout helpers */
-    .flex-row { display: flex; gap: 10px; align-items: center; }
-    .full-width { width: 100%; }
-    .hidden { display: none !important; }
 
     /* Grid */
     .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
@@ -220,11 +204,17 @@
     .badge-opening { background: #efe6ff; color: var(--opening-balance); }
     .badge-cc { background: #fef3c7; color: #b45309; }
 
+    /* Utility Classes (CRITICAL FOR FORM LOGIC) */
+    .flex-row { display: flex; gap: 10px; align-items: center; }
+    .full-width { width: 100%; }
+    .hidden { display: none !important; }
+
     /* Modals */
     .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
     .modal.open { display: flex; animation: fadeIn 0.2s ease-out; }
     .modal-content { background: white; width: 95%; max-width: 1200px; padding: 0; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
     .modal-pad { padding: 24px; }
+    .modal-small { width: 400px; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
     /* Calculator */
@@ -241,7 +231,8 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
       background: #f8fafc;
       border: 1px solid var(--border);
-      display: none;
+      /* NOTE: We removed 'display: none' here and use class='hidden' in HTML instead */
+      display: flex; 
       flex-direction: column;
       overflow: hidden;
     }
@@ -258,6 +249,8 @@
     .calc-zero { grid-column: span 2; }
     .calc-equals { grid-row: span 2; background: var(--primary) !important; color: white !important; }
     .calc-equals:hover { background: var(--primary-dark) !important; }
+    
+    #calc-toggle { margin-left: 10px; padding: 8px 12px; background: var(--primary); color: white; border-radius: 8px; cursor: pointer; display: flex; align-items: center; }
 
     /* Responsive */
     @media(max-width: 1200px) {
@@ -278,7 +271,6 @@
 </head>
 <body>
 
-<!-- Auth Gate -->
 <div id="authGate">
   <p class="line line-1">Welcome to</p>
   <p class="line line-2">MoneyMirror – Personal Finance Dashboard</p>
@@ -286,11 +278,10 @@
   <button id="loginBtn" class="btn-primary" style="padding:12px 24px; font-size:16px;">Sign in with Google</button>
 </div>
 
-<!-- Sidebar -->
 <aside>
   <div>
     <div class="brand">
-      <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
       MoneyMirror <span>v4.9</span>
     </div>
 
@@ -318,10 +309,8 @@
   </div>
 </aside>
 
-<!-- Main dashboard -->
 <main>
 
-  <!-- Header -->
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
     <div>
       <h1 style="margin:0; font-size:24px; font-weight:700">Financial Overview</h1>
@@ -331,17 +320,12 @@
       <button class="btn-outline" id="sampleBtn">Load Sample</button>
       <button class="btn-primary" id="importDataBtn">Import Data (CSV/JSON)</button>
       <button class="btn-outline" id="exportBtn">Export CSV</button>
-      <!-- Clean single-path calculator icon -->
-      <button id="calc-toggle" title="Toggle calculator" class="btn-outline" style="display:flex; align-items:center; gap:8px;">
-        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
-          <path d="M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm2 4h8v4H8V6zm0 6h3v3H8v-3zm5 0h3v3h-3v-3zM8 17h3v3H8v-3zm5 0h3v3h-3v-3z"/>
-        </svg>
-        Calculator
-      </button>
+      <div id="calc-toggle" title="Toggle calculator">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line><line x1="12" y1="14" x2="12.01" y2="14"></line><line x1="8" y1="10" x2="8.01" y2="10"></line><line x1="16" y1="10" x2="16.01" y2="10"></line></svg>
+      </div>
     </div>
   </div>
 
-  <!-- KPIs -->
   <div class="dashboard-grid">
     <div class="card kpi-card col-span-1">
       <div class="card-title" style="color:var(--success)">Monthly Income</div>
@@ -376,7 +360,6 @@
     </div>
   </div>
 
-  <!-- Charts -->
   <div class="dashboard-grid">
     <div class="card col-span-2">
       <div class="card-header">
@@ -407,12 +390,11 @@
     </div>
   </div>
 
-  <!-- Add entry -->
   <div class="dashboard-grid">
     <div class="card action-card col-span-4" id="addEntryCard">
       <div class="action-header">
         <div class="card-title">Add New Entry</div>
-        <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="white" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
       </div>
       <div class="action-body" style="flex-direction:row; flex-wrap:wrap; gap:20px;">
         <div style="width:15%">
@@ -452,7 +434,7 @@
               <select id="incomeSource"></select>
             </div>
             <div id="investmentRow" class="hidden" style="width:25%">
-              <label>Investment details</label>
+              <label>Investment Details</label>
               <div class="flex-row">
                 <select id="invGroup">
                   <option value="">Group</option>
@@ -465,22 +447,22 @@
               </div>
             </div>
             <div id="insuranceRow" class="hidden" style="width:25%">
-              <label>Insurance details</label>
+              <label>Insurance Details</label>
               <div class="flex-row">
                 <select id="insType"><option value="">Type</option><option value="Health">Health</option><option value="Life">Life</option></select>
-                <select id="insFor"><option value="">Insured</option><option value="Self">Self</option><option value="Family">Family</option></select>
+                <select id="insFor"><option value="">Insured</option><option value="Family">Family</option></select>
               </div>
             </div>
           </div>
 
           <div id="openingBalanceRow" class="hidden" style="display:flex; gap:20px; width:50%">
             <div style="width:45%">
-              <label>Asset type</label>
+              <label>Asset Type</label>
               <select id="openingType"><option value="Cash">Cash (Liquid)</option><option value="Investment">Investment Asset</option></select>
             </div>
             <div style="width:45%">
-              <label>Asset sub-type</label>
-              <select id="openingSub" disabled><option value="">Select asset</option></select>
+              <label>Asset Sub-type</label>
+              <select id="openingSub" disabled><option value="">Select Asset</option></select>
             </div>
           </div>
         </div>
@@ -494,7 +476,6 @@
     </div>
   </div>
 
-  <!-- Tables -->
   <div class="dashboard-grid">
     <div class="card col-span-2">
       <div class="card-header">
@@ -531,8 +512,7 @@
 
 </main>
 
-<!-- Calculator -->
-<div id="calculator">
+<div id="calculator" class="hidden">
   <div id="calc-header">
     <span>Calculator</span>
     <button id="calc-close-btn" onclick="toggleCalculator()">×</button>
@@ -560,7 +540,6 @@
   </div>
 </div>
 
-<!-- Settings Modal -->
 <div id="settingsModal" class="modal">
   <div class="modal-content">
     <div class="action-header" style="border-radius:12px 12px 0 0">
@@ -605,7 +584,6 @@
   </div>
 </div>
 
-<!-- Analytics Modal -->
 <div id="analyticsModal" class="modal">
   <div class="modal-content">
     <div class="action-header" style="border-radius:12px 12px 0 0">
@@ -614,7 +592,7 @@
     </div>
     <div class="modal-pad" id="analyticsContent">
       <div id="analyticsFilters">
-        <div class="filter-group" style="padding:15px; border:1px solid var(--border); border-radius:8px; margin-bottom:15px;">
+        <div class="filter-group">
           <h3 style="margin-top:0; font-size:16px;">Filter Data</h3>
           <div>
             <label>Date Range</label>
@@ -634,7 +612,7 @@
         </div>
       </div>
       <div id="chartContainer">
-        <div class="card chart-card" style="height: 400px;">
+        <div class="card chart-card">
           <div class="card-header"><div class="card-title">Cumulative Net Worth Trend (Historical Cost)</div></div>
           <div class="card-body" style="height:100%; position:relative;">
             <canvas id="chartNetWorth"></canvas>
@@ -657,7 +635,7 @@
 </div>
 
 <script>
-// ----------------------------------------------------------- LOGIC LAYER -----------------------------------------------------------
+// ------------------------ LOGIC LAYER ------------------------
 const BASE_STORAGE_KEY = 'mm_v4_data';
 const BASE_METHOD_KEY = 'mm_v4_methods';
 const BASE_INCOME_KEY = 'mm_v4_income';
@@ -701,9 +679,16 @@ let chartNetWorth = null;
 let chartExpenseDistribution = null;
 let expenseDrilldown = { active: false, parentCategory: null, parentData: null };
 
-function cssVar(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
+// Header date, calculator draggable
+document.addEventListener('DOMContentLoaded', () => {
+  const d = new Date();
+  document.getElementById('currentDate').innerText =
+    d.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const today = new Date().toISOString().slice(0,10);
+  const dateEl = document.getElementById('date');
+  if (dateEl) dateEl.value = today;
+  dragElement(document.getElementById("calculator"));
+});
 
 // Persistence
 function saveToLocalStorage() {
@@ -737,7 +722,6 @@ function loadFromLocalStorage() {
 }
 
 async function loadProfileData() {
-  // Reset defaults first
   data = [];
   methodNames = {...CANONICAL_METHODS};
   incomeSources = [];
@@ -766,42 +750,6 @@ async function loadProfileData() {
   document.getElementById('profileNameDisplay').textContent = currentProfile;
   document.querySelector('main').style.filter = 'none';
   renderAll();
-}
-
-// Header date + initial form state + calculator drag
-document.addEventListener('DOMContentLoaded', () => {
-  const d = new Date();
-  document.getElementById('currentDate').innerText =
-    d.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-  const today = new Date().toISOString().slice(0,10);
-  const dateEl = document.getElementById('date');
-  if (dateEl) dateEl.value = today;
-
-  dragElement(document.getElementById("calculator"));
-
-  // Ensure form is initialized cleanly
-  initializeFormState();
-});
-
-function initializeFormState() {
-  // Set defaults
-  const typeEl = document.getElementById('type');
-  const categoryEl = document.getElementById('category');
-  const openingTypeEl = document.getElementById('openingType');
-
-  if (typeEl) typeEl.value = 'expense';
-  if (openingTypeEl) openingTypeEl.value = 'Cash';
-  if (categoryEl) categoryEl.value = '';
-
-  // Hide all conditional sections explicitly
-  document.getElementById('incomeSourceRow')?.classList.add('hidden');
-  document.getElementById('investmentRow')?.classList.add('hidden');
-  document.getElementById('insuranceRow')?.classList.add('hidden');
-  document.getElementById('openingBalanceRow')?.classList.add('hidden');
-
-  // Apply conditional logic once DOM is ready
-  updateTransactionFormFields();
 }
 
 // Form refs
@@ -834,31 +782,27 @@ function populateSelects(){
   const cats = new Set(BASE_CATS);
   formEls.category.innerHTML = `<option value="">Select Category</option>` +
     Array.from(cats).sort().map(c=>`<option value="${c}">${c}</option>`).join('');
-
   formEls.method.innerHTML = Object.keys(methodNames)
     .map(key => `<option value="${key}">${methodNames[key]}</option>`).join('');
-
   formEls.incomeSource.innerHTML = `<option value="">Select Source</option>` +
-    (incomeSources.length ? incomeSources : ['Salary','Freelance','Interest']).map(s => `<option value="${s}">${s}</option>`).join('');
+    incomeSources.map(s => `<option value="${s}">${s}</option>`).join('');
 }
 
 function updateTransactionFormFields(){
-  const entryType = formEls.type?.value || 'expense';
-  const cat = formEls.category?.value || '';
-  const openingType = formEls.openingType?.value || 'Cash';
+  const entryType = formEls.type.value;
+  const cat = formEls.category.value;
+  const openingType = formEls.openingType.value;
 
-  // Reset visibility
-  formEls.regularFieldsDiv?.classList.remove('hidden');
-  formEls.openingBalanceRow?.classList.add('hidden');
-  formEls.incomeRow?.classList.add('hidden');
-  formEls.invRow?.classList.add('hidden');
-  formEls.insRow?.classList.add('hidden');
-  formEls.categoryContainer?.classList.remove('hidden');
+  formEls.regularFieldsDiv.classList.remove('hidden');
+  formEls.openingBalanceRow.classList.add('hidden');
+  formEls.incomeRow.classList.add('hidden');
+  formEls.invRow.classList.add('hidden');
+  formEls.insRow.classList.add('hidden');
+  formEls.categoryContainer.classList.remove('hidden');
 
   if(entryType === 'opening_balance'){
-    // Only show opening balance block
-    formEls.openingBalanceRow?.classList.remove('hidden');
-    formEls.regularFieldsDiv?.classList.add('hidden');
+    formEls.openingBalanceRow.classList.remove('hidden');
+    formEls.regularFieldsDiv.classList.add('hidden');
 
     if (openingType === 'Investment') {
       formEls.openingSub.disabled = false;
@@ -869,28 +813,23 @@ function updateTransactionFormFields(){
       formEls.openingSub.innerHTML = `<option value="">Select Cash Account</option>` +
         Object.keys(methodNames).map(key => `<option value="${key}">${methodNames[key]}</option>`).join('');
     }
-
   } else if (entryType === 'income') {
-    // Show only income source, hide category
-    formEls.incomeRow?.classList.remove('hidden');
-    formEls.categoryContainer?.classList.add('hidden');
-
-  } else if(entryType === 'expense') {
-    // Expense fields visible by category selection
+    formEls.incomeRow.classList.remove('hidden');
+    formEls.categoryContainer.classList.add('hidden');
+  } else if (entryType === 'expense') {
     if(cat === 'Investments') {
-      formEls.invRow?.classList.remove('hidden');
+      formEls.invRow.classList.remove('hidden');
       formEls.invSub.innerHTML = `<option value="">Select Instrument</option>` +
         Object.keys(INVESTMENT_SUBTYPES).map(key => `<option value="${key}">${INVESTMENT_SUBTYPES[key]}</option>`).join('');
     } else if(cat === 'Insurance') {
-      formEls.insRow?.classList.remove('hidden');
+      formEls.insRow.classList.remove('hidden');
     }
   }
 }
 
-// Bind change listeners for conditional behavior
-formEls.type?.addEventListener('change', updateTransactionFormFields);
-formEls.category?.addEventListener('change', updateTransactionFormFields);
-formEls.openingType?.addEventListener('change', updateTransactionFormFields);
+formEls.type.addEventListener('change', updateTransactionFormFields);
+formEls.category.addEventListener('change', updateTransactionFormFields);
+formEls.openingType.addEventListener('change', updateTransactionFormFields);
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
 const fmt = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(num);
@@ -997,14 +936,13 @@ function clearForm(){
   formEls.type.value = 'expense';
   formEls.incomeSource.value = '';
   formEls.openingType.value = 'Cash';
-  formEls.openingSub.innerHTML = '<option value="">Select asset</option>';
+  formEls.openingSub.innerHTML = '<option value="">Select Asset</option>';
   formEls.openingSub.disabled = true;
 
   formEls.addBtn.style.display = 'block';
   formEls.saveBtn.style.display = 'none';
   formEls.cancelBtn.style.display = 'none';
 
-  // Re-apply conditional visibility after clearing
   updateTransactionFormFields();
 }
 
@@ -1045,6 +983,7 @@ function loadEdit(id){
   }
 
   formEls.addBtn.style.display = 'none';
+  formEls.saveBtn.style.display = 'block';
   formEls.saveBtn.style.display = 'block';
   formEls.cancelBtn.style.display = 'block';
 
@@ -1258,6 +1197,7 @@ function renderMainChart(months) {
     netCashFlowData.push(m.netCashFlow || 0);
   });
 
+  const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   const colorInvestment = cssVar('--investment-savings') || '#0ea5e9';
   const colorExpense = cssVar('--danger') || '#ef4444';
   const colorIncome = cssVar('--success') || '#10b981';
@@ -1278,7 +1218,7 @@ function renderMainChart(months) {
       responsive: true, maintainAspectRatio: false,
       scales: {
         x: { stacked: true, grid: { display: false } },
-        y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Income / Expense (₹)', color: cssVar('--text-muted') || '#64748b' } },
+        y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Income / Expense (₹)', color: '#64748b' } },
         y1: { type: 'linear', display: false, position: 'right', grid: { drawOnChartArea: false },
               min: Math.min(...netCashFlowData, 0) - 500, max: Math.max(...netCashFlowData, 0) + 500 }
       },
@@ -1410,7 +1350,6 @@ function renderCharts() {
 
 function renderAll(){
   populateSelects();
-  updateTransactionFormFields(); // Enforce conditional fields after populating
   renderKPIs();
   renderTable();
   renderInvTable();
@@ -1451,9 +1390,12 @@ function calcCalculate() {
   updateCalcDisplay();
 }
 function toggleCalculator() {
-  const isHidden = calculator.style.display === 'none' || calculator.style.display === '';
-  calculator.style.display = isHidden ? 'flex' : 'none';
-  if (isHidden) { calcClear(); }
+  // Logic updated to toggle the hidden CLASS, not display style
+  calculator.classList.toggle('hidden');
+  if (!calculator.classList.contains('hidden')) { 
+      // Reset position if needed or clear calc
+      calcClear(); 
+  }
 }
 document.getElementById('calc-toggle').onclick = toggleCalculator;
 
@@ -1510,7 +1452,7 @@ function renderSettings(){
   `).join('');
 
   const incomeListDiv = document.getElementById('incomeList');
-  incomeListDiv.innerHTML = (incomeSources.length ? incomeSources : ['Salary','Freelance','Interest']).map(s => `
+  incomeListDiv.innerHTML = incomeSources.map(s => `
     <span class="badge" style="background:#e0f7fa; color:var(--primary);">${s}
       <button onclick="removeIncome('${s}')" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:0 0 0 4px; font-size:10px; font-weight:700">×</button>
     </span>
