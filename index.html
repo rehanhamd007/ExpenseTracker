@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MoneyMirror — v4.9.1 (Mobile Fixes & Full Restore)</title>
+  <title>MoneyMirror — v4.9.2 (Mobile Sidebar Fixed)</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@1,400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -127,8 +127,16 @@
     .sys-stat { font-size: 11px; color: var(--sidebar-text); display: flex; justify-content: space-between; margin-bottom: 4px; }
     .sys-val { color: white; font-weight: 600; }
 
-    /* Mobile Menu Toggle Button (Hidden on Desktop) */
-    #mobileMenuBtn { display: none; background: transparent; border: none; color: white; cursor: pointer; }
+    /* Mobile Menu Toggle Button */
+    #mobileMenuBtn { display: none; background: transparent; border: none; color: white; cursor: pointer; font-size: 24px; padding: 5px; }
+    
+    /* Icons for mobile menu toggle */
+    .icon-menu { display: block; }
+    .icon-close { display: none; }
+    
+    /* When mobile-open class is present, swap icons */
+    aside.mobile-open .icon-menu { display: none; }
+    aside.mobile-open .icon-close { display: block; }
 
     /* Auth Gate */
     #authGate {
@@ -214,7 +222,8 @@
     .full-width { width: 100%; }
     .hidden { display: none !important; }
 
-    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+    /* Modals - Z-index increased to be above sidebar */
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
     .modal.open { display: flex; animation: fadeIn 0.2s ease-out; }
     .modal-content { background: white; width: 95%; max-width: 1200px; padding: 0; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
     .modal-pad { padding: 24px; }
@@ -229,7 +238,7 @@
       height: 440px;
       min-height: 440px;
       max-height: 440px;
-      z-index: 2000;
+      z-index: 3000; /* Higher than everything */
       border-radius: 12px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
       background: #f8fafc;
@@ -284,6 +293,7 @@
         padding: 20px; 
         border-top: 1px solid rgba(255,255,255,0.1);
         box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        z-index: 501;
       }
       aside.mobile-open .sidebar-footer {
         display: block;
@@ -325,7 +335,8 @@
         MoneyMirror <span>v4.9</span>
       </div>
       <button id="mobileMenuBtn">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        <svg class="icon-menu" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        <svg class="icon-close" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
 
@@ -349,7 +360,7 @@
       <span>Current Profile</span>
       <span class="sys-val" id="profileNameDisplay">--</span>
     </div>
-    <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v4.9.1 • Mobile Fixes</div>
+    <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v4.9.2 • Mobile Fixed</div>
   </div>
 </aside>
 
@@ -744,7 +755,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sidebar.classList.toggle('mobile-open');
   });
   
-  // Close mobile menu when clicking a nav item
+  // Close mobile menu when clicking any nav item
   const navItems = document.querySelectorAll('.nav-item');
   navItems.forEach(item => {
     item.addEventListener('click', () => {
