@@ -4,37 +4,85 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>MoneyMirror — v4.9 (Full Logic + Fixed Calc)</title>
-  
+
+  <!-- Fonts & Charts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  
+
+  <!-- Firebase SDKs (compat versions for plain HTML) -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+
   <script>
-      /* --- FIREBASE CONFIGURATION --- */
-     const firebaseConfig = {
-  apiKey: "AIzaSyCAZvHT6dG61ISR57AJoZh8GSO7nY_mEGc",
-  authDomain: "moneymirror-22543.firebaseapp.com",
-  projectId: "moneymirror-22543",
-  storageBucket: "moneymirror-22543.firebasestorage.app",
-  messagingSenderId: "61775081584",
-  appId: "1:61775081584:web:3ec184985e324cf6f1c4b5",
-  measurementId: "G-8RPXH1VEFG"
-};
-      let db = null;
-      let USE_FIRESTORE = false;
-      const FIRESTORE_COLLECTION_NAME = 'moneymirror_v4.9_transactions'; 
-try {
+    /* --- FIREBASE CONFIGURATION --- */
+    const firebaseConfig = {
+      apiKey: "AIzaSyCAZvHT6dG61ISR57AJoZh8GSO7nY_mEGc",
+      authDomain: "moneymirror-22543.firebaseapp.com",
+      projectId: "moneymirror-22543",
+      storageBucket: "moneymirror-22543.firebasestorage.app",
+      messagingSenderId: "61775081584",
+      appId: "1:61775081584:web:3ec184985e324cf6f1c4b5",
+      measurementId: "G-8RPXH1VEFG"
+    };
+
+    let db = null;
+    let auth = null;
+    let USE_FIRESTORE = false;
+    const FIRESTORE_COLLECTION_NAME = 'moneymirror_v4_transactions';
+
+    try {
       const app = firebase.initializeApp(firebaseConfig);
       db = app.firestore();
+      auth = app.auth();
       USE_FIRESTORE = true;
       console.log("Firebase initialized for project:", db.app.options.projectId);
     } catch (e) {
       console.warn("Firebase init failed. Falling back to LocalStorage.", e);
     }
+
+    // --- Google Authentication with Popup ---
+    function signInWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
+        .then((result) => {
+          // Google Access Token
+          const credential = result.credential;
+          const token = credential.accessToken;
+          // Signed-in user info
+          const user = result.user;
+          console.log("Signed in:", user.displayName, user.email);
+          document.getElementById('loginBtn').style.display = 'none';
+          document.getElementById('logoutBtn').style.display = 'inline-block';
+        })
+        .catch((error) => {
+          console.error("Login failed:", error.code, error.message);
+        });
+    }
+
+    function signOutUser() {
+      auth.signOut().then(() => {
+        console.log("Signed out");
+        document.getElementById('loginBtn').style.display = 'inline-block';
+        document.getElementById('logoutBtn').style.display = 'none';
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('loginBtn').onclick = signInWithGoogle;
+      document.getElementById('logoutBtn').onclick = signOutUser;
+
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          console.log("User is signed in:", user.uid);
+        } else {
+          console.log("No user signed in");
+        }
+      });
+    });
   </script>
-</head>
-  <style>
+
+<style>
     :root {
       --sidebar-bg: #0f172a;
       --sidebar-text: #94a3b8;
@@ -318,6 +366,10 @@ try {
   </style>
 </head>
 <body>
+
+  <!-- Simple auth controls -->
+  <button id="loginBtn">Sign in with Google</button>
+  <button id="logoutBtn" style="display:none;">Logout</button>
 
   <aside>
     <div>
@@ -2308,6 +2360,35 @@ function resetExpenseDrilldown() {
         renderExpenseDistributionChart(filteredData);
     }
 }
+</script>
+
+<script>
+  // Example: Load sample data
+  document.getElementById('sampleBtn').onclick = () => {
+    console.log("Loading sample data...");
+    // Add logic to populate dashboard with sample transactions
+  };
+
+  // Example: Add transaction
+  document.getElementById('addBtn').onclick = () => {
+    console.log("Adding transaction...");
+    // Collect form data and save to Firestore
+  };
+
+  // Example: Render charts
+  function renderCharts() {
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Jan', 'Feb'],
+        datasets: [{ label: 'Income', data: [1000, 1200] }]
+      }
+    });
+  }
+
+  // Call renderCharts on page load
+  document.addEventListener('DOMContentLoaded', renderCharts);
 </script>
 
 </body>
