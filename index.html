@@ -12,19 +12,28 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script>
       /* --- FIREBASE CONFIGURATION --- */
-      const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT_ID.appspot.com",
-        messagingSenderId: "SENDER_ID",
-        appId: "APP_ID"
-      };
-
+     const firebaseConfig = {
+  apiKey: "AIzaSyCAZvHT6dG61ISR57AJoZh8GSO7nY_mEGc",
+  authDomain: "moneymirror-22543.firebaseapp.com",
+  projectId: "moneymirror-22543",
+  storageBucket: "moneymirror-22543.firebasestorage.app",
+  messagingSenderId: "61775081584",
+  appId: "1:61775081584:web:3ec184985e324cf6f1c4b5",
+  measurementId: "G-8RPXH1VEFG"
+};
       let db = null;
       let USE_FIRESTORE = false;
       const FIRESTORE_COLLECTION_NAME = 'moneymirror_v4_transactions'; 
+try {
+      const app = firebase.initializeApp(firebaseConfig);
+      db = app.firestore();
+      USE_FIRESTORE = true;
+      console.log("Firebase initialized for project:", db.app.options.projectId);
+    } catch (e) {
+      console.warn("Firebase init failed. Falling back to LocalStorage.", e);
+    }
   </script>
+</head>
   <style>
     :root {
       --sidebar-bg: #0f172a;
