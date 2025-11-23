@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MoneyMirror — v4.9.3 (Calculator & Analytics Fix)</title>
+  <title>MoneyMirror — v4.9.4 (Fix: Buttons & Calculator Expression)</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@1,400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -74,20 +74,28 @@
       });
     }
 
-    // --- CALCULATOR LOGIC (START: ADDED/FIXED) ---
+    // --- CALCULATOR LOGIC (START: FIXED FOR DISPLAY) ---
     const calculator = {
       displayValue: '0',
       firstOperand: null,
       waitingForSecondOperand: false,
       operator: null,
+      currentOperation: null, // NEW: Stores the full equation string (e.g., '346 +')
     };
 
     function updateDisplay() {
       const display = document.getElementById('calc-display');
-      // Limit display to prevent overflow/jumbling (e.g., scientific notation for large numbers)
+      const fullDisplay = document.getElementById('calc-full-display');
+      
+      // Update the primary display (result/current input)
       display.textContent = calculator.displayValue.length > 15 
         ? Number(calculator.displayValue).toExponential(8)
         : calculator.displayValue;
+
+      // Update the full operation display
+      if (fullDisplay) {
+        fullDisplay.textContent = calculator.currentOperation || '';
+      }
     }
 
     function inputDigit(digit) {
@@ -118,6 +126,7 @@
       calculator.firstOperand = null;
       calculator.waitingForSecondOperand = false;
       calculator.operator = null;
+      calculator.currentOperation = null; // Reset the operation string
     }
 
     function toggleSign() {
@@ -149,6 +158,10 @@
       
       if (operator && waitingForSecondOperand) {
         calculator.operator = nextOperator;
+        // Keep the currentOperation string but update the operator symbol
+        if (calculator.currentOperation) {
+             calculator.currentOperation = `${calculator.firstOperand} ${nextOperator}`;
+        }
         return;
       }
 
@@ -158,11 +171,25 @@
         const result = calculate(firstOperand, inputValue, operator);
         // Using toFixed(7) to handle floating point issues and then String()
         calculator.displayValue = String(parseFloat(result.toFixed(7))); 
+        
+        // Update the full operation display with the result equation
+        calculator.currentOperation = `${firstOperand} ${operator} ${inputValue} =`;
+        
+        // Set firstOperand to the result for chaining calculations
         calculator.firstOperand = parseFloat(calculator.displayValue);
       }
 
-      calculator.waitingForSecondOperand = true;
-      calculator.operator = nextOperator === '=' ? null : nextOperator;
+      if (nextOperator === '=') {
+          // Calculation finished, prepare for next operation
+          calculator.waitingForSecondOperand = false;
+          calculator.operator = null;
+      } else {
+          // New operator, set it, and prepare for the second operand input
+          calculator.waitingForSecondOperand = true;
+          calculator.operator = nextOperator;
+          // Set the current operation display for the next input (e.g., '1021 +')
+          calculator.currentOperation = `${calculator.firstOperand} ${nextOperator}`;
+      }
     }
 
     function calculate(firstOperand, secondOperand, operator) {
@@ -172,7 +199,7 @@
       if (operator === '/') return firstOperand / secondOperand;
       return secondOperand;
     }
-    // --- CALCULATOR LOGIC (END) ---
+    // --- CALCULATOR LOGIC (END: FIXED FOR DISPLAY) ---
 
     // Constants and Global Variables (from original code)
     const BASE_CATS = ['Food', 'Utilities', 'Shopping', 'Entertainment', 'Travel', 'Health', 'Investments', 'Insurance', 'Credit Card Payment', 'Misc'];
@@ -238,7 +265,7 @@
       settings = JSON.parse(localStorage.getItem(getSettingsKey())) || { ccLimit: DEFAULT_CC_LIMIT };
     }
     async function loadProfileData() {
-      data = []; methodNames = { ...CANONICAL_METHODS }; incomeSources = []; settings = { ccLimit: DEFAULT_CC_LIMIT };
+      data = []; methodNames = { ...CANONICAL_METHODS }; incomeSources = ['Salary', 'Freelance', 'Interest']; settings = { ccLimit: DEFAULT_CC_LIMIT };
       if (USE_FIRESTORE && db) {
         try {
           const doc = await db.collection(FIRESTORE_COLLECTION_NAME).doc(toKey(currentProfile)).get();
@@ -306,10 +333,13 @@
       }
     }
 
+    // Settings Modal element reference
+    const settingsModal = document.getElementById('settingsModal');
 
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('loginBtn').addEventListener('click', signInWithGoogle);
       document.getElementById('logoutBtn').addEventListener('click', signOutUser);
+
       if (auth) {
         auth.onAuthStateChanged(user => {
           if (user) onUserSignedIn(user);
@@ -335,7 +365,7 @@
       navItems.forEach(item => { item.addEventListener('click', () => { sidebar.classList.remove('mobile-open'); }); });
       // End existing DOMContentLoaded code
 
-      // --- CALCULATOR EVENT LISTENERS (START: ADDED/FIXED) ---
+      // --- CALCULATOR EVENT LISTENERS ---
       const calcEl = document.getElementById('calculator');
       const calcToggle = document.getElementById('calc-toggle');
       const calcClose = document.getElementById('calc-close-btn');
@@ -375,11 +405,30 @@
               updateDisplay();
           });
       }
-      // --- CALCULATOR EVENT LISTENERS (END: ADDED/FIXED) ---
+      // --- END CALCULATOR EVENT LISTENERS ---
 
-      // ... (Rest of existing DOMContentLoaded logic)
       
-      // Load sample data button
+      // --- ALL MAIN & SIDEBAR BUTTON LISTENERS (FIXED/CONSOLIDATED) ---
+      
+      // Sidebar Navigation
+      const analyticsModal = document.getElementById('analyticsModal'); 
+      document.getElementById('navAnalytics').addEventListener('click', () => {
+        if (!requireSignedIn()) return;
+        analyticsModal.classList.add('open');
+        populateAnalyticsFilters(); 
+        renderAdvancedCharts();
+      });
+      document.getElementById('closeAnalytics').addEventListener('click', () => analyticsModal.classList.remove('open')); 
+      
+      document.getElementById('navSettings').addEventListener('click', () => {
+          if (!requireSignedIn()) return;
+          settingsModal.classList.add('open');
+          renderSettings();
+      });
+      document.getElementById('closeSettings').addEventListener('click', () => settingsModal.classList.remove('open'));
+
+
+      // Top Action Buttons
       document.getElementById('sampleBtn').addEventListener('click', () => {
         if (!requireSignedIn()) return;
         if(confirm('Load sample data? This will REPLACE all current entries for this profile.')) {
@@ -390,6 +439,28 @@
         }
       });
       
+      document.getElementById('exportBtn').addEventListener('click', () => {
+        if (!requireSignedIn()) return;
+        if (data.length === 0) return alert('No data to export.');
+        const csv = convertToCSV(data);
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `MoneyMirror_Export_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      });
+      
+      document.getElementById('importDataBtn').addEventListener('click', () => {
+        if (!requireSignedIn()) return;
+        document.getElementById('fileInput').click();
+      });
+      
+      // --- END ALL MAIN & SIDEBAR BUTTON LISTENERS ---
+      
+
       // Transaction form listeners
       formEls.type.addEventListener('change', updateTransactionFormFields);
       formEls.category.addEventListener('change', updateTransactionFormFields);
@@ -1054,7 +1125,7 @@
       renderCharts();
     }
     
-    // --- ANALYTICS JS UPDATE (START: ADDED/FIXED) ---
+    // --- ANALYTICS JS UPDATE ---
     function filterDataByDate(data, dateFilter) {
       if (dateFilter === 'all') return data;
       const mCount = Number(dateFilter);
@@ -1090,16 +1161,12 @@
         categoryFilter.innerHTML = optionsHtml;
     }
 
-    // Updated navAnalytics handler to call populateAnalyticsFilters
-    const analyticsModal = document.getElementById('analyticsModal'); 
-    document.getElementById('navAnalytics').onclick = () => {
-      if (!requireSignedIn()) return;
-      analyticsModal.classList.add('open');
-      populateAnalyticsFilters(); // Call to populate category/source options
-      renderAdvancedCharts();
-    };
-    document.getElementById('closeAnalytics').onclick = () => analyticsModal.classList.remove('open'); 
-
+    document.getElementById('typeFilter')?.addEventListener('change', () => {
+        populateAnalyticsFilters();
+        renderAdvancedCharts();
+    });
+    document.getElementById('categoryFilter')?.addEventListener('change', renderAdvancedCharts);
+    
     // Update renderAdvancedCharts to use new filters
     function renderAdvancedCharts() {
         if (!data.length) {
@@ -1108,10 +1175,10 @@
             return;
         }
 
-        const dateFilter = document.getElementById('dateFilter').value;
-        const typeFilter = document.getElementById('typeFilter').value; // NEW
-        const categoryFilter = document.getElementById('categoryFilter').value; // NEW
-        const chart1Type = document.getElementById('chart1Type').value;
+        const dateFilter = document.getElementById('dateFilter')?.value;
+        const typeFilter = document.getElementById('typeFilter')?.value; 
+        const categoryFilter = document.getElementById('categoryFilter')?.value; 
+        const chart1Type = document.getElementById('chart1Type')?.value;
         
         // 1. Initial date filtering
         let filteredData = filterDataByDate(data, dateFilter);
@@ -1136,14 +1203,7 @@
         renderNetWorthChart(filteredData, chart1Type);
         renderExpenseDistributionChart(filteredData);
     }
-    
-    // Add event listener to typeFilter to refresh category options and charts
-    document.getElementById('typeFilter').addEventListener('change', () => {
-        populateAnalyticsFilters();
-        renderAdvancedCharts();
-    });
-    document.getElementById('categoryFilter').addEventListener('change', renderAdvancedCharts);
-    // --- ANALYTICS JS UPDATE (END: ADDED/FIXED) ---
+    // --- ANALYTICS JS UPDATE (END) ---
 
 
     // Advanced Chart Rendering (from original code, updated to accept filtered data)
@@ -1391,26 +1451,8 @@
       ].join('\n');
       return csv;
     }
-    document.getElementById('exportBtn').addEventListener('click', () => {
-      if (!requireSignedIn()) return;
-      if (data.length === 0) return alert('No data to export.');
-      const csv = convertToCSV(data);
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `MoneyMirror_Export_${new Date().toISOString().slice(0, 10)}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    });
 
-    document.getElementById('importDataBtn').addEventListener('click', () => {
-      if (!requireSignedIn()) return;
-      document.getElementById('fileInput').click();
-    });
-
-    document.getElementById('fileInput').addEventListener('change', (event) => {
+    document.getElementById('fileInput')?.addEventListener('change', (event) => {
       const file = event.target.files[0];
       if (!file) return;
 
@@ -1661,7 +1703,19 @@
     }
     #calc-header { background: var(--sidebar-bg); color: white; padding: 10px 15px; cursor: move; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 13px; height: 40px; }
     #calc-close-btn { background: transparent; border: none; color: #ef4444; font-size: 18px; font-weight: 700; cursor: pointer; padding: 0; line-height: 1; }
-    #calc-display { background: var(--sidebar-bg); color: white; text-align: right; font-size: 24px; padding: 15px; border-top: 1px solid rgba(255,255,255,0.1); font-family: monospace; overflow-x: auto; white-space: nowrap; height: 60px; }
+    #calc-display { background: var(--sidebar-bg); color: white; text-align: right; font-size: 24px; padding: 5px 15px 15px 15px; border-top: 1px solid rgba(255,255,255,0.1); font-family: monospace; overflow-x: auto; white-space: nowrap; height: 40px; }
+    /* NEW STYLE FOR CALCULATION HISTORY */
+    #calc-full-display { 
+        background: var(--sidebar-bg); 
+        color: var(--sidebar-text); 
+        text-align: right; 
+        font-size: 14px; 
+        padding: 10px 15px 0 15px; 
+        font-family: monospace; 
+        height: 35px; 
+        overflow: hidden; 
+    }
+    
     #calc-buttons { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(5, 1fr); padding: 10px; gap: 8px; background: white; flex: 1; }
     #calc-buttons button { width: 100%; height: 100%; font-size: 18px; font-weight: 500; border-radius: 8px; background: white; border: 1px solid #e2e8f0; transition: background 0.1s; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     #calc-buttons button:hover { background: #f1f5f9; }
@@ -1772,7 +1826,7 @@
       <span>Current Profile</span>
       <span class="sys-val" id="profileNameDisplay">--</span>
     </div>
-    <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v4.9.3 • Calculator/Analytics Fixed</div>
+    <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v4.9.4 • Buttons & Calculator Fixed</div>
   </div>
 </aside>
 
@@ -1804,7 +1858,7 @@
       <div class="kpi-value" id="kpiExpense">₹0</div>
       <div class="kpi-sub" id="momExpense"></div>
     </div>
-    <div class="card kpi-card col-span-1" id="ccCard" style="border-color:var(--warning); background:#fffbeb">
+    <div class="card kpi-card col-span-1" id="ccCard" style="background:#fffbeb">
       <div class="card-title" id="ccTitle" style="color:var(--warning)">Credit Card Due</div>
       <div class="kpi-value" id="kpiCCDue">₹0</div>
       <div class="kpi-sub" style="color:var(--warning); margin-top: 6px; position:relative;">
@@ -2112,7 +2166,7 @@
     Calculator
     <button id="calc-close-btn">×</button>
   </div>
-  <div id="calc-display">0</div>
+  <div id="calc-full-display"></div> <div id="calc-display">0</div>
   <div id="calc-buttons">
     <button class="calc-clear">AC</button>
     <button class="calc-operator">±</button>
