@@ -41,17 +41,13 @@
     console.warn("Firebase init failed. Falling back to LocalStorage.", e);
   }
 
-  // --- Google Authentication with Popup ---
   function signInWithGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider)
       .then((result) => {
-        const credential = result.credential;
-        const token = credential.accessToken;
         const user = result.user;
         console.log("Signed in:", user.displayName, user.email);
-        document.getElementById('loginBtn').style.display = 'none';
-        document.getElementById('logoutBtn').style.display = 'inline-block';
+        updateUIAuthState(user);
       })
       .catch((error) => {
         console.error("Login failed:", error.code, error.message);
@@ -61,31 +57,52 @@
   function signOutUser() {
     auth.signOut().then(() => {
       console.log("Signed out");
-      document.getElementById('loginBtn').style.display = 'inline-block';
-      document.getElementById('logoutBtn').style.display = 'none';
+      updateUIAuthState(null);
     });
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function updateUIAuthState(user) {
     const main = document.querySelector('main');
     const loginBtn = document.getElementById('loginBtn');
     const logoutBtn = document.getElementById('logoutBtn');
+    const profileModal = document.getElementById('profileModal');
+    const lastProfile = localStorage.getItem('mm_last_profile');
 
+    // Toggle buttons
+    if (loginBtn && logoutBtn) {
+      loginBtn.style.display = user ? 'none' : 'inline-block';
+      logoutBtn.style.display = user ? 'inline-block' : 'none';
+    }
+
+    // If user is signed in and there's a profile, unblur and close modal
+    if (user && lastProfile) {
+      window.currentProfile = lastProfile;  // ensure global is set
+      profileModal?.classList.remove('open');
+      main.style.filter = 'none';
+      // Load profile data if needed
+      if (typeof loadProfileData === 'function') {
+        loadProfileData();
+      }
+    } else if (user) {
+      // Signed in but no profile yet — show modal, keep blur
+      profileModal?.classList.add('open');
+      main.style.filter = 'blur(5px)';
+    } else {
+      // Not signed in — show modal, keep blur
+      profileModal?.classList.add('open');
+      main.style.filter = 'blur(5px)';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
     loginBtn.onclick = signInWithGoogle;
     logoutBtn.onclick = signOutUser;
 
     auth.onAuthStateChanged(user => {
-      if (user) {
-        console.log("User is signed in:", user.uid);
-        main.style.filter = 'none'; // Unblur dashboard
-        loginBtn.style.display = 'none';
-        logoutBtn.style.display = 'inline-block';
-      } else {
-        console.log("No user signed in");
-        main.style.filter = 'blur(5px)'; // Blur dashboard
-        loginBtn.style.display = 'inline-block';
-        logoutBtn.style.display = 'none';
-      }
+      console.log(user ? "User is signed in" : "No user signed in");
+      updateUIAuthState(user);
     });
   });
 </script>
