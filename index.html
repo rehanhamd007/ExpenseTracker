@@ -570,12 +570,10 @@
 
 </main>
 
-<input type="file" id="importFileInput" accept=".csv,.json" style="display:none;" /> 
-
 <div id="calculator" class="hidden">
   <div id="calc-header">
     <span>Calculator</span>
-    <button id="calc-close-btn" onclick="toggleCalculator(false)">×</button>
+    <button id="calc-close-btn" onclick="toggleCalculator()">×</button>
   </div>
   <div id="calc-display">0</div>
   <div id="calc-buttons">
@@ -583,57 +581,47 @@
     <button class="calc-operator" onclick="calcBackspace()">←</button>
     <button class="calc-operator" onclick="calcHandleOperator('/')">÷</button>
     <button class="calc-operator" onclick="calcHandleOperator('*')">×</button>
-    <button onclick="calcHandleNumber('7')">7</button>
-    <button onclick="calcHandleNumber('8')">8</button>
-    <button onclick="calcHandleNumber('9')">9</button>
-    <button class="calc-operator" onclick="calcHandleOperator('-')">−</button>
-    <button onclick="calcHandleNumber('4')">4</button>
-    <button onclick="calcHandleNumber('5')">5</button>
-    <button onclick="calcHandleNumber('6')">6</button>
+    <button onclick="calcAppend('7')">7</button>
+    <button onclick="calcAppend('8')">8</button>
+    <button onclick="calcAppend('9')">9</button>
+    <button class="calc-operator" onclick="calcHandleOperator('-')">-</button>
+    <button onclick="calcAppend('4')">4</button>
+    <button onclick="calcAppend('5')">5</button>
+    <button onclick="calcAppend('6')">6</button>
     <button class="calc-operator" onclick="calcHandleOperator('+')">+</button>
-    <button onclick="calcHandleNumber('1')">1</button>
-    <button onclick="calcHandleNumber('2')">2</button>
-    <button onclick="calcHandleNumber('3')">3</button>
-    <button class="calc-equals" onclick="calcHandleEquals()">=</button>
-    <button class="calc-zero" onclick="calcHandleNumber('0')">0</button>
-    <button onclick="calcHandleNumber('.')">.</button>
+    <button onclick="calcAppend('1')">1</button>
+    <button onclick="calcAppend('2')">2</button>
+    <button onclick="calcAppend('3')">3</button>
+    <button class="calc-equals" onclick="calcCalculate()">=</button>
+    <button class="calc-zero" onclick="calcAppend('0')">0</button>
+    <button onclick="calcAppend('.')">.</button>
   </div>
 </div>
 
 <div id="settingsModal" class="modal">
-  <div class="modal-content modal-small">
+  <div class="modal-content">
     <div class="action-header" style="border-radius:12px 12px 0 0">
-      <div class="card-title" style="color:white">App Settings & Profile Backup</div>
+      <div class="card-title" style="color:white">System Configuration</div>
       <button class="btn-outline" id="closeSettings" style="background:transparent; color:white; border-color:white; padding:4px 10px">Close</button>
     </div>
     <div class="modal-pad">
-      
       <div style="margin-bottom:20px">
-        <label style="margin-bottom:8px">Categories</label>
-        <div id="categoryEditor"></div>
+        <label style="margin-bottom:8px">Payment Method Labels</label>
+        <div id="methodEditor" style="display:flex; flex-direction:column; gap:8px; max-height:200px; overflow-y:auto; border:1px solid var(--border); padding:10px; border-radius:6px;"></div>
         <div class="flex-row" style="margin-top:10px">
-          <input id="newCat" placeholder="New Category Name (e.g. Shopping)" />
-          <button class="btn-primary" id="addCatBtn">Add</button>
-        </div>
-        <div style="font-size:11px; color:var(--text-muted); margin-top:10px;">Investment and Insurance categories cannot be removed.</div>
-      </div>
-
-      <div style="margin-bottom:20px">
-        <label style="margin-bottom:8px">Payment Methods (Accounts)</label>
-        <div id="methodEditor"></div>
-        <div class="flex-row" style="margin-top:10px">
-          <input id="newMethod" placeholder="New Method Name (e.g. SBI UPI)" />
+          <input id="newMethodId" placeholder="ID (e.g. sbi_upi)" />
+          <input id="newMethodName" placeholder="Display Name (e.g. SBI UPI)" />
           <button class="btn-primary" id="addMethod">Add</button>
         </div>
       </div>
 
       <div style="margin-bottom:20px">
         <label style="margin-bottom:8px">Income Sources</label>
-        <div id="incomeEditor"></div>
-        <div class="flex-row" style="margin-top:10px">
+        <div class="flex-row">
           <input id="newIncome" placeholder="New Source Name" />
           <button class="btn-primary" id="addIncomeBtn">Add</button>
         </div>
+        <div id="incomeList" style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap"></div>
       </div>
 
       <div style="margin-bottom:20px">
@@ -664,37 +652,39 @@
       <div id="analyticsFilters">
         <div class="filter-group">
           <h3 style="margin-top:0; font-size:16px;">Filter Data</h3>
-          <div style="display:flex; gap:10px; margin-bottom:10px;">
-            <div>
-              <label>Date Range</label>
-              <select id="dateFilter" onchange="renderAdvancedCharts()">
-                <option value="6">Last 6 Months</option>
-                <option value="12">Last 12 Months</option>
-                <option value="all">All Time</option>
-              </select>
-            </div>
-            <div>
-              <label>Chart Type</label>
-              <select id="chart1Type" onchange="renderAdvancedCharts()">
-                <option value="line">Line Chart</option>
-                <option value="bar">Bar Chart</option>
-              </select>
-            </div>
+          <div>
+            <label>Date Range</label>
+            <select id="dateFilter" onchange="renderAdvancedCharts()">
+              <option value="6">Last 6 Months</option>
+              <option value="12">Last 12 Months</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+          <div style="margin-top:10px">
+            <label>Chart Type</label>
+            <select id="chart1Type" onchange="renderAdvancedCharts()">
+              <option value="line">Line Chart</option>
+              <option value="bar">Bar Chart</option>
+            </select>
           </div>
         </div>
       </div>
-      <div id="chartContainer" class="dashboard-grid">
-        <div class="card chart-card col-span-2">
-          <div class="card-header"><div class="card-title">Cumulative Net Worth Over Time</div></div>
-          <div class="card-body"><div style="height:300px;"><canvas id="chartNetWorth"></canvas></div></div>
-        </div>
-        <div class="card chart-card col-span-2">
-          <div class="card-header">
-            <div class="card-title" id="expenseDonutTitle">Expense Distribution</div>
-            <button id="resetExpenseDrilldown" class="btn-outline hidden" style="padding:4px 10px">← Back</button>
+      <div id="chartContainer">
+        <div class="card chart-card">
+          <div class="card-header"><div class="card-title">Cumulative Net Worth Trend (Historical Cost)</div></div>
+          <div class="card-body" style="height:100%; position:relative;">
+            <canvas id="chartNetWorth"></canvas>
           </div>
-          <div class="card-body" style="height:300px; display:flex; justify-content:center; align-items:center;">
-            <canvas id="chartExpenseDistribution"></canvas>
+        </div>
+        <div class="card chart-card" style="height: auto;">
+          <div class="card-header">
+            <div class="card-title" id="expenseDonutTitle">Expense Distribution by Category</div>
+            <button class="btn-outline hidden" id="resetExpenseDrilldown" onclick="resetExpenseDrilldown()" style="padding:4px 8px; font-size:12px;">← Back to Main</button>
+          </div>
+          <div class="card-body" style="display:flex; justify-content:center; align-items:center;">
+            <div style="height:300px; width:100%; max-width:500px; position:relative;">
+              <canvas id="chartExpenseDistribution"></canvas>
+            </div>
           </div>
         </div>
       </div>
@@ -703,1513 +693,1257 @@
 </div>
 
 <script>
-  // Configuration Constants
-  const DEFAULT_CC_LIMIT = 13000;
-  const CANONICAL_CATEGORIES = ['Investments', 'Insurance', 'Credit Card Payment'];
-  const BASE_CATS = ['Rent','Food','Utilities','Shopping','Entertainment','Travel','Health', ...CANONICAL_CATEGORIES];
-  const CANONICAL_METHODS = { 'cash': 'Cash', 'salary_acct': 'Salary Account', 'savings_acct': 'Savings Account', 'credit_card': 'Credit Card' };
-  const INVESTMENT_SUBTYPES = { 'Equity Funds': 'Equity Funds', 'Debt Funds': 'Debt Funds', 'Gold': 'Gold', 'Crypto': 'Crypto', 'Tech Stock': 'Tech Stock', 'Blue Chip Stock': 'Blue Chip Stock' };
+// ------------------------ LOGIC LAYER ------------------------
+const BASE_STORAGE_KEY = 'mm_v4_data';
+const BASE_METHOD_KEY = 'mm_v4_methods';
+const BASE_INCOME_KEY = 'mm_v4_income';
+const BASE_SETTINGS_KEY = 'mm_v4_settings';
 
-  // Global State
-  let data = [];
-  let methodNames = { ...CANONICAL_METHODS };
-  let incomeSources = ['Salary', 'Freelance', 'Interest'];
-  let settings = { ccLimit: DEFAULT_CC_LIMIT };
-  let editId = null;
+const INVESTMENT_SUBTYPES = {
+  'Stocks': 'Stocks (Equity)',
+  'Mutual_Funds': 'Mutual Funds',
+  'Bonds': 'Bonds/Debt Instruments',
+  'ETFs': 'ETFs',
+  'Real_Estate': 'Real Estate (Direct/REIT)',
+  'Crypto': 'Cryptocurrency',
+  'Gold_Silver': 'Gold/Silver/Commodities',
+  'Other_Investment': 'Other Investment'
+};
 
-  // Cached DOM Elements
-  const formEls = {
-    type: document.getElementById('type'),
-    amount: document.getElementById('amount'),
-    date: document.getElementById('date'),
-    desc: document.getElementById('desc'),
-    category: document.getElementById('category'),
-    method: document.getElementById('method'),
-    incomeSource: document.getElementById('incomeSource'),
-    openingType: document.getElementById('openingType'),
-    openingSub: document.getElementById('openingSub'),
-    
-    // Dynamic Field Containers
-    regularFieldsDiv: document.getElementById('regularFields'),
-    incomeRow: document.getElementById('incomeSourceRow'),
-    invRow: document.getElementById('investmentRow'),
-    insRow: document.getElementById('insuranceRow'),
-    openingBalanceRow: document.getElementById('openingBalanceRow'),
-    categoryContainer: document.getElementById('categoryContainer'),
+const DEFAULT_CC_LIMIT = 13000;
+const toKey = (name) => (name || 'user').toLowerCase().replace(/\s/g, '_').replace(/[^a-z0-9_]/g, '');
+const getStorageKey = (baseKey) => `${baseKey}_${toKey(currentProfile)}`;
+const getTxKey = () => getStorageKey(BASE_STORAGE_KEY);
+const getMethodKey = () => getStorageKey(BASE_METHOD_KEY);
+const getIncomeKey = () => getStorageKey(BASE_INCOME_KEY);
+const getSettingsKey = () => getStorageKey(BASE_SETTINGS_KEY);
 
-    // Buttons
-    addBtn: document.getElementById('addBtn'),
-    saveBtn: document.getElementById('saveBtn'),
-    cancelBtn: document.getElementById('cancelBtn'),
-  };
+const CANONICAL_METHODS = {
+  salary_acct: 'Salary Account',
+  savings_acct: 'Savings Account',
+  cash: 'Cash',
+  credit_card: 'Credit Card',
+};
+const BASE_CATS = ['Food', 'Utilities', 'Rent', 'EMI/Loan', 'Shopping', 'Entertainment', 'Investments', 'Insurance', 'Travel', 'Health', 'Credit Card Payment', 'Misc'];
 
-  // Chart References
-  let mainChart = null;
-  let donutChart = null;
-  let chartNetWorth = null;
-  let chartExpenseDistribution = null;
-  let expenseDrilldown = { active: false, parentCategory: null, parentData: null };
+let methodNames = {...CANONICAL_METHODS};
+let incomeSources = [];
+let data = [];
+let settings = {};
 
-  // Helper Functions
-  function requireSignedIn(){ if(!currentProfile) { alert('Please sign in first.'); return false; } return true; }
-  function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2); }
-  function toKey(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g, '_'); }
-  function getTxKey() { return `mm_v4_${toKey(currentProfile)}_tx`; }
-  function getMethodKey() { return `mm_v4_${toKey(currentProfile)}_methods`; }
-  function getIncomeKey() { return `mm_v4_${toKey(currentProfile)}_income`; }
-  function getSettingsKey() { return `mm_v4_${toKey(currentProfile)}_settings`; }
-  function fmt(n) { return '₹' + Math.abs(Number(n)).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
-  function getTrendIcon(val) { return val > 0 ? `<span class="trend-up">▲</span>` : (val < 0 ? `<span class="trend-down">▼</span>` : `<span>=</span>`); }
-  function getTrendPercent(cur, prev) {
-    if (prev === 0) return cur > 0 ? `(+100% since last month)` : `(New this month)`;
-    const diff = cur - prev;
-    const percent = Math.abs(diff / prev) * 100;
-    return `(${getTrendIcon(diff)} ${percent.toFixed(1)}% vs last month)`;
-  }
-  function getColorPalette(count) {
-    const colors = ['#3b82f6', '#10b981', '#ef4444', '#f97316', '#a855f7', '#6b21a8', '#0ea5e9', '#facc15', '#be123c', '#0f766e', '#7f1d1d'];
-    let palette = [];
-    for(let i = 0; i < count; i++) {
-      palette.push(colors[i % colors.length]);
-    }
-    return palette;
-  }
+let mainChart = null;
+let donutChart = null;
+let chartNetWorth = null;
+let chartExpenseDistribution = null;
+let expenseDrilldown = { active: false, parentCategory: null, parentData: null };
+
+// Header date, calculator draggable, Mobile Menu logic
+document.addEventListener('DOMContentLoaded', () => {
+  const d = new Date();
+  document.getElementById('currentDate').innerText =
+    d.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const today = new Date().toISOString().slice(0,10);
+  const dateEl = document.getElementById('date');
+  if (dateEl) dateEl.value = today;
+  dragElement(document.getElementById("calculator"));
+
+  // Mobile Menu Toggle
+  const mobileBtn = document.getElementById('mobileMenuBtn');
+  const sidebar = document.getElementById('mainSidebar');
   
-  // DRAGGABLE CALCULATOR LOGIC
-  function dragElement(elmnt) {
-    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-    if (document.getElementById(elmnt.id + "-header")) {
-      document.getElementById(elmnt.id + "-header").onmousedown = dragMouseDown;
-      document.getElementById(elmnt.id + "-header").ontouchstart = dragTouchStart;
-    } else {
-      elmnt.onmousedown = dragMouseDown;
-      elmnt.ontouchstart = dragTouchStart;
-    }
-    function dragMouseDown(e) { e = e || window.event; e.preventDefault(); pos3 = e.clientX; pos4 = e.clientY; document.onmouseup = closeDragElement; document.onmousemove = elementDrag; }
-    function dragTouchStart(e) { e = e || window.event; pos3 = e.touches[0].clientX; pos4 = e.touches[0].clientY; document.ontouchend = closeDragElement; document.ontouchmove = elementDrag; }
-    function elementDrag(e) { e = e || window.event; let clientX = e.clientX || (e.touches && e.touches[0].clientX); let clientY = e.clientY || (e.touches && e.touches[0].clientY); if (clientX == null || clientY == null) return; pos1 = pos3 - clientX; pos2 = pos4 - clientY; pos3 = clientX; pos4 = clientY; elmnt.style.top = (elmnt.offsetTop - pos2) + "px"; elmnt.style.left = (elmnt.offsetLeft - pos1) + "px"; }
-    function closeDragElement() { document.onmouseup = null; document.onmousemove = null; document.ontouchend = null; document.ontouchmove = null; }
-  }
-  
-  let calcDisplay = '0';
-  let calcOperator = null;
-  let calcFirstOperand = null;
-
-  function calcUpdateDisplay() { document.getElementById('calc-display').innerText = calcDisplay; }
-  function calcClear() { calcDisplay = '0'; calcOperator = null; calcFirstOperand = null; calcUpdateDisplay(); }
-  function calcBackspace() { calcDisplay = calcDisplay.length > 1 ? calcDisplay.slice(0, -1) : '0'; calcUpdateDisplay(); }
-  function calcHandleNumber(number) { calcDisplay = calcDisplay === '0' ? number : calcDisplay + number; calcUpdateDisplay(); }
-  function calcHandleOperator(nextOperator) {
-    const inputValue = Number(calcDisplay);
-    if (calcFirstOperand === null) { calcFirstOperand = inputValue; } 
-    else if (calcOperator) {
-      const result = calcPerformCalculation(calcFirstOperand, inputValue, calcOperator);
-      calcFirstOperand = result;
-      calcDisplay = String(result);
-    }
-    calcOperator = nextOperator;
-    calcDisplay = '0'; // Reset display for next operand
-    calcUpdateDisplay();
-  }
-  function calcPerformCalculation(first, second, operator) {
-    if (operator === '+') return first + second;
-    if (operator === '-') return first - second;
-    if (operator === '*') return first * second;
-    if (operator === '/') return first / second;
-    return second;
-  }
-  function calcHandleEquals() {
-    if (calcFirstOperand === null) return;
-    const inputValue = Number(calcDisplay);
-    const result = calcPerformCalculation(calcFirstOperand, inputValue, calcOperator);
-    calcDisplay = String(result);
-    calcFirstOperand = null;
-    calcOperator = null;
-    calcUpdateDisplay();
-  }
-  function toggleCalculator(open) {
-    const calc = document.getElementById('calculator');
-    if (open === false) { 
-      calc.classList.add('hidden');
-      return;
-    }
-    if (calc.classList.contains('hidden')) {
-      calc.classList.remove('hidden');
-    } else {
-      calc.classList.add('hidden');
-    }
-  }
-
-  // Header date, calculator draggable, Mobile Menu logic
-  document.addEventListener('DOMContentLoaded', () => {
-    const d = new Date();
-    document.getElementById('currentDate').innerText = d.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    const today = new Date().toISOString().slice(0,10);
-    const dateEl = document.getElementById('date');
-    if (dateEl) dateEl.value = today;
-    
-    dragElement(document.getElementById("calculator"));
-
-    // Mobile Menu Toggle
-    const mobileBtn = document.getElementById('mobileMenuBtn');
-    const sidebar = document.getElementById('mainSidebar');
-    mobileBtn.addEventListener('click', () => { sidebar.classList.toggle('mobile-open'); });
-    
-    // Close mobile menu when clicking any nav item
-    const navItems = document.querySelectorAll('.nav-item');
-    navItems.forEach(item => { item.addEventListener('click', () => { sidebar.classList.remove('mobile-open'); }); });
-    
-    // --- FIXES: WIRING UP MISSING BUTTONS ---
-    // 1. Load Sample Button Fix
-    const sampleBtn = document.getElementById('sampleBtn');
-    if (sampleBtn) sampleBtn.addEventListener('click', loadSampleData);
-    
-    // 2. Calculator Toggle Fix
-    const calcToggleBtn = document.getElementById('calc-toggle');
-    if (calcToggleBtn) calcToggleBtn.addEventListener('click', () => toggleCalculator(true));
+  mobileBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('mobile-open');
   });
-
-  // Persistence function
-  function saveToLocalStorage() {
-    localStorage.setItem(getTxKey(), JSON.stringify(data));
-    localStorage.setItem(getMethodKey(), JSON.stringify(methodNames));
-    localStorage.setItem(getIncomeKey(), JSON.stringify(incomeSources));
-    localStorage.setItem(getSettingsKey(), JSON.stringify(settings));
-  }
   
-  function saveAll() {
-    if (!currentProfile) return;
-    if (USE_FIRESTORE && db) {
-      const docRef = db.collection(FIRESTORE_COLLECTION_NAME).doc(toKey(currentProfile));
-      docRef.set({
-        data,
-        methodNames,
-        incomeSources,
-        settings,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).catch((error) => {
-        console.error("Firestore write error:", error);
-        saveToLocalStorage();
-      });
-    } else {
+  // Close mobile menu when clicking any nav item
+  const navItems = document.querySelectorAll('.nav-item');
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      sidebar.classList.remove('mobile-open');
+    });
+  });
+});
+
+// Persistence
+function saveToLocalStorage() {
+  localStorage.setItem(getTxKey(), JSON.stringify(data));
+  localStorage.setItem(getMethodKey(), JSON.stringify(methodNames));
+  localStorage.setItem(getIncomeKey(), JSON.stringify(incomeSources));
+  localStorage.setItem(getSettingsKey(), JSON.stringify(settings));
+}
+
+function saveAll() {
+  if (!currentProfile) return;
+  if (USE_FIRESTORE && db) {
+    const docRef = db.collection(FIRESTORE_COLLECTION_NAME).doc(toKey(currentProfile));
+    docRef.set({
+      data, methodNames, incomeSources, settings,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch((error) => {
+      console.error("Firestore write error:", error);
       saveToLocalStorage();
-    }
+    });
+  } else {
+    saveToLocalStorage();
   }
+}
 
-  function loadFromLocalStorage() {
-    methodNames = JSON.parse(localStorage.getItem(getMethodKey())) || { ...CANONICAL_METHODS
-    };
-    incomeSources = JSON.parse(localStorage.getItem(getIncomeKey())) || ['Salary', 'Freelance', 'Interest'];
-    data = JSON.parse(localStorage.getItem(getTxKey())) || [];
-    settings = JSON.parse(localStorage.getItem(getSettingsKey())) || { ccLimit: DEFAULT_CC_LIMIT };
-  }
+function loadFromLocalStorage() {
+  methodNames = JSON.parse(localStorage.getItem(getMethodKey())) || {...CANONICAL_METHODS};
+  incomeSources = JSON.parse(localStorage.getItem(getIncomeKey())) || ['Salary', 'Freelance', 'Interest'];
+  data = JSON.parse(localStorage.getItem(getTxKey())) || [];
+  settings = JSON.parse(localStorage.getItem(getSettingsKey())) || { ccLimit: DEFAULT_CC_LIMIT };
+}
 
-  async function loadProfileData() {
-    data = [];
-    methodNames = { ...CANONICAL_METHODS
-    };
-    incomeSources = [];
-    settings = { ccLimit: DEFAULT_CC_LIMIT };
+async function loadProfileData() {
+  data = [];
+  methodNames = {...CANONICAL_METHODS};
+  incomeSources = [];
+  settings = { ccLimit: DEFAULT_CC_LIMIT };
 
-    if (USE_FIRESTORE && db) {
-      try {
-        const doc = await db.collection(FIRESTORE_COLLECTION_NAME).doc(toKey(currentProfile)).get();
-        if (doc.exists) {
-          const loaded = doc.data();
-          data = loaded.data || [];
-          // Merge custom methods with canonical ones
-          methodNames = { ...CANONICAL_METHODS,
-            ...(loaded.methodNames || {})
-          };
-          incomeSources = loaded.incomeSources || ['Salary', 'Freelance', 'Interest'];
-          settings = loaded.settings || { ccLimit: DEFAULT_CC_LIMIT };
-        } else {
-          console.log("No data found for new profile. Using defaults.");
-        }
-      } catch (e) {
-        console.error("Firestore read error, falling back to LocalStorage:", e);
+  if (USE_FIRESTORE && db) {
+    try {
+      const doc = await db.collection(FIRESTORE_COLLECTION_NAME).doc(toKey(currentProfile)).get();
+      if (doc.exists) {
+        const loadedData = doc.data();
+        data = loadedData.data || [];
+        methodNames = loadedData.methodNames || {...CANONICAL_METHODS};
+        incomeSources = loadedData.incomeSources || ['Salary', 'Freelance', 'Interest'];
+        settings = loadedData.settings || { ccLimit: DEFAULT_CC_LIMIT };
+      } else {
         loadFromLocalStorage();
       }
-    } else {
+    } catch (e) {
+      console.error("Firestore read error, using local:", e);
       loadFromLocalStorage();
     }
-    
-    // Initial render
-    renderAll();
-    // If data is empty after load, load sample data
-    if (data.length === 0) loadSampleData(true);
+  } else {
+    loadFromLocalStorage();
   }
 
-  // Transaction Functions
+  document.getElementById('profileNameDisplay').textContent = currentProfile;
+  document.querySelector('main').style.filter = 'none';
+  renderAll();
+}
 
-  function populateSelects() {
-    // Categories
-    const allCategories = [...new Set(data.filter(d => d.type === 'expense' && !CANONICAL_CATEGORIES.includes(d.category)).map(d => d.category)), ...BASE_CATS.filter(c => c !== 'Credit Card Payment')];
-    allCategories.sort();
-    formEls.category.innerHTML = '<option value="">Select Category</option>' + allCategories.map(c => `<option value="${c}">${c}</option>`).join('');
+// Form refs
+const formEls = {
+  type: document.getElementById('type'),
+  amount: document.getElementById('amount'),
+  date: document.getElementById('date'),
+  desc: document.getElementById('desc'),
+  regularFieldsDiv: document.getElementById('regularFields'),
+  categoryContainer: document.getElementById('categoryContainer'),
+  category: document.getElementById('category'),
+  method: document.getElementById('method'),
+  incomeRow: document.getElementById('incomeSourceRow'),
+  incomeSource: document.getElementById('incomeSource'),
+  invRow: document.getElementById('investmentRow'),
+  invGroup: document.getElementById('invGroup'),
+  invSub: document.getElementById('invSub'),
+  insRow: document.getElementById('insuranceRow'),
+  insType: document.getElementById('insType'),
+  insFor: document.getElementById('insFor'),
+  openingBalanceRow: document.getElementById('openingBalanceRow'),
+  openingType: document.getElementById('openingType'),
+  openingSub: document.getElementById('openingSub'),
+  addBtn: document.getElementById('addBtn'),
+  saveBtn: document.getElementById('saveBtn'),
+  cancelBtn: document.getElementById('cancelBtn')
+};
 
-    // Methods
-    const allMethodKeys = new Set([...Object.keys(methodNames), ...data.map(d => d.method)]);
-    const filteredMethods = Array.from(allMethodKeys).filter(key => key && key !== 'credit_card'); // Exclude CC and empty
-    filteredMethods.sort((a,b) => methodNames[a].localeCompare(methodNames[b]));
-    formEls.method.innerHTML = `<option value="">Select Method</option>` + filteredMethods.map(key => `<option value="${key}">${methodNames[key]}</option>`).join('');
-    
-    // Income Sources
-    incomeSources.sort();
-    formEls.incomeSource.innerHTML = `<option value="">Select Source</option>` + incomeSources.map(s => `<option value="${s}">${s}</option>`).join('');
-  }
+function populateSelects(){
+  const cats = new Set(BASE_CATS);
+  formEls.category.innerHTML = `<option value="">Select Category</option>` +
+    Array.from(cats).sort().map(c=>`<option value="${c}">${c}</option>`).join('');
+  formEls.method.innerHTML = Object.keys(methodNames)
+    .map(key => `<option value="${key}">${methodNames[key]}</option>`).join('');
+  formEls.incomeSource.innerHTML = `<option value="">Select Source</option>` +
+    incomeSources.map(s => `<option value="${s}">${s}</option>`).join('');
+}
 
-  function updateTransactionFormFields() {
-    const entryType = formEls.type.value;
-    const cat = formEls.category.value;
-    const openingType = formEls.openingType.value;
+function updateTransactionFormFields(){
+  const entryType = formEls.type.value;
+  const cat = formEls.category.value;
+  const openingType = formEls.openingType.value;
 
-    formEls.regularFieldsDiv.classList.remove('hidden');
-    formEls.openingBalanceRow.classList.add('hidden');
-    formEls.incomeRow.classList.add('hidden');
-    formEls.invRow.classList.add('hidden');
-    formEls.insRow.classList.add('hidden');
-    formEls.categoryContainer.classList.remove('hidden');
+  formEls.regularFieldsDiv.classList.remove('hidden');
+  formEls.openingBalanceRow.classList.add('hidden');
+  formEls.incomeRow.classList.add('hidden');
+  formEls.invRow.classList.add('hidden');
+  formEls.insRow.classList.add('hidden');
+  formEls.categoryContainer.classList.remove('hidden');
 
-    if (entryType === 'opening_balance') {
-      formEls.openingBalanceRow.classList.remove('hidden');
-      formEls.regularFieldsDiv.classList.add('hidden');
-      if (openingType === 'Investment') {
-        formEls.openingSub.disabled = false;
-        formEls.openingSub.innerHTML = `<option value="">Select Investment Type</option>` + Object.keys(INVESTMENT_SUBTYPES).map(key => `<option value="${key}">${INVESTMENT_SUBTYPES[key]}</option>`).join('');
-      } else {
-        formEls.openingSub.disabled = false;
-        formEls.openingSub.innerHTML = `<option value="">Select Cash Account</option>` + Object.keys(methodNames).filter(key => key !== 'credit_card').map(key => `<option value="${key}">${methodNames[key]}</option>`).join('');
-      }
-    } else if (entryType === 'income') {
-      formEls.incomeRow.classList.remove('hidden');
-      formEls.categoryContainer.classList.add('hidden');
-    } else if (entryType === 'expense') {
-      if (cat === 'Investments') {
-        formEls.invRow.classList.remove('hidden');
-        formEls.invSub.innerHTML = `<option value="">Select Instrument</option>` + Object.keys(INVESTMENT_SUBTYPES).map(key => `<option value="${key}">${INVESTMENT_SUBTYPES[key]}</option>`).join('');
-      } else if (cat === 'Insurance') {
-        formEls.insRow.classList.remove('hidden');
-      }
-    }
-  }
+  if(entryType === 'opening_balance'){
+    formEls.openingBalanceRow.classList.remove('hidden');
+    formEls.regularFieldsDiv.classList.add('hidden');
 
-  formEls.type.addEventListener('change', updateTransactionFormFields);
-  formEls.category.addEventListener('change', updateTransactionFormFields);
-  formEls.openingType.addEventListener('change', updateTransactionFormFields);
-
-  function addEntry(isImportOrEdit) {
-    if (!requireSignedIn()) return;
-
-    const type = formEls.type.value;
-    const amount = Number(formEls.amount.value);
-    const date = formEls.date.value;
-    const desc = formEls.desc.value.trim();
-
-    if (!amount || amount <= 0) return alert('Please enter a valid amount.');
-    if (!date) return alert('Please select a date.');
-    if (!desc) return alert('Please enter a description.');
-
-    let entry = {
-      id: editId || uid(),
-      type: type,
-      amount: amount,
-      date: date,
-      desc: desc,
-      category: '',
-      method: '',
-      incomeSource: '',
-      investmentGroup: '',
-      investmentSub: '',
-      insuranceType: '',
-      insuranceFor: '',
-    };
-
-    if (type === 'opening_balance') {
-      entry.category = 'N/A';
-      entry.method = formEls.openingSub.value || (editId ? data.find(t=>t.id===editId).method : '');
-      if (!entry.method && !isImportOrEdit) return alert('Please select an Asset Sub-type.');
-
-      const openingType = formEls.openingType.value;
-      if (openingType === 'Investment') {
-        entry.investmentGroup = 'Investment';
-        entry.investmentSub = entry.method;
-        entry.method = 'N/A';
-      } else {
-        entry.investmentGroup = 'Cash';
-        entry.investmentSub = entry.method;
-      }
-    } else if (type === 'income') {
-      entry.incomeSource = formEls.incomeSource.value || (editId ? data.find(t=>t.id===editId).incomeSource : '');
-      entry.method = formEls.method.value || (editId ? data.find(t=>t.id===editId).method : '');
-      if (!entry.incomeSource && !isImportOrEdit) return alert('Please select an Income Source.');
-      if (!entry.method && !isImportOrEdit) return alert('Please select a Payment Method.');
-      entry.category = 'N/A';
-    } else if (type === 'expense') {
-      entry.category = formEls.category.value || (editId ? data.find(t=>t.id===editId).category : '');
-      entry.method = formEls.method.value || (editId ? data.find(t=>t.id===editId).method : '');
-      if (!entry.category && !isImportOrEdit) return alert('Please select a Category.');
-      if (!entry.method && !isImportOrEdit) return alert('Please select a Payment Method.');
-
-      if (entry.category === 'Investments') {
-        entry.investmentGroup = formEls.invGroup.value || (editId ? data.find(t=>t.id===editId).investmentGroup : 'Unspecified');
-        entry.investmentSub = formEls.invSub.value || (editId ? data.find(t=>t.id===editId).investmentSub : 'Unspecified');
-      }
-      if (entry.category === 'Insurance') {
-        entry.insuranceType = formEls.insType.value || (editId ? data.find(t=>t.id===editId).insuranceType : 'General');
-        entry.insuranceFor = formEls.insFor.value || (editId ? data.find(t=>t.id===editId).insuranceFor : 'Self');
-      }
-    }
-
-    if (editId) {
-      data = data.map(t => t.id === editId ? entry : t);
-      editId = null;
-      formEls.addBtn.style.display = 'block';
-      formEls.saveBtn.style.display = 'none';
-      formEls.cancelBtn.style.display = 'none';
-      alert('Transaction updated.');
+    if (openingType === 'Investment') {
+      formEls.openingSub.disabled = false;
+      formEls.openingSub.innerHTML = `<option value="">Select Investment Type</option>` +
+        Object.keys(INVESTMENT_SUBTYPES).map(key => `<option value="${key}">${INVESTMENT_SUBTYPES[key]}</option>`).join('');
     } else {
-      data.push(entry);
+      formEls.openingSub.disabled = false;
+      formEls.openingSub.innerHTML = `<option value="">Select Cash Account</option>` +
+        Object.keys(methodNames).map(key => `<option value="${key}">${methodNames[key]}</option>`).join('');
     }
-
-    if (!isImportOrEdit) {
-      saveAll();
-      renderAll();
-      clearForm();
+  } else if (entryType === 'income') {
+    formEls.incomeRow.classList.remove('hidden');
+    formEls.categoryContainer.classList.add('hidden');
+  } else if (entryType === 'expense') {
+    if(cat === 'Investments') {
+      formEls.invRow.classList.remove('hidden');
+      formEls.invSub.innerHTML = `<option value="">Select Instrument</option>` +
+        Object.keys(INVESTMENT_SUBTYPES).map(key => `<option value="${key}">${INVESTMENT_SUBTYPES[key]}</option>`).join('');
+    } else if(cat === 'Insurance') {
+      formEls.insRow.classList.remove('hidden');
     }
   }
+}
 
-  function clearForm() {
-    formEls.amount.value = '';
-    formEls.desc.value = '';
-    const today = new Date().toISOString().slice(0, 10);
-    formEls.date.value = today;
-    formEls.invGroup.value = '';
-    formEls.invSub.innerHTML = '<option value="">Instrument</option>';
-    formEls.category.value = '';
-    formEls.method.value = '';
-    formEls.type.value = 'expense';
-    formEls.incomeSource.value = '';
-    formEls.openingType.value = 'Cash';
-    formEls.openingSub.innerHTML = '<option value="">Select Asset</option>';
-    updateTransactionFormFields();
-  }
+formEls.type.addEventListener('change', updateTransactionFormFields);
+formEls.category.addEventListener('change', updateTransactionFormFields);
+formEls.openingType.addEventListener('change', updateTransactionFormFields);
 
-  function loadEdit(id) {
-    if (!requireSignedIn()) return;
-    const entry = data.find(t => t.id === id);
-    if (!entry) return alert('Entry not found.');
+function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 5); }
+const fmt = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(num);
 
-    editId = id;
-    formEls.amount.value = entry.amount;
-    formEls.date.value = entry.date;
-    formEls.desc.value = entry.desc;
-    formEls.type.value = entry.type;
+let editId = null;
 
-    // Trigger update fields logic
-    updateTransactionFormFields();
+function requireSignedIn() {
+  if (!currentProfile) { alert('Please sign in with Google first.'); return false; }
+  return true;
+}
 
-    // Populate dynamic fields
-    if (entry.type === 'expense') {
-      formEls.category.value = entry.category;
-      formEls.method.value = entry.method;
-      updateTransactionFormFields(); // re-trigger for inv/ins
-      if (entry.category === 'Investments') {
-        formEls.invGroup.value = entry.investmentGroup;
-        formEls.invSub.value = entry.investmentSub;
-      } else if (entry.category === 'Insurance') {
-        formEls.insType.value = entry.insuranceType;
-        formEls.insFor.value = entry.insuranceFor;
+function addEntry(e){
+  if (!requireSignedIn()) return;
+  const isImportOrEdit = e && e.id;
+
+  const amount = Number(formEls.amount.value || (e ? e.amount : 0));
+  const type = formEls.type.value || (e ? e.type : '');
+  if(!amount || amount <= 0) return alert('Please enter a valid amount');
+
+  const entry = {
+    id: isImportOrEdit ? e.id : uid(),
+    type,
+    amount,
+    date: formEls.date.value || (e ? e.date : new Date().toISOString().slice(0,10)),
+    desc: formEls.desc.value || (e ? e.desc : ''),
+    category: '',
+    method: formEls.method.value || (e ? e.method : ''),
+    incomeSource: '',
+    investmentGroup: '',
+    investmentSub: '',
+    insuranceType: '',
+    insuranceFor: ''
+  };
+
+  if(type === 'opening_balance') {
+    const opType = isImportOrEdit && e.investmentGroup ? (e.investmentGroup === 'Cash' ? 'Cash' : 'Investment') : formEls.openingType.value;
+    const opSubSelection = isImportOrEdit ? e.method : formEls.openingSub.value;
+    if (!opSubSelection) return alert('Please select an asset for the opening balance.');
+
+    entry.method = opSubSelection;
+    entry.category = 'N/A';
+
+    if(opType === 'Cash') {
+      if(!methodNames[opSubSelection] && !isImportOrEdit) {
+        methodNames[opSubSelection] = opSubSelection.replace(/_/g, ' ').replace(/(^\w)|(\s\w)/g, m => m.toUpperCase());
       }
-    } else if (entry.type === 'income') {
-      formEls.method.value = entry.method;
-      formEls.incomeSource.value = entry.incomeSource;
-    } else if (entry.type === 'opening_balance') {
-      formEls.openingType.value = entry.investmentGroup === 'Cash' ? 'Cash' : 'Investment';
-      updateTransactionFormFields(); // re-trigger for openingSub
-      formEls.openingSub.value = entry.investmentSub;
+      entry.investmentGroup = 'Cash';
+      entry.investmentSub = methodNames[opSubSelection] || opSubSelection;
+    } else {
+      entry.investmentGroup = opSubSelection;
+      entry.investmentSub = INVESTMENT_SUBTYPES[opSubSelection] || opSubSelection;
     }
+  } else if (type === 'income') {
+    entry.incomeSource = formEls.incomeSource.value || (e ? e.incomeSource : '');
+    if(!entry.incomeSource && !isImportOrEdit) return alert('Please select an Income Source.');
+    entry.category = 'N/A';
+  } else if(type === 'expense') {
+    entry.category = formEls.category.value || (e ? e.category : '');
+    if(!entry.category && !isImportOrEdit) return alert('Please select a Category.');
+    if(!entry.method && !isImportOrEdit) return alert('Please select a Payment Method.');
 
-    formEls.addBtn.style.display = 'none';
-    formEls.saveBtn.style.display = 'block';
-    formEls.cancelBtn.style.display = 'block';
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if(entry.category === 'Investments') {
+      entry.investmentGroup = formEls.invGroup.value || (e ? e.investmentGroup : 'Unspecified');
+      entry.investmentSub = formEls.invSub.value || (e ? e.investmentSub : 'Unspecified');
+    }
+    if(entry.category === 'Insurance') {
+      entry.insuranceType = formEls.insType.value || (e ? e.insuranceType : 'General');
+      entry.insuranceFor = formEls.insFor.value || (e ? e.insuranceFor : 'Self');
+    }
   }
 
-  formEls.saveBtn.addEventListener('click', () => addEntry(false));
-  formEls.cancelBtn.addEventListener('click', () => {
+  if (!isImportOrEdit) {
+    if (type !== 'expense') { entry.category = 'N/A'; }
+    if (type !== 'income') { entry.incomeSource = ''; }
+    if (entry.category !== 'Investments' && entry.type !== 'opening_balance') { entry.investmentGroup = entry.investmentSub = ''; }
+    if (entry.category !== 'Insurance') { entry.insuranceType = entry.insuranceFor = ''; }
+  }
+
+  if(editId) {
+    data = data.map(t => t.id === editId ? entry : t);
     editId = null;
-    clearForm();
     formEls.addBtn.style.display = 'block';
     formEls.saveBtn.style.display = 'none';
     formEls.cancelBtn.style.display = 'none';
+  } else {
+    data.push(entry);
+  }
+
+  if(!isImportOrEdit) {
+    saveAll();
+    renderAll();
+    clearForm();
+  }
+}
+
+function clearForm(){
+  formEls.amount.value='';
+  formEls.desc.value='';
+  formEls.date.value='';
+  formEls.invGroup.value='';
+  formEls.invSub.innerHTML='<option value="">Instrument</option>';
+  formEls.category.value = '';
+  formEls.method.value = '';
+  formEls.type.value = 'expense';
+  formEls.incomeSource.value = '';
+  formEls.openingType.value = 'Cash';
+  formEls.openingSub.innerHTML = '<option value="">Select Asset</option>';
+  formEls.openingSub.disabled = true;
+
+  formEls.addBtn.style.display = 'block';
+  formEls.saveBtn.style.display = 'none';
+  formEls.cancelBtn.style.display = 'none';
+
+  updateTransactionFormFields();
+}
+
+document.getElementById('addBtn').addEventListener('click', addEntry);
+document.getElementById('saveBtn').addEventListener('click', addEntry);
+document.getElementById('cancelBtn').addEventListener('click', clearForm);
+
+function loadEdit(id){
+  const entry = data.find(x => x.id === id);
+  if(!entry) return;
+
+  editId = id;
+  formEls.type.value = entry.type;
+  formEls.amount.value = entry.amount;
+  formEls.date.value = entry.date;
+  formEls.desc.value = entry.desc;
+  formEls.method.value = entry.method;
+
+  updateTransactionFormFields();
+
+  if(entry.type === 'expense') {
+    formEls.category.value = entry.category;
     updateTransactionFormFields();
+    if(entry.category === 'Investments') {
+      formEls.invGroup.value = entry.investmentGroup;
+      formEls.invSub.value = entry.investmentSub;
+    } else if(entry.category === 'Insurance') {
+      formEls.insType.value = entry.insuranceType;
+      formEls.insFor.value = entry.insuranceFor;
+    }
+  } else if (entry.type === 'income') {
+    formEls.incomeSource.value = entry.incomeSource;
+  } else if (entry.type === 'opening_balance') {
+    const isInvestment = entry.investmentGroup !== 'Cash';
+    formEls.openingType.value = isInvestment ? 'Investment' : 'Cash';
+    updateTransactionFormFields();
+    formEls.openingSub.value = entry.method;
+  }
+
+  formEls.addBtn.style.display = 'none';
+  formEls.saveBtn.style.display = 'block';
+  formEls.cancelBtn.style.display = 'block';
+
+  window.scrollTo(0, 0);
+}
+
+function deleteEntry(id){
+  if(confirm('Are you sure you want to delete this transaction?')){
+    data = data.filter(x => x.id !== id);
+    saveAll();
+    renderAll();
+  }
+}
+
+function getNextPaymentDate() {
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+  const paymentDay = 10;
+  let paymentDate = new Date(currentYear, currentMonth, paymentDay);
+  if (today.getDate() > paymentDay) paymentDate.setMonth(currentMonth + 1);
+  return paymentDate.toLocaleDateString('en-IN', {month:'long'});
+}
+
+function renderKPIs(){
+  const curMonth = new Date().getMonth();
+  const curYear = new Date().getFullYear();
+  const prevMonth = curMonth === 0 ? 11 : curMonth - 1;
+  const prevYear = curMonth === 0 ? curYear - 1 : curYear;
+
+  const operationalData = data.filter(d => d.type !== 'opening_balance');
+  const filterMonth = (d, m, y) => { const dt = new Date(d); return dt.getMonth()===m && dt.getFullYear()===y; };
+  const sum = (arr) => arr.reduce((acc,curr) => acc + Number(curr.amount), 0);
+
+  const curData = operationalData.filter(d => filterMonth(d.date, curMonth, curYear));
+  const prevData = operationalData.filter(d => filterMonth(d.date, prevMonth, prevYear));
+
+  const inc = sum(curData.filter(d=>d.type==='income'));
+  const exp = sum(curData.filter(d=>d.type==='expense'));
+  const prevInc = sum(prevData.filter(d=>d.type==='income'));
+  const prevExp = sum(prevData.filter(d=>d.type==='expense'));
+
+  const allInvestments = data.filter(d =>
+    (d.type === 'opening_balance' && d.investmentGroup !== 'Cash') ||
+    (d.type === 'expense' && d.category === 'Investments'));
+  const totalInvested = sum(allInvestments);
+
+  const prevInvest = sum(allInvestments.filter(d => filterMonth(d.date, prevMonth, prevYear)));
+  const curInvest = sum(allInvestments.filter(d => filterMonth(d.date, curMonth, curYear)));
+
+  const liquidOB = sum(data.filter(d => d.type === 'opening_balance' && d.investmentGroup === 'Cash'));
+  const operationalNet = sum(operationalData.filter(d => d.type === 'income')) - sum(operationalData.filter(d => d.type === 'expense'));
+  const netLiquidity = liquidOB + operationalNet;
+
+  const ccExpenses = sum(data.filter(d => d.method === 'credit_card' && d.type === 'expense'));
+  const ccPayments = sum(data.filter(d => d.category === 'Credit Card Payment' && d.type === 'expense'));
+  const creditCardDue = ccExpenses - ccPayments;
+
+  const ccLimit = settings.ccLimit || DEFAULT_CC_LIMIT;
+  const limitExceeded = creditCardDue > ccLimit;
+  const ccCard = document.getElementById('ccCard');
+  const ccTitle = document.getElementById('ccTitle');
+  const ccAlert = document.getElementById('ccAlert');
+
+  if (limitExceeded) {
+    ccCard.classList.add('cc-alert-high');
+    ccTitle.style.color = 'var(--danger)';
+    ccAlert.classList.remove('hidden');
+  } else {
+    ccCard.classList.remove('cc-alert-high');
+    ccTitle.style.color = 'var(--warning)';
+    ccAlert.classList.add('hidden');
+  }
+
+  const calcDelta = (cur, prev) => {
+    if(prev === 0 && cur === 0) return 0;
+    if(prev === 0) return cur > 0 ? 100 : 0;
+    return ((cur - prev) / prev * 100).toFixed(1);
+  }
+  const incDelta = calcDelta(inc, prevInc);
+  const expDelta = calcDelta(exp, prevExp);
+  const invDelta = calcDelta(curInvest, prevInvest);
+
+  document.getElementById('kpiIncome').innerText = fmt(inc);
+  document.getElementById('momIncome').innerHTML = `<span class="${incDelta>=0?'trend-up':'trend-down'}">${incDelta}%</span> vs last month`;
+
+  document.getElementById('kpiExpense').innerText = fmt(exp);
+  document.getElementById('momExpense').innerHTML = `<span class="${expDelta<=0?'trend-up':'trend-down'}">${expDelta}%</span> vs last month`;
+
+  document.getElementById('kpiNet').innerText = fmt(netLiquidity);
+  document.getElementById('kpiInvest').innerText = fmt(totalInvested);
+  document.getElementById('momInvest').innerHTML = `<span class="${invDelta>=0?'trend-up':'trend-down'}">+${fmt(curInvest)}</span> added this month`;
+
+  document.getElementById('kpiCCDue').innerText = fmt(creditCardDue);
+  document.getElementById('ccPaymentDate').innerText = `Next Payment: 10th of ${getNextPaymentDate()}`;
+  document.getElementById('ccLimitDisplay').innerText = fmt(ccLimit);
+
+  // MERGED LOGIC: Render Account Balance Breakdown
+  const breakdownContainer = document.getElementById('netLiquidityBreakdown');
+  let breakdownHtml = '';
+  
+  const allMethodKeys = new Set([...Object.keys(methodNames), ...data.map(d => d.method)]);
+  
+  allMethodKeys.forEach(key => {
+      if(key === 'credit_card' || !key) return; 
+      
+      const name = methodNames[key] || key;
+      
+      const mOpen = sum(data.filter(d => d.type === 'opening_balance' && d.method === key));
+      const mInc = sum(data.filter(d => d.type === 'income' && d.method === key));
+      const mExp = sum(data.filter(d => d.type === 'expense' && d.method === key));
+      const balance = mOpen + mInc - mExp;
+      
+      if(balance !== 0 || CANONICAL_METHODS[key]) {
+           breakdownHtml += `<div><span>${name}</span><span>${fmt(balance)}</span></div>`;
+      }
   });
+  
+  breakdownContainer.innerHTML = breakdownHtml;
+}
 
-  function deleteEntry(id) {
-    if (!requireSignedIn()) return;
-    if (confirm('Are you sure you want to delete this transaction?')) {
-      data = data.filter(t => t.id !== id);
-      saveAll();
-      renderAll();
-    }
+function getBadge(entry) {
+  let type = entry.type;
+  let category = entry.category;
+  let text = '';
+  let className = '';
+
+  if (type === 'income') { className = 'badge-income'; text = 'Income'; }
+  else if (type === 'opening_balance') { className = 'badge-opening'; text = 'OB / Asset'; }
+  else if (type === 'expense') {
+    if (category === 'Investments') { className = 'badge-inv'; text = 'Investment'; }
+    else if (category === 'Insurance') { className = 'badge-ins'; text = 'Insurance'; }
+    else if (entry.method === 'credit_card') { className = 'badge-cc'; text = 'CC Expense'; }
+    else if (category === 'Credit Card Payment') { className = 'badge-cc'; text = 'CC Payment'; }
+    else { className = 'badge-expense'; text = 'Expense'; }
   }
+  return `<span class="badge ${className}">${text}</span>`;
+}
 
-  // KPI & Rendering Functions
+function renderTable(filterText = '') {
+  const tBody = document.getElementById('txBody');
+  const filtered = data.filter(e =>
+    (e.type || '').toLowerCase().includes(filterText) ||
+    (e.desc || '').toLowerCase().includes(filterText) ||
+    (e.category || '').toLowerCase().includes(filterText) ||
+    (e.method || '').toLowerCase().includes(filterText) ||
+    (e.investmentSub || '').toLowerCase().includes(filterText)
+  ).sort((a,b) => new Date(b.date) - new Date(a.date));
 
-  function getNextPaymentDate() {
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-    const paymentDay = 10;
-    let paymentDate = new Date(currentYear, currentMonth, paymentDay);
-    if (today.getDate() > paymentDay) paymentDate.setMonth(currentMonth + 1);
-    return paymentDate.toLocaleDateString('en-IN', {
-      month: 'long'
-    });
-  }
-
-  function renderKPIs() {
-    const curMonth = new Date().getMonth();
-    const curYear = new Date().getFullYear();
-    const prevMonth = curMonth === 0 ? 11 : curMonth - 1;
-    const prevYear = curMonth === 0 ? curYear - 1 : curYear;
-    const operationalData = data.filter(d => d.type !== 'opening_balance');
-
-    const filterMonth = (d, m, y) => {
-      const dt = new Date(d);
-      return dt.getMonth() === m && dt.getFullYear() === y;
-    };
-    const sum = (arr) => arr.reduce((acc, curr) => acc + Number(curr.amount), 0);
-
-    const curData = operationalData.filter(d => filterMonth(d.date, curMonth, curYear));
-    const prevData = operationalData.filter(d => filterMonth(d.date, prevMonth, prevYear));
-
-    const inc = sum(curData.filter(d => d.type === 'income'));
-    const exp = sum(curData.filter(d => d.type === 'expense' && d.category !== 'Credit Card Payment'));
-    const prevInc = sum(prevData.filter(d => d.type === 'income'));
-    const prevExp = sum(prevData.filter(d => d.type === 'expense' && d.category !== 'Credit Card Payment'));
-
-    // Investments (including Opening Balance not categorized as Cash)
-    const allInvestments = data.filter(d => (d.type === 'opening_balance' && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments'));
-    const totalInvested = sum(allInvestments);
-
-    const liquidOB = sum(data.filter(d => d.type === 'opening_balance' && d.investmentGroup === 'Cash'));
-    const totalIncomeToLiquid = sum(data.filter(d => d.type === 'income' && d.method !== 'credit_card'));
-    const totalExpenseFromLiquid = sum(data.filter(d => d.type === 'expense' && d.method !== 'credit_card'));
-    const totalNet = liquidOB + totalIncomeToLiquid - totalExpenseFromLiquid;
-    
-    // Credit Card Due
-    const ccTransactions = operationalData.filter(d => d.method === 'credit_card' && d.category !== 'Credit Card Payment');
-    const ccPayments = operationalData.filter(d => d.category === 'Credit Card Payment');
-    const totalCCSpent = sum(ccTransactions);
-    const totalCCPaid = sum(ccPayments);
-    let creditCardDue = totalCCSpent - totalCCPaid;
-    // Cap due at 0 if overpaid
-    creditCardDue = Math.max(0, creditCardDue);
-    
-    const ccLimit = settings.ccLimit;
-
-    // Render KPIs
-    document.getElementById('kpiIncome').innerText = fmt(inc);
-    document.getElementById('kpiExpense').innerText = fmt(exp);
-    document.getElementById('momIncome').innerHTML = getTrendPercent(inc, prevInc);
-    document.getElementById('momExpense').innerHTML = getTrendPercent(exp, prevExp);
-    document.getElementById('kpiNet').innerText = fmt(totalNet);
-    document.getElementById('kpiInvest').innerText = fmt(totalInvested);
-    
-    // CC KPI
-    document.getElementById('kpiCCDue').innerText = fmt(creditCardDue);
-    document.getElementById('ccPaymentDate').innerText = `Next Payment: 10th of ${getNextPaymentDate()}`;
-    document.getElementById('ccLimitDisplay').innerText = fmt(ccLimit);
-
-    const ccCardEl = document.getElementById('ccCard');
-    const ccAlertEl = document.getElementById('ccAlert');
-    const ccTitleEl = document.getElementById('ccTitle');
-    
-    // Check for high utilization (80%)
-    if (creditCardDue > (ccLimit * 0.8) && ccLimit > 0) {
-      ccCardEl.classList.add('cc-alert-high');
-      ccTitleEl.style.color = 'var(--danger)';
-      ccAlertEl.classList.remove('hidden');
+  tBody.innerHTML = filtered.map(e => {
+    let categoryDetail;
+    let methodDetail;
+    if (e.type === 'income') {
+      categoryDetail = `Income: ${e.incomeSource}`;
+      methodDetail = methodNames[e.method] || 'N/A';
+    } else if (e.type === 'opening_balance') {
+      categoryDetail = `Asset: ${e.investmentSub}`;
+      methodDetail = e.investmentGroup;
     } else {
-      ccCardEl.classList.remove('cc-alert-high');
-      ccTitleEl.style.color = 'var(--warning)';
-      ccAlertEl.classList.add('hidden');
+      categoryDetail = e.category;
+      methodDetail = methodNames[e.method] || 'N/A';
     }
-    
-    // MERGED LOGIC: Render Account Balance Breakdown
-    const breakdownContainer = document.getElementById('netLiquidityBreakdown');
-    let liquidBreakdown = {};
-    Object.keys(methodNames).forEach(key => {
-      if (key !== 'credit_card') {
-        liquidBreakdown[key] = { name: methodNames[key], amount: 0 };
-      }
-    });
+    if(e.category === 'Investments') categoryDetail = `${e.category} (${e.investmentSub})`;
+    if (e.category === 'Insurance') categoryDetail = `${e.category} (${e.insuranceType})`;
 
-    data.forEach(d => {
-      const key = d.method;
-      if (liquidBreakdown[key]) {
-        const amount = Number(d.amount);
-        if (d.type === 'opening_balance' || d.type === 'income') liquidBreakdown[key].amount += amount;
-        else if (d.type === 'expense') liquidBreakdown[key].amount -= amount;
-      }
-    });
-
-    let breakdownHtml = '';
-    Object.values(liquidBreakdown).sort((a,b) => b.amount - a.amount).forEach(item => {
-      if (item.amount !== 0 || CANONICAL_METHODS[Object.keys(methodNames).find(key => methodNames[key] === item.name)]) {
-        breakdownHtml += `<div><span>${item.name}</span><span>${fmt(item.amount)}</span></div>`;
-      }
-    });
-    breakdownContainer.innerHTML = breakdownHtml;
-  }
-
-  function getBadge(entry) {
-    let type = entry.type;
-    let category = entry.category;
-    let text = '';
-    let className = '';
-
-    if (type === 'income') {
-      className = 'badge-income';
-      text = 'Income';
-    } else if (type === 'opening_balance') {
-      className = 'badge-opening';
-      text = 'OB / Asset';
-    } else if (type === 'expense') {
-      if (category === 'Investments') {
-        className = 'badge-inv';
-        text = 'Investment';
-      } else if (category === 'Insurance') {
-        className = 'badge-ins';
-        text = 'Insurance';
-      } else if (entry.method === 'credit_card') {
-        className = 'badge-cc';
-        text = 'CC Expense';
-      } else if (category === 'Credit Card Payment') {
-        className = 'badge-cc';
-        text = 'CC Payment';
-      } else {
-        className = 'badge-expense';
-        text = 'Expense';
-      }
-    }
-    return `<span class="badge ${className}">${text}</span>`;
-  }
-
-  function getDetails(entry) {
-    let details = '';
-    if (entry.type === 'income') {
-      details = `Source: ${entry.incomeSource}`;
-    } else if (entry.type === 'expense') {
-      details = `Category: ${entry.category}`;
-      if (entry.category === 'Investments') details += ` / ${entry.investmentGroup} (${entry.investmentSub})`;
-      else if (entry.category === 'Insurance') details += ` / ${entry.insuranceType} for ${entry.insuranceFor}`;
-    } else if (entry.type === 'opening_balance') {
-      details = `Asset: ${entry.investmentSub}`;
-    }
-    return details;
-  }
-
-  function getMethodOrAsset(entry) {
-    if (entry.type === 'opening_balance') {
-      return entry.investmentGroup === 'Cash' ? (methodNames[entry.investmentSub] || entry.investmentSub) : entry.investmentSub;
-    }
-    return methodNames[entry.method] || entry.method;
-  }
-
-  function renderTable(searchText) {
-    const tBody = document.getElementById('txBody');
-    const filteredData = data.slice().sort((a, b) => new Date(b.date) - new Date(a.date)).filter(e => {
-      if (!searchText) return true;
-      const search = searchText.toLowerCase();
-      return Object.values(e).some(val => 
-        (String(val).toLowerCase().includes(search))
-      );
-    });
-
-    if (filteredData.length === 0) {
-      tBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-muted)">No transactions found.</td></tr>`;
-      return;
-    }
-
-    tBody.innerHTML = filteredData.map(e => {
-      return `
+    return `
       <tr>
         <td>${e.date}</td>
-        <td>
-          ${getBadge(e)}
-          <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${getDetails(e)}</div>
-        </td>
+        <td>${getBadge(e)} <span style="font-weight:600; display:block; margin-top:2px;">${categoryDetail}</span></td>
         <td>${e.desc}</td>
-        <td>${getMethodOrAsset(e)}</td>
-        <td style="text-align:right; font-weight:600; color:${e.type === 'income' || e.type === 'opening_balance' ? 'var(--success)' : 'var(--danger)'}">
-          ${fmt(e.amount)}
-        </td>
+        <td>${methodDetail}</td>
+        <td style="text-align:right; font-weight:700; color: ${e.type==='income' || e.type === 'opening_balance' ?'#166534':'#1e293b'}">${e.type==='expense'?'-':'+'} ${fmt(e.amount)}</td>
         <td style="text-align:center">
           <button onclick="loadEdit('${e.id}')" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px" title="Edit">✎</button>
           <button onclick="deleteEntry('${e.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:4px" title="Delete">×</button>
         </td>
       </tr>
-      `;
-    }).join('');
+    `;
+  }).join('');
+}
+
+function renderInvTable(){
+  const t = document.getElementById('invTable').querySelector('tbody');
+  const invs = data.filter(d =>
+    (d.type === 'opening_balance' && d.investmentGroup !== 'Cash') ||
+    (d.type === 'expense' && d.category === 'Investments')
+  );
+
+  const investmentBreakdown = invs.reduce((acc, curr) => {
+    const key = `${curr.investmentGroup}|${curr.investmentSub}`;
+    if (!acc[key]) acc[key] = { group: curr.investmentGroup, sub: curr.investmentSub, amount: 0 };
+    acc[key].amount += Number(curr.amount);
+    return acc;
+  }, {});
+
+  const sortedInvs = Object.values(investmentBreakdown).sort((a,b) => b.amount - a.amount);
+
+  t.innerHTML = sortedInvs.length
+    ? sortedInvs.map(item => `
+        <tr>
+          <td>${item.group}</td>
+          <td>${item.sub}</td>
+          <td style="text-align:right; font-weight:600">${fmt(item.amount)}</td>
+        </tr>`).join('')
+    : `<tr><td colspan="3" style="text-align:center; color:var(--text-muted)">No investment entries yet.</td></tr>`;
+}
+
+function getColorPalette(count) {
+  const colors = ['#3b82f6','#10b981','#ef4444','#f97316','#6b21a8','#0ea5e9','#facc15','#e11d48','#059669','#7c3aed'];
+  return Array.from({ length: count }, (_, i) => colors[i % colors.length]);
+}
+
+function renderMainChart(months) {
+  if (mainChart) mainChart.destroy();
+  const ctx = document.getElementById('mainChart').getContext('2d');
+
+  if (data.length === 0) {
+    mainChart = new Chart(ctx, { type: 'bar', data: { labels: [], datasets: [] }, options: { responsive: true, maintainAspectRatio: false } });
+    return;
   }
 
-  function renderInvTable() {
-    const t = document.getElementById('invTable').querySelector('tbody');
-    const invs = data.filter(d => (d.type === 'opening_balance' && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments'));
+  const { monthlyData, labels, monthKeys } = prepareMonthlyData(data, months);
 
-    const investmentBreakdown = invs.reduce((acc, curr) => {
-      const groupKey = curr.investmentGroup || 'Other';
-      const subKey = curr.investmentSub || 'Unspecified';
-      const key = `${groupKey}|${subKey}`;
-      
-      if (!acc[key]) acc[key] = { group: groupKey, sub: subKey, amount: 0 };
-      acc[key].amount += Number(curr.amount);
-      return acc;
-    }, {});
+  const investmentData = [];
+  const expenseData = [];
+  const incomeData = [];
+  const netCashFlowData = [];
 
-    const sortedBreakdown = Object.values(investmentBreakdown).filter(i => i.amount > 0).sort((a,b) => b.amount - a.amount);
+  monthKeys.forEach((monthKey) => {
+    const m = monthlyData[monthKey] || { income: 0, expense: 0, investment: 0, netCashFlow: 0 };
+    investmentData.push(m.investment || 0);
+    expenseData.push((m.expense - m.investment) || 0);
+    incomeData.push(m.income || 0);
+    netCashFlowData.push(m.netCashFlow || 0);
+  });
 
-    if (sortedBreakdown.length === 0) {
-      t.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:20px; color:var(--text-muted)">No investment data.</td></tr>`;
-      return;
-    }
+  const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const colorInvestment = cssVar('--investment-savings') || '#0ea5e9';
+  const colorExpense = cssVar('--danger') || '#ef4444';
+  const colorIncome = cssVar('--success') || '#10b981';
+  const colorNetLine = cssVar('--primary') || '#3b82f6';
 
-    t.innerHTML = sortedBreakdown.map(i => `
-      <tr>
-        <td>${i.group}</td>
-        <td>${i.sub}</td>
-        <td style="text-align:right; font-weight:600">${fmt(i.amount)}</td>
-      </tr>
-    `).join('');
-  }
-
-  function renderMainChart(months) {
-    if (mainChart) mainChart.destroy();
-
-    const endDate = new Date();
-    let startDate = new Date();
-    if (months !== 'all') {
-      startDate.setMonth(endDate.getMonth() - Number(months));
-      startDate.setDate(1);
-    }
-    
-    // Aggregate by month
-    const monthlyData = {};
-    const filteredData = data.filter(d => {
-      const date = new Date(d.date);
-      return months === 'all' || date >= startDate;
-    });
-
-    filteredData.forEach(d => {
-      const date = new Date(d.date);
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      if (!monthlyData[key]) {
-        monthlyData[key] = { income: 0, expense: 0, investment: 0 };
+  mainChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Investment', data: investmentData, backgroundColor: colorInvestment, stack: 'ExpenseStack' },
+        { label: 'Expenses', data: expenseData, backgroundColor: colorExpense, stack: 'ExpenseStack' },
+        { label: 'Income', data: incomeData, backgroundColor: colorIncome, stack: 'IncomeStack' },
+        { type: 'line', label: 'Net Cash Flow', data: netCashFlowData, borderColor: colorNetLine, backgroundColor: 'rgba(59,130,246,0.1)', yAxisID: 'y1', fill: false, tension: 0.3, pointRadius: 4, borderWidth: 3 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { stacked: true, grid: { display: false } },
+        y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Income / Expense (₹)', color: '#64748b' } },
+        y1: { type: 'linear', display: false, position: 'right', grid: { drawOnChartArea: false },
+              min: Math.min(...netCashFlowData, 0) - 500, max: Math.max(...netCashFlowData, 0) + 500 }
+      },
+      plugins: { legend: { position: 'top' },
+        tooltip: { callbacks: { label: (context) => {
+          let label = context.dataset.label || '';
+          if (label) label += ': ';
+          if (context.parsed.y !== null) label += fmt(context.parsed.y);
+          return label;
+        } } }
       }
+    }
+  });
+}
 
+function prepareMonthlyData(data, months) {
+  const monthlyData = {};
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+  const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  const monthKeys = [];
+  if (months === 'all') {
+    const sortedDates = data.map(d => new Date(d.date)).sort((a,b)=>a-b);
+    let currentIterDate = sortedDates.length > 0 ? new Date(sortedDates[0].getFullYear(), sortedDates[0].getMonth(), 1) : new Date(currentYear, currentMonth, 1);
+    let lastDate = new Date(currentYear, currentMonth, 1);
+    while (currentIterDate <= lastDate) {
+      monthKeys.push(`${currentIterDate.getFullYear()}-${currentIterDate.getMonth()}`);
+      currentIterDate.setMonth(currentIterDate.getMonth() + 1);
+    }
+  } else {
+    const mCount = Number(months);
+    for (let i = 0; i < mCount; i++) {
+      let month = (currentMonth - (mCount - 1 - i) + 1200) % 12;
+      let year = currentYear - Math.floor((currentMonth - (mCount - 1 - i)) / 12);
+      monthKeys.push(`${year}-${month}`);
+    }
+  }
+
+  monthKeys.forEach(key => { monthlyData[key] = { income: 0, expense: 0, investment: 0, netCashFlow: 0 }; });
+
+  data.filter(d => d.type !== 'opening_balance').forEach(d => {
+    const date = new Date(d.date);
+    const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+    if (monthlyData[monthKey]) {
       const amount = Number(d.amount);
       if (d.type === 'income') {
-        monthlyData[key].income += amount;
+        monthlyData[monthKey].income += amount;
+        monthlyData[monthKey].netCashFlow += amount;
       } else if (d.type === 'expense') {
-        if (d.category === 'Investments') {
-          monthlyData[key].investment += amount;
-        } else if (d.category !== 'Credit Card Payment') {
-          monthlyData[key].expense += amount;
-        }
+        monthlyData[monthKey].expense += amount;
+        monthlyData[monthKey].netCashFlow -= amount;
+        if (d.category === 'Investments') monthlyData[monthKey].investment += amount;
       }
-    });
-
-    const labels = [];
-    let datePointer = months === 'all' ? new Date(filteredData[0]?.date || endDate) : startDate;
-    datePointer.setDate(1);
-
-    while (datePointer <= endDate) {
-      const key = `${datePointer.getFullYear()}-${String(datePointer.getMonth() + 1).padStart(2, '0')}`;
-      labels.push(datePointer.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
-      datePointer.setMonth(datePointer.getMonth() + 1);
-      datePointer.setDate(1); // Reset to 1st to prevent month skip
-      if (!monthlyData[key]) monthlyData[key] = { income: 0, expense: 0, investment: 0 }; // Ensure all months have an entry
-    }
-
-    const incomeData = labels.map((label, index) => {
-      const key = Object.keys(monthlyData)[index];
-      return monthlyData[key]?.income || 0;
-    });
-    const expenseData = labels.map((label, index) => {
-      const key = Object.keys(monthlyData)[index];
-      return monthlyData[key]?.expense || 0;
-    });
-    const investmentData = labels.map((label, index) => {
-      const key = Object.keys(monthlyData)[index];
-      return monthlyData[key]?.investment || 0;
-    });
-
-    const ctx = document.getElementById('mainChart').getContext('2d');
-    mainChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Income (₹)',
-          data: incomeData,
-          backgroundColor: 'var(--success)',
-        }, {
-          label: 'Expenses (₹)',
-          data: expenseData,
-          backgroundColor: 'var(--danger)',
-        }, {
-          label: 'Investment / Savings (₹)',
-          data: investmentData,
-          backgroundColor: 'var(--investment-savings)',
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          x: { stacked: true },
-          y: { 
-            stacked: true,
-            title: { display: true, text: 'Amount (₹)' },
-            ticks: { callback: (value) => fmt(value) }
-          }
-        },
-        plugins: {
-          legend: { position: 'top' },
-          tooltip: {
-            callbacks: {
-              label: (context) => `${context.dataset.label}: ${fmt(context.parsed.y)}`
-            }
-          }
-        }
-      }
-    });
-  }
-
-  function renderDonutChart() {
-    if (donutChart) donutChart.destroy();
-    
-    // Include all liquid assets from opening balance and current transactions
-    let liquidBreakdown = {};
-    Object.keys(methodNames).forEach(key => {
-      if (key !== 'credit_card') {
-        liquidBreakdown[key] = { name: methodNames[key], amount: 0 };
-      }
-    });
-
-    data.forEach(d => {
-      const key = d.method;
-      const amount = Number(d.amount);
-
-      if (d.type === 'opening_balance') {
-        if(d.investmentGroup === 'Cash' && liquidBreakdown[key]) {
-           liquidBreakdown[key].amount += amount;
-        }
-      } else if (liquidBreakdown[key]) {
-        if (d.type === 'income') liquidBreakdown[key].amount += amount;
-        else if (d.type === 'expense') liquidBreakdown[key].amount -= amount;
-      }
-    });
-    
-    const finalData = Object.values(liquidBreakdown).filter(item => item.amount > 0);
-    const labels = finalData.map(item => item.name);
-    const chartData = finalData.map(item => item.amount);
-    const backgroundColors = getColorPalette(labels.length);
-
-    const ctx = document.getElementById('donutChart').getContext('2d');
-    donutChart = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels,
-        datasets: [{
-          data: chartData,
-          backgroundColor: backgroundColors,
-          borderWidth: 1,
-          hoverOffset: 8
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '70%',
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: (context) => {
-                let label = context.label || '';
-                if (label) label += ': ';
-                label += fmt(context.parsed);
-                return label;
-              }
-            }
-          }
-        }
-      }
-    });
-
-    const legendDiv = document.getElementById('walletLegend');
-    legendDiv.innerHTML = finalData.length ? finalData.map((item, index) => `
-      <div style="display:flex; justify-content:space-between; font-weight:500;">
-        <div style="display:flex; align-items:center;">
-          <span style="width:10px; height:10px; border-radius:50%; background-color:${backgroundColors[index]}; margin-right:8px;"></span>
-          <span>${item.name}</span>
-        </div>
-        <span style="font-weight:700; color:var(--text-main)">${fmt(item.amount)}</span>
-      </div>
-    `).join('') : `<div style="text-align:center; padding:10px; color:var(--text-muted)">No liquid cash balance.</div>`;
-  }
-
-  function renderCharts() {
-    const months = document.getElementById('mainChartFilter').value;
-    renderMainChart(months);
-    renderDonutChart();
-  }
-
-  function renderAll() {
-    populateSelects();
-    renderKPIs();
-    renderTable();
-    renderInvTable();
-    renderCharts();
-  }
-
-  // Search
-  document.getElementById('searchTx').addEventListener('input', (e) => {
-    renderTable(e.target.value);
-  });
-  
-  // Settings modal logic
-  const settingsModal = document.getElementById('settingsModal');
-  document.getElementById('navSettings').onclick = () => {
-    if (!requireSignedIn()) return;
-    settingsModal.classList.add('open');
-    renderSettings();
-  };
-  document.getElementById('closeSettings').onclick = () => settingsModal.classList.remove('open');
-
-  function renderSettings() {
-    // Categories
-    const allCategories = [...new Set(data.filter(d => d.type === 'expense' && !CANONICAL_CATEGORIES.includes(d.category)).map(d => d.category)), ...BASE_CATS.filter(c => c !== 'Credit Card Payment')];
-    const catEditor = document.getElementById('categoryEditor');
-    catEditor.innerHTML = allCategories.map(cat => `
-      <div class="flex-row" style="justify-content:space-between; margin-bottom:8px">
-        <span>${cat}</span>
-        <button onclick="removeCategory('${cat}')" class="btn-danger" style="padding:4px 8px; font-size:11px; ${CANONICAL_CATEGORIES.includes(cat) ? 'display:none' : ''}">Remove</button>
-      </div>
-    `).join('');
-
-    // Methods
-    const editor = document.getElementById('methodEditor');
-    editor.innerHTML = Object.keys(methodNames).map(id => `
-      <div class="flex-row" style="justify-content:space-between; margin-bottom:8px">
-        <span style="font-size:12px; color:#64748b">${CANONICAL_METHODS[id]||'Custom'}</span>
-        <input value="${methodNames[id]}" onchange="updateMethodName('${id}', this.value)" style="width:150px" />
-        <button onclick="removeMethod('${id}')" class="btn-danger" style="padding:4px 8px; font-size:11px; ${CANONICAL_METHODS[id] ? 'display:none' : ''}">Remove</button>
-      </div>
-    `).join('');
-
-    // Income Sources
-    const incomeEditor = document.getElementById('incomeEditor');
-    incomeEditor.innerHTML = incomeSources.map(s => `
-      <div class="flex-row" style="justify-content:space-between; margin-bottom:8px">
-        <span>${s}</span>
-        <button onclick="removeIncomeSource('${s}')" class="btn-danger" style="padding:4px 8px; font-size:11px;">Remove</button>
-      </div>
-    `).join('');
-
-    document.getElementById('ccLimitInput').value = settings.ccLimit;
-  }
-
-  function addCategory(){
-    const newCatEl = document.getElementById('newCat');
-    const newCatName = newCatEl.value.trim();
-    if (!newCatName) return;
-    if (BASE_CATS.includes(newCatName)) return alert('Category already exists or is a reserved type.');
-    BASE_CATS.push(newCatName);
-    newCatEl.value = '';
-    renderSettings();
-    populateSelects();
-  }
-  document.getElementById('addCatBtn').addEventListener('click', addCategory);
-
-  function removeCategory(catName){
-    if(confirm(`Remove category "${catName}"? Transactions using it will be labeled "Misc".`)){
-      const index = BASE_CATS.indexOf(catName);
-      if (index > -1) BASE_CATS.splice(index, 1);
-      data.filter(t => t.category === catName).forEach(t => t.category = 'Misc');
-      saveAll();
-      renderAll();
-      renderSettings();
-    }
-  }
-
-  function updateMethodName(id, newName) {
-    if (newName.trim()) {
-      methodNames[id] = newName.trim();
-      saveAll();
-      renderAll();
-    } else {
-      alert('Name cannot be empty.');
-      renderSettings();
-    }
-  }
-  
-  function addMethod() {
-    const newMethodEl = document.getElementById('newMethod');
-    const newMethodName = newMethodEl.value.trim();
-    if (!newMethodName) return;
-
-    // Create a unique ID for the new method
-    const newMethodId = toKey(newMethodName);
-    if(methodNames[newMethodId]) return alert('A method with a similar name already exists.');
-
-    methodNames[newMethodId] = newMethodName;
-    newMethodEl.value = '';
-    saveAll();
-    renderSettings();
-    populateSelects();
-  }
-  document.getElementById('addMethod').addEventListener('click', addMethod);
-
-  function removeMethod(id) {
-    if(CANONICAL_METHODS[id]) return;
-    if(confirm(`Remove method "${methodNames[id]}"? Transactions using it will be re-categorized to "Cash".`)){
-      delete methodNames[id];
-      data.filter(t => t.method === id).forEach(t => t.method = 'cash');
-      saveAll();
-      renderAll();
-      renderSettings();
-    }
-  }
-
-  function addIncomeSource() {
-    const newIncomeEl = document.getElementById('newIncome');
-    const newIncomeName = newIncomeEl.value.trim();
-    if (!newIncomeName) return;
-    if (incomeSources.includes(newIncomeName)) return alert('Income source already exists.');
-    incomeSources.push(newIncomeName);
-    newIncomeEl.value = '';
-    saveAll();
-    renderSettings();
-    populateSelects();
-  }
-  document.getElementById('addIncomeBtn').addEventListener('click', addIncomeSource);
-
-  function removeIncomeSource(source) {
-    if(confirm(`Remove income source "${source}"?`)){
-      incomeSources = incomeSources.filter(s => s !== source);
-      saveAll();
-      renderAll();
-      renderSettings();
-    }
-  }
-
-  document.getElementById('saveCCLimit').addEventListener('click', () => {
-    const limitEl = document.getElementById('ccLimitInput');
-    const limit = Number(limitEl?.value || 0);
-    if (limit >= 0) { // Allow 0 limit
-      settings.ccLimit = limit;
-      saveAll();
-      renderKPIs();
-      alert('Credit Card Limit saved.');
-    } else {
-      alert('Please enter a valid limit (0 or greater).');
     }
   });
 
-  document.getElementById('resetBtn').addEventListener('click', () => {
-    if (!requireSignedIn()) return;
-    if (confirm(`DANGER! Wipe all data for profile "${currentProfile}"? This cannot be undone.`)) {
-      data = [];
-      methodNames = { ...CANONICAL_METHODS
-      };
-      incomeSources = ['Salary', 'Freelance', 'Interest'];
-      settings = { ccLimit: DEFAULT_CC_LIMIT };
-      saveAll();
-      renderAll();
-      settingsModal.classList.remove('open');
-      alert('Profile reset complete.');
+  const labels = monthKeys.map(key => {
+    const [year, month] = key.split('-');
+    return `${monthNames[Number(month)]} ${year % 100}`;
+  });
+
+  return { monthlyData, labels, monthKeys };
+}
+
+function renderDonutChart() {
+  if (donutChart) donutChart.destroy();
+
+  const liquidAssets = data.filter(d => d.type === 'opening_balance' && d.investmentGroup === 'Cash');
+
+  const liquidBreakdown = liquidAssets.reduce((acc, curr) => {
+    const key = curr.method;
+    if (!acc[key]) acc[key] = { name: curr.investmentSub, amount: 0 };
+    acc[key].amount += Number(curr.amount);
+    return acc;
+  }, {});
+
+  data.filter(d => d.type !== 'opening_balance').forEach(d => {
+    if(d.method === 'credit_card' || d.category === 'Credit Card Payment') return;
+    const key = d.method;
+    if (!liquidBreakdown[key]) return;
+    const amount = Number(d.amount);
+    if (d.type === 'income') liquidBreakdown[key].amount += amount;
+    else if (d.type === 'expense') liquidBreakdown[key].amount -= amount;
+  });
+
+  const finalData = Object.values(liquidBreakdown).filter(item => item.amount > 0);
+  const labels = finalData.map(item => item.name);
+  const chartData = finalData.map(item => item.amount);
+  const backgroundColors = getColorPalette(labels.length);
+
+  const ctx = document.getElementById('donutChart').getContext('2d');
+  donutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: chartData, backgroundColor: backgroundColors, borderWidth: 1, hoverOffset: 8 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '70%',
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: (context) => {
+          let label = context.label || '';
+          if (label) label += ': ';
+          label += fmt(context.parsed);
+          return label;
+        } } }
+      }
     }
   });
 
-  // Export / Import
-  function convertToCSV(data) {
-    const header = ["id", "type", "amount", "date", "desc", "category", "method", "incomeSource", "investmentGroup", "investmentSub", "insuranceType", "insuranceFor"];
-    const csv = [
-      header.map(h => `"${h}"`).join(','),
-      ...data.map(row => header.map(fieldName => {
-        let value = row[fieldName.replace(/([A-Z])/g, (match) => '_' + match.toLowerCase())] || row[fieldName];
-        if (value === undefined || value === null) return '';
-        if (typeof value === 'string') {
-          value = value.replace(/"/g, '""');
-          if (value.includes(',') || value.includes('\n') || value.includes('"')) value = `"${value}"`;
-        }
-        return value;
-      }).join(','))
-    ].join('\n');
-    return csv;
+  const legendDiv = document.getElementById('walletLegend');
+  legendDiv.innerHTML = finalData.length
+    ? finalData.map((item, index) => `
+        <div style="display:flex; justify-content:space-between; font-weight:500;">
+          <div style="display:flex; align-items:center;">
+            <span style="width:10px; height:10px; border-radius:50%; background-color:${backgroundColors[index]}; margin-right:8px;"></span>
+            <span>${item.name}</span>
+          </div>
+          <span style="font-weight:700; color:var(--text-main)">${fmt(item.amount)}</span>
+        </div>`).join('')
+    : `<div style="text-align:center; padding:10px; color:var(--text-muted)">No liquid cash balance.</div>`;
+}
+
+function renderCharts() {
+  const months = document.getElementById('mainChartFilter').value;
+  renderMainChart(months);
+  renderDonutChart();
+}
+
+function renderAll(){
+  populateSelects();
+  renderKPIs();
+  renderTable();
+  renderInvTable();
+  renderCharts();
+}
+
+// Search
+document.getElementById('searchTx').addEventListener('input', (e) => {
+  renderTable(e.target.value.toLowerCase());
+});
+
+// Calculator logic
+const calculator = document.getElementById('calculator');
+let expression = "";
+
+function updateCalcDisplay() {
+  const displayEl = document.getElementById('calc-display');
+  displayEl.textContent = expression || "0";
+  displayEl.scrollLeft = displayEl.scrollWidth;
+}
+function calcAppend(val) { expression += val; updateCalcDisplay(); }
+function calcHandleOperator(op) {
+  if(expression === "" && op !== '-') return;
+  const lastChar = expression.slice(-1);
+  if (['+','-','*','/'].includes(lastChar)) expression = expression.slice(0, -1) + op;
+  else expression += op;
+  updateCalcDisplay();
+}
+function calcBackspace() { expression = expression.slice(0, -1); updateCalcDisplay(); }
+function calcClear() { expression = ""; updateCalcDisplay(); }
+function calcCalculate() {
+  try {
+    const safeExpr = expression.replace(/[^0-9+\-*/.]/g, '');
+    if(!safeExpr) return;
+    const result = new Function('return ' + safeExpr)();
+    expression = String(Math.round(result * 100000) / 100000);
+  } catch { expression = "Error"; }
+  updateCalcDisplay();
+}
+function toggleCalculator() {
+  calculator.classList.toggle('hidden');
+  if (!calculator.classList.contains('hidden')) { 
+      calcClear(); 
   }
+}
+document.getElementById('calc-toggle').onclick = toggleCalculator;
 
-  document.getElementById('exportBtn').addEventListener('click', () => {
-    if (!requireSignedIn()) return;
-    if (data.length === 0) return alert('No data to export.');
-    const csv = convertToCSV(data);
-    const blob = new Blob([csv], {
-      type: 'text/csv;charset=utf-8;'
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `moneymirror_export_${toKey(currentProfile)}_${new Date().toISOString().slice(0,10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  });
-
-  function parseCSV(csvText) {
-    const lines = csvText.split('\n').filter(line => line.trim() !== '');
-    if (lines.length < 2) return [];
-
-    const headerLine = lines[0].trim();
-    // Regex to split by comma, ignoring commas inside double quotes. Also removes surrounding quotes.
-    const headerRegex = /(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g;
-    const headers = (headerLine.match(headerRegex) || []).map(h => h.toLowerCase().replace(/["\s]/g, ''));
-    
-    if (!headers.includes('type') || !headers.includes('amount')) {
-      alert('CSV file is missing required headers (type, amount, date, desc).');
-      return [];
-    }
-
-    const csvData = [];
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      const rowRegex = /(".*?"|[^",\r\n]+)(?=\s*,|\s*$)/g;
-      let rowValues = (line.match(rowRegex) || []).map(v => v.replace(/^"|"$/g, ''));
-
-      if (rowValues.length !== headers.length) {
-        console.warn(`Skipping malformed row: ${line}`);
-        continue;
-      }
-      
-      const row = rowValues.reduce((obj, val, index) => {
-        obj[headers[index]] = (val || '').trim();
-        return obj;
-      }, {});
-
-      const tx = {
-        id: row.id || uid(),
-        type: row.type || 'expense',
-        amount: Number(row.amount) || 0,
-        date: row.date || new Date().toISOString().slice(0, 10),
-        desc: row.desc || '',
-        category: row.category || '',
-        method: row.method || 'cash',
-        incomeSource: row.incomesource || '',
-        investmentGroup: row.investmentgroup || '',
-        investmentSub: row.investmentsub || '',
-        insuranceType: row.insurancetype || '',
-        insuranceFor: row.insurancefor || '',
-      };
-
-      if (tx.type === 'expense' && !BASE_CATS.includes(tx.category)) tx.category = 'Misc';
-      if (tx.type === 'income' && !incomeSources.includes(tx.incomeSource)) incomeSources.push(tx.incomeSource);
-      
-      // Update custom methods if new ones are found
-      if(tx.method && !CANONICAL_METHODS[tx.method] && !methodNames[tx.method]) {
-        methodNames[tx.method] = tx.method.replace(/_/g, ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-      }
-
-      csvData.push(tx);
-    }
-    return csvData;
+function dragElement(elmnt) {
+  var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+  if (document.getElementById("calc-header")) {
+    document.getElementById("calc-header").onmousedown = dragMouseDown;
+    document.getElementById("calc-header").ontouchstart = dragMouseDown;
+  } else {
+    elmnt.onmousedown = dragMouseDown;
   }
-
-  function processImportedData(importedData) {
-    if (importedData.length === 0) return alert('No valid transactions found in the file.');
-
-    const promptText = `Do you want to REPLACE the current data for '${currentProfile}' with ${importedData.length} imported entries?\n\n- OR -\n\nClick Cancel, then click OK to APPEND the imported entries to your existing data.`;
-    
-    // First confirm is for REPLACE
-    if (confirm(promptText)) {
-      data = importedData;
-      saveAll();
-      renderAll();
-      alert('Data imported successfully (Replaced current profile data)!');
-    } 
-    // Second confirm is for APPEND
-    else if (confirm(`Do you want to APPEND the ${importedData.length} entries to your existing data?`)) {
-      const existingIds = new Set(data.map(t => t.id));
-      const uniqueNewData = importedData.map(t => ({
-        ...t,
-        id: existingIds.has(t.id) ? uid() : t.id
-      }));
-      data = [...data, ...uniqueNewData];
-      saveAll();
-      renderAll();
-      alert('Data imported successfully (Appended to existing data)!');
-    }
+  function dragMouseDown(e) {
+    e = e || window.event;
+    pos3 = e.clientX || (e.touches && e.touches[0].clientX);
+    pos4 = e.clientY || (e.touches && e.touches[0].clientY);
+    if (pos3 == null || pos4 == null) return;
+    document.onmouseup = closeDragElement;
+    document.onmousemove = elementDrag;
+    document.ontouchend = closeDragElement;
+    document.ontouchmove = elementDrag;
   }
-
-  function handleImport(event) {
-    if (!requireSignedIn()) return;
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const content = e.target.result;
-        let importedData = [];
-
-        if (file.name.endsWith('.json')) {
-          importedData = JSON.parse(content);
-        } else if (file.name.endsWith('.csv')) {
-          importedData = parseCSV(content);
-        }
-
-        if (Array.isArray(importedData)) {
-          processImportedData(importedData);
-        } else {
-          alert('Invalid file format. Please use a valid CSV or JSON format.');
-        }
-
-      } catch (error) {
-        console.error("Import error:", error);
-        alert('Could not process file. Check console for details.');
-      }
-      event.target.value = ''; // Clear file input
-    };
-
-    reader.onerror = () => {
-      alert('Failed to read file.');
-    };
-
-    reader.readAsText(file);
+  function elementDrag(e) {
+    e = e || window.event;
+    let clientX = e.clientX || (e.touches && e.touches[0].clientX);
+    let clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    if (clientX == null || clientY == null) return;
+    pos1 = pos3 - clientX; pos2 = pos4 - clientY; pos3 = clientX; pos4 = clientY;
+    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
   }
+  function closeDragElement() {
+    document.onmouseup = null; document.onmousemove = null;
+    document.ontouchend = null; document.ontouchmove = null;
+  }
+}
 
-  // Wires up the Import Button to the hidden file input
-  document.getElementById('importDataBtn').addEventListener('click', () => {
-    if (!requireSignedIn()) return;
-    document.getElementById('importFileInput').click();
-  });
-  // Wires up the hidden file input to the import handler
-  document.getElementById('importFileInput').addEventListener('change', handleImport);
+// Settings modal logic
+const settingsModal = document.getElementById('settingsModal');
+document.getElementById('navSettings').onclick = () => {
+  if (!requireSignedIn()) return;
+  settingsModal.classList.add('open');
+  renderSettings();
+};
+document.getElementById('closeSettings').onclick = () => settingsModal.classList.remove('open');
 
-  
-  // FIX: LOAD SAMPLE DATA FUNCTION
-  // I will make the function accept an optional flag to skip the confirmation alert on first run
-  function loadSampleData(isInitialLoad = false) {
-    if (!currentProfile) return alert('Please sign in first.');
-    if (!isInitialLoad && !confirm('This will replace ALL your current data with sample entries. Continue?')) return;
+function renderSettings(){
+  const editor = document.getElementById('methodEditor');
+  editor.innerHTML = Object.keys(methodNames).map(id => `
+    <div class="flex-row" style="justify-content:space-between">
+      <span style="font-size:12px; color:#64748b">${CANONICAL_METHODS[id]||'Custom'}</span>
+      <input value="${methodNames[id]}" onchange="updateMethodName('${id}', this.value)" style="width:150px" />
+      <button onclick="removeMethod('${id}')" class="btn-danger" style="padding:4px 8px; font-size:11px; ${CANONICAL_METHODS[id] ? 'display:none' : ''}">Remove</button>
+    </div>
+  `).join('');
 
-    // Helper functions for data generation
-    const randBetween = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-    const pick = (arr) => arr[randBetween(0, arr.length - 1)];
-    const dateInLastMonths = (months) => {
-      const d = new Date();
-      const m = randBetween(months[0], months[1]);
-      d.setMonth(d.getMonth() - m);
-      d.setDate(randBetween(1, 28));
-      return d.toISOString().slice(0, 10);
-    };
+  const incomeListDiv = document.getElementById('incomeList');
+  incomeListDiv.innerHTML = incomeSources.map(s => `
+    <span class="badge" style="background:#e0f7fa; color:var(--primary);">${s}
+      <button onclick="removeIncome('${s}')" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:0 0 0 4px; font-size:10px; font-weight:700">×</button>
+    </span>
+  `).join('');
 
-    // Reset all to sample state
+  document.getElementById('ccLimitInput').value = settings.ccLimit || DEFAULT_CC_LIMIT;
+}
+
+function updateMethodName(id, newName) {
+  methodNames[id] = (newName || '').trim();
+  saveAll(); populateSelects(); renderSettings();
+}
+
+document.getElementById('addMethod').addEventListener('click', () => {
+  const idEl = document.getElementById('newMethodId');
+  const nameEl = document.getElementById('newMethodName');
+  const id = (idEl?.value || '').trim().toLowerCase().replace(/\s/g, '_');
+  const name = (nameEl?.value || '').trim();
+  if (id && name && !methodNames[id]) {
+    methodNames[id] = name;
+    idEl.value = ''; nameEl.value = '';
+    saveAll(); populateSelects(); renderSettings();
+  } else {
+    alert('Invalid ID or name, or ID already exists. ID must be unique.');
+  }
+});
+
+function removeMethod(id) {
+  if(CANONICAL_METHODS[id]) return alert('Cannot remove canonical method.');
+  if(confirm(`Remove method "${methodNames[id]}"? Transactions using this will still be tracked.`)) {
+    delete methodNames[id];
+    saveAll(); populateSelects(); renderSettings();
+  }
+}
+
+document.getElementById('addIncomeBtn').addEventListener('click', () => {
+  const nameEl = document.getElementById('newIncome');
+  const name = (nameEl?.value || '').trim();
+  if (name && !incomeSources.includes(name)) {
+    incomeSources.push(name);
+    nameEl.value = '';
+    saveAll(); populateSelects(); renderSettings();
+  } else {
+    alert('Invalid or duplicate income source name.');
+  }
+});
+
+function removeIncome(name) {
+  if(confirm(`Remove income source "${name}"? Transactions using this will still be tracked.`)) {
+    incomeSources = incomeSources.filter(s => s !== name);
+    saveAll(); populateSelects(); renderSettings();
+  }
+}
+
+document.getElementById('saveCCLimit').addEventListener('click', () => {
+  const limitEl = document.getElementById('ccLimitInput');
+  const limit = Number(limitEl?.value || 0);
+  if(limit > 0) {
+    settings.ccLimit = limit;
+    saveAll(); renderKPIs();
+    alert('Credit Card Limit saved.');
+  } else { alert('Please enter a valid limit.'); }
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if(!requireSignedIn()) return;
+  if(confirm(`DANGER! Wipe all data for profile "${currentProfile}"? This cannot be undone.`)){
     data = [];
-    methodNames = { ...CANONICAL_METHODS
-    };
+    methodNames = {...CANONICAL_METHODS};
     incomeSources = ['Salary', 'Freelance', 'Interest'];
     settings = { ccLimit: DEFAULT_CC_LIMIT };
-
-    // Generate Sample Data
-    data.push({ id: uid(), type: 'opening_balance', amount: randBetween(100000, 300000), date: dateInLastMonths([5, 6]), desc: 'Initial Salary A/C Balance', investmentGroup: 'Cash', investmentSub: 'Salary Account', method: 'salary_acct', category: 'N/A' });
-    data.push({ id: uid(), type: 'opening_balance', amount: randBetween(50000, 150000), date: dateInLastMonths([4, 5]), desc: 'Initial Savings A/C Balance', investmentGroup: 'Cash', investmentSub: 'Savings Account', method: 'savings_acct', category: 'N/A' });
-    data.push({ id: uid(), type: 'opening_balance', amount: randBetween(2000, 10000), date: dateInLastMonths([5, 6]), desc: 'Initial Cash Balance in Physical Cash', investmentGroup: 'Cash', investmentSub: 'Physical Cash', method: 'cash', category: 'N/A' });
-
-    const monthsIncome = randBetween(2, 3);
-    for (let i = 0; i < monthsIncome; i++) {
-      data.push({ id: uid(), type: 'income', amount: randBetween(90000, 180000), incomeSource: 'Salary', method: 'salary_acct', date: dateInLastMonths([i + 1, i + 1]), desc: 'Monthly Salary Deposit' });
-    }
-
-    const expenseCats = ['Rent', 'Food', 'Utilities', 'Shopping', 'Entertainment', 'Travel', 'Health', 'Insurance'];
-    const methodsPool = ['salary_acct', 'savings_acct', 'cash', 'credit_card'];
-    const expenseCount = randBetween(8, 14);
-    for (let i = 0; i < expenseCount; i++) {
-      const cat = pick(expenseCats);
-      const amtRanges = {
-        'Rent': [18000, 40000],
-        'Food': [800, 5000],
-        'Utilities': [800, 4000],
-        'Shopping': [1000, 12000],
-        'Entertainment': [500, 4000],
-        'Travel': [2000, 25000],
-        'Health': [800, 6000],
-        'Insurance': [1500, 6000]
-      };
-      const amount = randBetween(amtRanges[cat][0], amtRanges[cat][1]);
-      data.push({
-        id: uid(),
-        type: 'expense',
-        amount: amount,
-        date: dateInLastMonths([0, 2]),
-        desc: `${cat} Expense`,
-        category: cat,
-        method: pick(methodsPool),
-      });
-    }
-
-    // Credit Card Payment - required to show CC logic works
-    const ccDue = data.filter(d => d.method === 'credit_card').reduce((sum, d) => sum + d.amount, 0);
-    if (ccDue > 0) {
-      data.push({ id: uid(), type: 'expense', amount: ccDue, date: dateInLastMonths([-1, -1]), desc: 'Credit Card Payment', category: 'Credit Card Payment', method: 'salary_acct' });
-    }
-
-    // Sample Investment
-    data.push({ id: uid(), type: 'expense', amount: 50000, date: dateInLastMonths([3, 4]), desc: 'MF SIP', category: 'Investments', method: 'salary_acct', investmentGroup: 'MFs', investmentSub: 'Equity Funds' });
-    data.push({ id: uid(), type: 'expense', amount: 10000, date: dateInLastMonths([0, 0]), desc: 'Stock Purchase', category: 'Investments', method: 'savings_acct', investmentGroup: 'Stocks', investmentSub: 'Tech Stock' });
-    data.push({ id: uid(), type: 'opening_balance', amount: 250000, date: dateInLastMonths([8, 9]), desc: 'Legacy Stock Holding', investmentGroup: 'Stocks', investmentSub: 'Blue Chip Stock', method: 'N/A', category: 'N/A' });
-
-    // Final actions
-    saveAll();
-    renderAll();
-    if(!isInitialLoad) alert('Sample data loaded! Please refresh if the data display looks off (due to Chart.js context sometimes)');
+    saveAll(); renderAll();
+    settingsModal.classList.remove('open');
+    alert('Profile reset complete.');
   }
+});
 
-  // --- Advanced Analytics Logic ---
+// Export / Import
+function convertToCSV(data) {
+  const header = ["id","type","amount","date","desc","category","method","income_source","investment_group","investment_sub","insurance_type","insurance_for"];
+  const csv = [
+    header.join(','),
+    ...data.map(row => header.map(fieldName => {
+      let value = row[fieldName.replace(/_/g, '')] || row[fieldName];
+      if (value === undefined || value === null) return '';
+      if (typeof value === 'string') {
+        value = value.replace(/"/g, '""');
+        if (value.includes(',')) value = `"${value}"`;
+      }
+      return value;
+    }).join(','))
+  ].join('\n');
+  return csv;
+}
 
-  // Function to aggregate data for Net Worth chart
-  function calculateNetWorthByDate(filteredData) {
-    const dailyNetWorth = new Map();
-    let totalNetWorth = 0;
+document.getElementById('exportBtn').addEventListener('click', () => {
+  if (!requireSignedIn()) return;
+  if(data.length === 0) return alert('No data to export.');
+  const csv = convertToCSV(data);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `moneymirror_backup_${toKey(currentProfile)}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+});
 
-    // 1. Calculate the starting Net Worth from the oldest Opening Balance
-    const oldestTransaction = filteredData.sort((a,b) => new Date(a.date) - new Date(b.date))[0];
-    const startDate = oldestTransaction ? oldestTransaction.date : new Date().toISOString().slice(0, 10);
-    
-    // Aggregate initial balance on the day of the oldest opening balance
-    filteredData.filter(d => d.date <= startDate && d.type === 'opening_balance').forEach(d => {
-        totalNetWorth += Number(d.amount);
-    });
-    
-    dailyNetWorth.set(startDate, totalNetWorth);
-
-    // 2. Iterate through all dates and calculate daily changes
-    const sortedDates = [...new Set(filteredData.map(d => d.date))].sort();
-    
-    for(const date of sortedDates) {
-      if(date === startDate) continue;
-      
-      const transactionsOnDate = filteredData.filter(d => d.date === date);
-      let netChange = 0;
-      
-      transactionsOnDate.forEach(d => {
-        const amount = Number(d.amount);
-        if(d.type === 'opening_balance' || d.type === 'income') {
-          netChange += amount;
-        } else if (d.type === 'expense') {
-          netChange -= amount;
+document.getElementById('importDataBtn').addEventListener('click', () => {
+  if (!requireSignedIn()) return;
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.csv, application/json, text/csv, text/plain';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = event => {
+      const content = event.target.result;
+      let importedData = [];
+      try {
+        const json = JSON.parse(content);
+        importedData = Array.isArray(json) ? json : (json.data || json.transactions || []);
+        if (importedData.length > 0) { processImportedData(importedData); return; }
+      } catch(jsonErr) {
+        if (file.name.toLowerCase().endsWith('.csv') || file.type === 'text/csv' || file.type === 'text/plain') {
+          importedData = parseCSV(content);
+          if (importedData.length > 0) { processImportedData(importedData); return; }
         }
-      });
+      }
+      alert('Could not parse file. Please ensure it is a valid CSV or a JSON array of transactions.');
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+});
 
-      // The previous day's net worth is the last recorded value
-      const previousNetWorth = Array.from(dailyNetWorth.values()).pop() || 0;
-      totalNetWorth = previousNetWorth + netChange;
-      dailyNetWorth.set(date, totalNetWorth);
-    }
-
-    return dailyNetWorth;
+function parseCSV(csvText) {
+  const lines = csvText.split('\n').filter(line => line.trim() !== '');
+  if (lines.length < 2) return [];
+  const headerLine = lines[0].toLowerCase().trim().replace(/"/g, '').split(',');
+  const headers = headerLine.map(h => h.replace(/[^a-z0-9_]/g, '').replace(/_/g, ''));
+  const csvData = [];
+  for (let i = 1; i < lines.length; i++) {
+    let rowValues = lines[i].match(/(?:"[^"]*"|[^,])+/g);
+    if (!rowValues) continue;
+    const row = rowValues.reduce((obj, val, index) => {
+      obj[headers[index]] = (val || '').trim().replace(/^"|"$/g, '');
+      return obj;
+    }, {});
+    const tx = {
+      id: row.id || uid(),
+      type: row.type || 'expense',
+      amount: Number(row.amount) || 0,
+      date: row.date || new Date().toISOString().slice(0,10),
+      desc: row.desc || '',
+      category: row.category || '',
+      method: row.method || 'cash',
+      incomeSource: row.incomesource || '',
+      investmentGroup: row.investmentgroup || '',
+      investmentSub: row.investmentsub || '',
+      insuranceType: row.insurancetype || '',
+      insuranceFor: row.insurancefor || '',
+    };
+    if (tx.type === 'expense' && !BASE_CATS.includes(tx.category)) tx.category = 'Misc';
+    csvData.push(tx);
   }
-  
-  function renderAdvancedCharts() {
-    // 1. Filter Data based on date range
-    const months = document.getElementById('dateFilter').value;
-    const endDate = new Date();
-    let startDate = new Date();
-    if (months !== 'all') {
-      startDate.setMonth(endDate.getMonth() - Number(months));
-      startDate.setDate(1);
-    }
+  return csvData;
+}
 
-    const filteredData = data.filter(d => {
-      const date = new Date(d.date);
-      return months === 'all' || date >= startDate;
+function processImportedData(importedData){
+  if(importedData.length === 0) return alert('No valid transactions found in the file.');
+  const prompt = `Do you want to REPLACE the current data for '${currentProfile}' with ${importedData.length} imported entries?\n\n- OR -\n\nClick Cancel, then click OK to APPEND the imported entries to your existing data.`;
+  if(confirm(prompt)) {
+    data = importedData;
+    saveAll(); renderAll();
+    alert('Data imported successfully (Replaced current profile data)!');
+  } else if (confirm(`Do you want to APPEND the ${importedData.length} entries to your existing data?`)) {
+    const existingIds = new Set(data.map(t => t.id));
+    const uniqueNewData = importedData.map(t => ({ ...t, id: existingIds.has(t.id) ? uid() : t.id }));
+    data = [...data, ...uniqueNewData];
+    saveAll(); renderAll();
+    alert('Data imported successfully (Appended to current profile data)!');
+  }
+}
+
+// Analytics modal
+document.getElementById('navAnalytics').onclick = () => {
+  if (!requireSignedIn()) return;
+  document.getElementById('analyticsModal').classList.add('open');
+  renderAdvancedCharts();
+}
+document.getElementById('closeAnalytics').onclick = () => document.getElementById('analyticsModal').classList.remove('open');
+
+function renderAdvancedCharts() {
+  const range = document.getElementById('dateFilter').value;
+  const filteredData = filterDataByRange(data, range);
+  renderNetWorthChart(filteredData);
+  resetExpenseDrilldown();
+  renderExpenseDistributionChart(filteredData);
+}
+
+function filterDataByRange(data, range) {
+  if (range === 'all') return data;
+  const months = parseInt(range);
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - months);
+  cutoff.setDate(1);
+  return data.filter(d => new Date(d.date) >= cutoff);
+}
+
+function renderNetWorthChart(filteredData) {
+  const ctx = document.getElementById('chartNetWorth').getContext('2d');
+  const chartType = document.getElementById('chart1Type').value;
+  const labels = [];
+  const cumulativeData = [];
+
+  const sortedData = filteredData.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+  let currentNetWorth = 0;
+  const dailyNetWorth = new Map();
+
+  sortedData.forEach(e => {
+    let amount = Number(e.amount);
+    if (e.type === 'income' || (e.type === 'opening_balance' && e.investmentGroup !== 'Cash')) currentNetWorth += amount;
+    else if (e.type === 'opening_balance' && e.investmentGroup === 'Cash') currentNetWorth += amount;
+    else if (e.type === 'expense') currentNetWorth -= amount;
+    const dateKey = e.date;
+    dailyNetWorth.set(dateKey, currentNetWorth);
+  });
+
+  const dates = Array.from(dailyNetWorth.keys()).sort();
+  dates.forEach(date => { labels.push(date); cumulativeData.push(dailyNetWorth.get(date)); });
+
+  if (chartNetWorth) chartNetWorth.destroy();
+  chartNetWorth = new Chart(ctx, {
+    type: chartType,
+    data: {
+      labels,
+      datasets: [{
+        label: 'Cumulative Net Worth (₹)',
+        data: cumulativeData,
+        borderColor: '#3b82f6',
+        backgroundColor: chartType === 'bar' ? '#3b82f6' : 'rgba(59, 130, 246, 0.2)',
+        fill: chartType === 'line' ? 'origin' : false,
+        tension: 0.2,
+        borderWidth: 2,
+        pointRadius: chartType === 'line' ? 2 : 0
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { grid: { display: false }, title: { display: true, text: 'Date' } },
+        y: { title: { display: true, text: 'Net Worth (₹)' }, ticks: { callback: (value) => fmt(value) } }
+      },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `Net Worth: ${fmt(context.parsed.y)}` } } }
+    }
+  });
+}
+
+function renderExpenseDistributionChart(filteredData) {
+  const ctx = document.getElementById('chartExpenseDistribution').getContext('2d');
+  const expenses = filteredData.filter(d => d.type === 'expense' && d.category !== 'Credit Card Payment');
+  const titleEl = document.getElementById('expenseDonutTitle');
+  const backBtn = document.getElementById('resetExpenseDrilldown');
+
+  let labels = [];
+  let chartData = [];
+
+  if (expenses.length === 0) {
+    if(chartExpenseDistribution) chartExpenseDistribution.destroy();
+    chartExpenseDistribution = new Chart(ctx, { type: 'doughnut', data: { labels: [], datasets: [{ data: [] }] }, options: { responsive: true, maintainAspectRatio: false } });
+    return;
+  }
+
+  if (expenseDrilldown.active) {
+    titleEl.textContent = `${expenseDrilldown.parentCategory} Breakdown`;
+    backBtn.classList.remove('hidden');
+
+    const subGrouped = {};
+    expenses.forEach(e => {
+      if (e.category !== expenseDrilldown.parentCategory) return;
+      let subKey;
+      if (e.category === 'Investments') {
+        subKey = e.investmentSub || 'Uncategorized Investment';
+        const subTypeKey = Object.keys(INVESTMENT_SUBTYPES).find(k => INVESTMENT_SUBTYPES[k] === subKey);
+        subKey = subTypeKey ? INVESTMENT_SUBTYPES[subTypeKey] : subKey;
+      } else if (e.category === 'Insurance') {
+        subKey = `${e.insuranceType} (${e.insuranceFor})` || 'Uncategorized Insurance';
+      } else {
+        subKey = e.category;
+      }
+      subGrouped[subKey] = (subGrouped[subKey] || 0) + Number(e.amount);
     });
 
-    // 2. Render Cumulative Net Worth Chart
-    renderNetWorthChart(filteredData);
+    labels = Object.keys(subGrouped);
+    chartData = Object.values(subGrouped);
 
-    // 3. Render Expense Distribution Chart
+  } else {
+    titleEl.textContent = 'Expense Distribution by Category';
+    backBtn.classList.add('hidden');
+
+    const categoryGrouped = {};
+    expenses.forEach(e => {
+      const cat = e.category || 'Misc';
+      categoryGrouped[cat] = (categoryGrouped[cat] || 0) + Number(e.amount);
+    });
+
+    for (const cat in categoryGrouped) { if (categoryGrouped[cat] < 5) delete categoryGrouped[cat]; }
+    labels = Object.keys(categoryGrouped);
+    chartData = Object.values(categoryGrouped);
+    expenseDrilldown.parentData = categoryGrouped;
+  }
+
+  if (chartExpenseDistribution) chartExpenseDistribution.destroy();
+  const backgroundColors = getColorPalette(labels.length);
+
+  chartExpenseDistribution = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: chartData, backgroundColor: backgroundColors, borderWidth: 1, hoverOffset: 8 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '60%',
+      plugins: {
+        legend: { position: 'right' },
+        tooltip: { callbacks: { label: (context) => {
+          let label = context.label || '';
+          if (label) label += ': ';
+          label += fmt(context.parsed);
+          return label;
+        } } }
+      },
+      onClick: (e, elements) => {
+        if (elements.length > 0 && !expenseDrilldown.active) {
+          const index = elements[0].index;
+          const selectedCategory = labels[index];
+          const isDrillable = selectedCategory === 'Investments' || selectedCategory === 'Insurance';
+          if (isDrillable) {
+            expenseDrilldown.active = true;
+            expenseDrilldown.parentCategory = selectedCategory;
+            renderExpenseDistributionChart(filteredData);
+          }
+        }
+      }
+    }
+  });
+}
+
+function resetExpenseDrilldown() {
+  expenseDrilldown.active = false;
+  expenseDrilldown.parentCategory = null;
+  if (document.getElementById('analyticsModal').classList.contains('open')) {
+    const range = document.getElementById('dateFilter').value;
+    const filteredData = filterDataByRange(data, range);
     renderExpenseDistributionChart(filteredData);
   }
+}
 
-  function renderNetWorthChart(filteredData) {
-    const chartType = document.getElementById('chart1Type').value;
-    const ctx = document.getElementById('chartNetWorth').getContext('2d');
-    const dailyNetWorth = calculateNetWorthByDate(filteredData);
-    
-    // Sort dates for chart rendering
-    const labels = Array.from(dailyNetWorth.keys()).sort();
-    const cumulativeData = labels.map(date => dailyNetWorth.get(date));
-    
-    if (chartNetWorth) chartNetWorth.destroy();
+// Sample data
+function randBetween(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pick(arr) { return arr[randBetween(0, arr.length - 1)]; }
+function dateInLastMonths(monthsBackRange = [1, 6]) {
+  const back = randBetween(monthsBackRange[0], monthsBackRange[1]);
+  const d = new Date(); d.setMonth(d.getMonth() - back);
+  d.setDate(randBetween(1, Math.min(28, new Date(d.getFullYear(), d.getMonth()+1, 0).getDate())));
+  return d.toISOString().slice(0,10);
+}
+document.getElementById('sampleBtn').addEventListener('click', () => {
+  if (!requireSignedIn()) return;
+  if(!confirm(`Add sample data to your active profile (${currentProfile})? This will replace your current data.`)) return;
 
-    chartNetWorth = new Chart(ctx, {
-      type: chartType,
-      data: {
-        labels,
-        datasets: [{
-          label: 'Cumulative Net Worth (₹)',
-          data: cumulativeData,
-          borderColor: '#3b82f6',
-          backgroundColor: chartType === 'bar' ? '#3b82f6' : 'rgba(59, 130, 246, 0.2)',
-          fill: chartType === 'line' ? 'origin' : false,
-          tension: 0.2,
-          borderWidth: 2,
-          pointRadius: chartType === 'line' ? 2 : 0
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          x: {
-            grid: { display: false },
-            title: { display: true, text: 'Date' }
-          },
-          y: {
-            title: { display: true, text: 'Net Worth (₹)' },
-            ticks: { callback: (value) => fmt(value) }
-          }
-        },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: (context) => `Net Worth: ${fmt(context.parsed.y)}`
-            }
-          }
-        }
-      }
-    });
+  methodNames = {...CANONICAL_METHODS};
+  incomeSources = ['Salary','Freelance','Interest'];
+
+  data = [];
+  data.push({id:uid(), type:'opening_balance', amount: randBetween(60000, 150000), date: dateInLastMonths([5,6]), desc:'Initial Cash Balance in Savings A/C', investmentGroup:'Cash', investmentSub:'Savings A/C', method:'savings_acct', category:'N/A'});
+  data.push({id:uid(), type:'opening_balance', amount: randBetween(2000, 10000), date: dateInLastMonths([5,6]), desc:'Initial Cash Balance in Physical Cash', investmentGroup:'Cash', investmentSub:'Physical Cash', method:'cash', category:'N/A'});
+
+  const monthsIncome = randBetween(2,3);
+  for (let i=0;i<monthsIncome;i++){
+    data.push({id:uid(), type:'income', amount: randBetween(90000, 180000), incomeSource:'Salary', method:'salary_acct', date: dateInLastMonths([i+1, i+1]), desc:'Monthly Salary Deposit'});
   }
 
-  function renderExpenseDistributionChart(filteredData) {
-    const ctx = document.getElementById('chartExpenseDistribution').getContext('2d');
-    const expenses = filteredData.filter(d => d.type === 'expense' && d.category !== 'Credit Card Payment');
-    const titleEl = document.getElementById('expenseDonutTitle');
-    const backBtn = document.getElementById('resetExpenseDrilldown');
-
-    let labels = [];
-    let chartData = [];
-    let breakdown = {};
-
-    if (expenseDrilldown.active) {
-      titleEl.innerText = `${expenseDrilldown.parentCategory} Breakdown`;
-      backBtn.classList.remove('hidden');
-
-      const drilldownExpenses = expenses.filter(d => d.category === expenseDrilldown.parentCategory);
-      const subKey = expenseDrilldown.parentCategory === 'Investments' ? 'investmentSub' : 'insuranceType';
-      
-      drilldownExpenses.forEach(d => {
-        const key = d[subKey] || 'Unspecified';
-        breakdown[key] = (breakdown[key] || 0) + Number(d.amount);
-      });
-      
-    } else {
-      titleEl.innerText = 'Expense Distribution';
-      backBtn.classList.add('hidden');
-      
-      expenses.forEach(d => {
-        const key = d.category || 'Misc';
-        breakdown[key] = (breakdown[key] || 0) + Number(d.amount);
-      });
-    }
-
-    labels = Object.keys(breakdown);
-    chartData = Object.values(breakdown);
-    const backgroundColors = getColorPalette(labels.length);
-
-    if (chartExpenseDistribution) chartExpenseDistribution.destroy();
-
-    if (expenses.length === 0) {
-      return; // No expenses to chart
-    }
-
-    chartExpenseDistribution = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels,
-        datasets: [{
-          data: chartData,
-          backgroundColor: backgroundColors,
-          borderWidth: 1,
-          hoverOffset: 8
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '60%',
-        plugins: {
-          legend: { position: 'right' },
-          tooltip: {
-            callbacks: {
-              label: (context) => {
-                let label = context.label || '';
-                if (label) label += ': ';
-                label += fmt(context.parsed);
-                return label;
-              }
-            }
-          }
-        },
-        onClick: (e, elements) => {
-          if (elements.length > 0 && !expenseDrilldown.active) {
-            const index = elements[0].index;
-            const selectedCategory = labels[index];
-            const isDrillable = selectedCategory === 'Investments' || selectedCategory === 'Insurance';
-            
-            if (isDrillable) {
-              expenseDrilldown.active = true;
-              expenseDrilldown.parentCategory = selectedCategory;
-              renderExpenseDistributionChart(filteredData);
-            }
-          }
-        }
-      }
-    });
+  const expenseCats = ['Rent','Food','Utilities','Shopping','Entertainment','Travel','Health','Insurance'];
+  const methodsPool = ['salary_acct','savings_acct','cash','credit_card'];
+  const expenseCount = randBetween(8, 14);
+  for (let i=0;i<expenseCount;i++){
+    const cat = pick(expenseCats);
+    const amtRanges = {'Rent':[18000, 40000],'Food':[800, 5000],'Utilities':[800, 4000],'Shopping':[1000, 12000],'Entertainment':[500, 4000],'Travel':[2000, 25000],'Health':[800, 6000],'Insurance':[1500, 6000]};
+    const amount = randBetween(amtRanges[cat][0], amtRanges[cat][1]);
+    const method = cat==='Rent' ? pick(['salary_acct','savings_acct']) : pick(methodsPool);
+    const entry = {id:uid(), type:'expense', amount, category:cat, method, date: dateInLastMonths([1,4]), desc:`${cat} expense`};
+    if (cat==='Insurance') { entry.insuranceType = pick(['Health','Life']); entry.insuranceFor = pick(['Self','Family']); }
+    data.push(entry);
   }
 
-  function resetExpenseDrilldown() {
-    expenseDrilldown.active = false;
-    expenseDrilldown.parentCategory = null;
-    if (document.getElementById('analyticsModal').classList.contains('open')) {
-      renderAdvancedCharts();
-    }
-  }
-  document.getElementById('resetExpenseDrilldown').addEventListener('click', resetExpenseDrilldown);
-
-  // Analytics Modal
-  const analyticsModal = document.getElementById('analyticsModal');
-  document.getElementById('navAnalytics').onclick = () => {
-    if (!requireSignedIn()) return;
-    analyticsModal.classList.add('open');
-    renderAdvancedCharts();
-  };
-  document.getElementById('closeAnalytics').onclick = () => analyticsModal.classList.remove('open');
-  
-  // Initial load
-  const lastProfile = localStorage.getItem('mm_last_profile');
-  if(lastProfile && auth) {
-    // If user was previously signed in, Firebase will handle state via onAuthStateChanged
-  } else {
-    // If not signed in and no profile, load local storage or sample data
-    loadProfileData();
-  }
-  
+  saveAll(); renderAll();
+});
 </script>
+
 </body>
 </html>
