@@ -2387,34 +2387,5 @@ function resetExpenseDrilldown() {
 }
 </script>
 
-<script>
-  // Example: Load sample data
-  document.getElementById('sampleBtn').onclick = () => {
-    console.log("Loading sample data...");
-    // Add logic to populate dashboard with sample transactions
-  };
-
-  // Example: Add transaction
-  document.getElementById('addBtn').onclick = () => {
-    console.log("Adding transaction...");
-    // Collect form data and save to Firestore
-  };
-
-  // Example: Render charts
-  function renderCharts() {
-    const ctx = document.getElementById('mainChart').getContext('2d');
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['Jan', 'Feb'],
-        datasets: [{ label: 'Income', data: [1000, 1200] }]
-      }
-    });
-  }
-
-  // Call renderCharts on page load
-  document.addEventListener('DOMContentLoaded', renderCharts);
-</script>
-
 </body>
 </html>
