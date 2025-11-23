@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MoneyMirror — v5.0.4 (Updates)</title>
+  <title>MoneyMirror — v5.0.5 (Analytics & Search)</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@1,400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -125,11 +125,12 @@
     .full-width { width: 100%; }
     .hidden { display: none !important; }
 
+    /* Modal Updates: Bigger for analytics */
     .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
     .modal.open { display: flex; animation: fadeIn 0.2s ease-out; }
-    .modal-content { background: white; width: 95%; max-width: 1200px; padding: 0; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
-    .modal-pad { padding: 24px; }
-    .modal-small { width: 400px; }
+    .modal-content { background: white; width: 98%; max-width: 1400px; padding: 0; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); height: 95vh; display:flex; flex-direction:column; }
+    .modal-pad { padding: 24px; overflow-y: auto; flex: 1; }
+    .modal-small { width: 400px; height: auto; max-height: 90vh; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
     /* Calculator */
@@ -157,47 +158,16 @@
     .quick-sub-title { font-weight: 700; }
     .total-badge { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; color: var(--text-main); }
     
-    /* REFACTORED DROPDOWN FOR SUBCATEGORIES */
     .sub-dropdown-container { position: relative; }
-    .sub-dropdown-menu { 
-        position: absolute; 
-        top: 36px; left: 0; 
-        background: #fff; 
-        border: 1px solid var(--border); 
-        border-radius: 8px; 
-        padding: 8px 0; 
-        width: 100%; min-width: 240px;
-        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); 
-        z-index: 50; 
-        display: none; /* hidden by default */
-        max-height: 300px;
-        overflow-y: auto;
-    }
+    .sub-dropdown-menu { position: absolute; top: 36px; left: 0; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 8px 0; width: 100%; min-width: 240px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); z-index: 50; display: none; max-height: 300px; overflow-y: auto; }
     .sub-dropdown-menu.show { display: block; }
-    .sub-dropdown-item { 
-        display: flex; justify-content: space-between; align-items: center; 
-        padding: 8px 12px; 
-        font-size: 12px; 
-        color: var(--text-main);
-        border-bottom: 1px solid #f1f5f9;
-    }
+    .sub-dropdown-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; font-size: 12px; color: var(--text-main); border-bottom: 1px solid #f1f5f9; }
     .sub-dropdown-item:last-child { border-bottom: none; }
     .sub-dropdown-item:hover { background: #f8fafc; }
 
     /* MULTI-SELECT CHECKBOX STYLES */
     .multiselect-container { position: relative; }
-    .multiselect-dropdown {
-        position: absolute;
-        top: 100%; right: 0;
-        background: white;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-        width: 220px;
-        padding: 10px;
-        z-index: 60;
-        display: none;
-    }
+    .multiselect-dropdown { position: absolute; top: 100%; right: 0; background: white; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); width: 220px; padding: 10px; z-index: 60; display: none; }
     .multiselect-dropdown.show { display: block; }
     .ms-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; cursor: pointer; }
     .ms-item input { width: auto; margin: 0; }
@@ -240,7 +210,7 @@
     <div style="display:flex; justify-content:space-between; align-items:center; width:100%">
       <div class="brand">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
-        MoneyMirror <span>v5.0.4</span>
+        MoneyMirror <span>v5.0.5</span>
       </div>
       <button id="mobileMenuBtn">
         <svg class="icon-menu" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
@@ -267,7 +237,7 @@
       <span>Current profile</span>
       <span class="sys-val" id="profileNameDisplay">--</span>
     </div>
-    <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v5.0.4 • Multiselect & Quickview Updates</div>
+    <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v5.0.5 • Deep Analytics & Search</div>
   </div>
 </aside>
 
@@ -411,8 +381,7 @@
           <div id="expenseFilterContainer" class="multiselect-container hidden">
               <button class="btn-outline" style="font-size:12px; padding:6px 10px;" id="expenseFilterBtn">Select Categories ▾</button>
               <div class="multiselect-dropdown" id="expenseMultiselectDropdown">
-                  <div id="expenseCheckboxes" style="max-height:200px; overflow-y:auto;">
-                      </div>
+                  <div id="expenseCheckboxes" style="max-height:200px; overflow-y:auto;"></div>
                   <div class="ms-actions">
                       <button class="btn-outline" style="padding:4px 8px; font-size:11px;" id="msClear">Clear</button>
                       <button class="btn-primary" style="padding:4px 8px; font-size:11px;" id="msApply">Apply</button>
@@ -528,11 +497,24 @@
     <div class="card col-span-4">
       <div class="card-header">
         <div class="card-title">Recent transactions</div>
-        <div class="flex-row">
-             <select id="entryLimit" onchange="renderRecentEntries()">
-                <option value="10">Last 10</option>
-                <option value="25">Last 25</option>
-                <option value="50">Last 50</option>
+        <div class="flex-row" style="gap:10px; flex:1; justify-content:flex-end;">
+             <input type="text" id="recentSearch" placeholder="Search..." style="max-width:180px; padding:8px;" onkeyup="renderRecentEntries()" />
+             
+             <select id="recentSort" onchange="renderRecentEntries()" style="max-width:140px;">
+                 <option value="dateDesc">Date (Newest)</option>
+                 <option value="dateAsc">Date (Oldest)</option>
+                 <option value="amtDesc">Amount (High)</option>
+                 <option value="amtAsc">Amount (Low)</option>
+             </select>
+
+             <select id="recentCategory" onchange="renderRecentEntries()" style="max-width:140px;">
+                 <option value="">All Categories</option>
+             </select>
+
+             <select id="entryLimit" onchange="renderRecentEntries()" style="max-width:80px;">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
                 <option value="all">All</option>
             </select>
         </div>
@@ -558,6 +540,7 @@
   </div>
 
 </main>
+
 <div id="settingsModal" class="modal">
   <div class="modal-content modal-small">
     <div class="action-header" style="border-radius:12px 12px 0 0">
@@ -607,9 +590,9 @@
     <div class="modal-pad" id="analyticsContent">
       <div id="analyticsFilters">
         <div class="filter-group">
-          <h3 style="margin-top:0; font-size:16px;">Filter data</h3>
-          <div style="display:flex; gap:20px; flex-wrap:wrap">
-            <div style="flex:1">
+          <h3 style="margin-top:0; font-size:16px;">Deep Dive Filters</h3>
+          <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:15px; margin-bottom:20px;">
+            <div>
               <label>Date range</label>
               <select id="dateFilter" onchange="renderAdvancedCharts()">
                 <option value="6">Last 6 months</option>
@@ -617,7 +600,15 @@
                 <option value="all">All time</option>
               </select>
             </div>
-            <div style="flex:1">
+            <div>
+              <label>Investment Group</label>
+              <select id="anlInvGroup" onchange="updateAnlSubDropdown(); renderAdvancedCharts()"></select>
+            </div>
+            <div>
+              <label>Investment Sub-type</label>
+              <select id="anlInvSub" onchange="renderAdvancedCharts()"><option value="">All Types</option></select>
+            </div>
+            <div>
               <label>Chart type</label>
               <select id="chartType" onchange="renderAdvancedCharts()">
                 <option value="line">Line chart</option>
@@ -628,27 +619,35 @@
         </div>
       </div>
 
-      <h3 style="margin-top:30px; font-size:18px;">Cumulative net worth</h3>
-      <div class="card" style="margin-bottom:20px">
-        <div class="card-body" style="padding-top:20px;">
-          <div style="height:350px; width:100%; position:relative">
-            <canvas id="chartNetWorth"></canvas>
+      <div style="display:flex; flex-direction:column; gap:20px; height:100%;">
+          
+          <div class="card" style="flex: 0 0 320px;">
+            <div class="card-header"><div class="card-title">Cumulative Growth (Filtered)</div></div>
+            <div class="card-body" style="padding-top:10px;">
+              <div style="height:260px; width:100%; position:relative">
+                <canvas id="chartNetWorth"></canvas>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <h3 style="margin-top:10px; font-size:18px;">Investment analysis</h3>
-      <div class="card" style="margin-bottom:20px">
-        <div class="card-body" style="padding-top:20px;">
-          <div style="display:grid; gap:16px; grid-template-columns:1fr 1fr;">
-            <div style="height:280px; position:relative;">
-              <canvas id="chartInvTypesModal"></canvas>
-            </div>
-            <div style="height:280px; position:relative;">
-              <canvas id="chartInvGrowthModal"></canvas>
-            </div>
+          <div style="flex:1; display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+             <div class="card">
+                <div class="card-header"><div class="card-title">Investment Distribution</div></div>
+                <div class="card-body" style="padding-top:10px;">
+                    <div style="height:100%; min-height:250px; position:relative;">
+                        <canvas id="chartInvTypesModal"></canvas>
+                    </div>
+                </div>
+             </div>
+             <div class="card">
+                <div class="card-header"><div class="card-title">Growth Trend</div></div>
+                <div class="card-body" style="padding-top:10px;">
+                    <div style="height:100%; min-height:250px; position:relative;">
+                        <canvas id="chartInvGrowthModal"></canvas>
+                    </div>
+                </div>
+             </div>
           </div>
-        </div>
       </div>
 
     </div>
@@ -798,7 +797,6 @@
         });
       }
       
-      // Setup Expense Multiselect logic
       setupExpenseMultiSelect();
     });
 
@@ -900,7 +898,7 @@
   let incomeSources = ['Salary', 'Freelance', 'Interest'];
   let settings = { ccLimit: DEFAULT_CC_LIMIT };
   let editId = null;
-  let selectedExpenseCategories = []; // For Multiselect
+  let selectedExpenseCategories = [];
 
   const formEls = {
     type: document.getElementById('type'),
@@ -964,8 +962,8 @@
     });
     document.getElementById('navAnalytics').addEventListener('click', () => {
         document.getElementById('analyticsModal').classList.add('open');
+        populateAnalyticsDropdowns();
         renderAdvancedCharts();
-        renderInvestmentAnalytics('modal');
     });
     document.getElementById('closeAnalytics').addEventListener('click', () => {
         document.getElementById('analyticsModal').classList.remove('open');
@@ -1095,6 +1093,13 @@
     formEls.incomeSource.innerHTML = '<option value="">Select Source</option>' + incomeSources.map(s => `<option value="${s}">${s}</option>`).join('');
     // Categories
     formEls.category.innerHTML = BASE_CATS.map(c => `<option value="${c}">${c}</option>`).join('');
+    
+    // Recent Table Filter
+    const recentCat = document.getElementById('recentCategory');
+    if(recentCat) {
+        const allCats = Array.from(new Set([...BASE_CATS, 'Income', 'Opening Balance']));
+        recentCat.innerHTML = '<option value="">All Categories</option>' + allCats.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
 
     // Listeners
     formEls.type.onchange = updateTransactionFormFields;
@@ -1501,7 +1506,6 @@
     }
   }
 
-  // --- REWRITTEN QUICKVIEW FUNCTION FOR SIMPLE LIST ---
   function renderQuickSubDropdowns(entries){
     const container = document.getElementById('invQuickSubs');
     if(!container) return;
@@ -1549,7 +1553,6 @@
 
     container.innerHTML = blocks;
     
-    // Close dropdowns when clicking outside
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.sub-dropdown-container')) {
             document.querySelectorAll('.sub-dropdown-menu').forEach(m => m.classList.remove('show'));
@@ -1558,7 +1561,6 @@
   }
 
   function toggleSubMenu(btn) {
-      // Close all others
       const currentMenu = btn.parentElement.querySelector('.sub-dropdown-menu');
       document.querySelectorAll('.sub-dropdown-menu').forEach(m => {
           if (m !== currentMenu) m.classList.remove('show');
@@ -1591,7 +1593,6 @@
       document.getElementById('invPieTitle').innerText = 'Share by bucket (Top 4)';
     }
 
-    // Bar chart
     if (invBreakdownBarChart) invBreakdownBarChart.destroy();
     const barCtx = document.getElementById('invBreakdownBar');
     if (barCtx) {
@@ -1608,7 +1609,6 @@
       });
     }
 
-    // Pie chart
     if (invBreakdownPieChart) invBreakdownPieChart.destroy();
     const pieCtx = document.getElementById('invBreakdownPie');
     if (pieCtx) {
@@ -1630,7 +1630,6 @@
             if (!els || !els.length) return;
             const idx = els[0].index;
             const bucket = labels[idx];
-            // Drill to subcategories
             document.getElementById('invViewMode').value = 'subcats';
             document.getElementById('invBucketFilter').value = bucket;
             renderInvestmentKPICharts();
@@ -1638,74 +1637,13 @@
         }
       });
     }
-
-    // Quick subcategories sections with "View subcategories" buttons
     renderQuickSubDropdowns(entries);
   }
 
-  // --- TABLES ---
-  function getBadge(entry) {
-    let type = entry.type;
-    let category = entry.category;
-    let text = '';
-    let className = '';
-    if (type === 'income') { className = 'badge-income'; text = 'Income'; }
-    else if (type === 'opening_balance') {
-        className = 'badge-opening';
-        text = entry.investmentGroup && entry.investmentGroup !== 'Cash' ? 'Asset (Inv)' : 'O.Balance';
-    }
-    else if (type === 'expense') {
-      if (category === 'Investments') { className = 'badge-inv'; text = 'Investment'; }
-      else if (category === 'Insurance') { className = 'badge-ins'; text = 'Insurance'; }
-      else if (category === 'Credit Card Payment') { className = 'badge-cc'; text = 'CC Pay'; }
-      else { className = 'badge-expense'; text = 'Expense'; }
-    }
-    return `<span class="badge ${className}">${text}</span>`;
-  }
-
-  function renderRecentEntries() {
-    const t = document.getElementById('recentTable').querySelector('tbody');
-    const limitEl = document.getElementById('entryLimit');
-    const limit = limitEl.value === 'all' ? data.length : Number(limitEl.value);
-    const recent = data.slice(0, limit);
-    t.innerHTML = recent.map(e => {
-      const amountDisplay = e.type === 'income' || e.type === 'opening_balance' ? `<span style="color:var(--success)">+${fmt(e.amount)}</span>` : `<span style="color:var(--danger)">-${fmt(e.amount)}</span>`;
-
-      let methodDisplay = '';
-      if (e.type === 'opening_balance' && e.investmentGroup !== 'Cash') {
-          methodDisplay = e.investmentSub || e.investmentGroup;
-      } else if (e.type === 'expense' && e.category === 'Investments') {
-          methodDisplay = e.investmentSub || e.investmentGroup;
-      } else if (e.method === 'credit_card_payment') {
-          methodDisplay = 'N/A (Transfer)';
-      } else {
-          methodDisplay = methodNames[e.method] || e.method || '--';
-      }
-
-      let categoryDisplay = e.category === 'Investments' ? e.investmentSub :
-                            e.category === 'Insurance' ? `${e.insuranceType} (${e.insuranceFor})` :
-                            e.type === 'expense' ? e.category : '--';
-      return `
-        <tr>
-          <td>${getBadge(e)}</td>
-          <td>${e.date}</td>
-          <td style="font-weight:600; text-align:right">${amountDisplay}</td>
-          <td>${e.desc}</td>
-          <td>${categoryDisplay}</td>
-          <td>${methodDisplay}</td>
-          <td class="flex-row">
-            <button onclick="loadEdit('${e.id}')" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px" title="Edit">✎</button>
-            <button onclick="deleteEntry('${e.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:4px" title="Delete">×</button>
-          </td>
-        </tr>
-      `;
-    }).join('');
-  }
-
   // --- CHART FUNCTIONS ---
-  function prepareMonthlyData(range) {
+  function prepareMonthlyData(range, filteredData = data) {
     const monthlyData = {};
-    const dates = data.map(d => d.date);
+    const dates = filteredData.map(d => d.date);
     if (dates.length === 0) return { labels: [], income: [], expense: [], investment: [] };
     const start = range === 'all' ? new Date(Math.min(...dates.map(d => new Date(d)))) : new Date();
     if (range !== 'all') start.setMonth(start.getMonth() - Number(range));
@@ -1719,7 +1657,7 @@
       currentDate.setMonth(currentDate.getMonth() + 1);
     }
 
-    data.forEach(d => {
+    filteredData.forEach(d => {
       const date = new Date(d.date);
       const key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
       if (monthlyData[key]) {
@@ -1743,7 +1681,7 @@
   function renderCharts() {
     if (typeof Chart === 'undefined') return;
     const range = document.getElementById('mainChartFilter').value;
-    const { labels, income, expense, investment } = prepareMonthlyData(range === 'all' ? 'all' : Number(range));
+    const { labels, income, expense, investment } = prepareMonthlyData(range === 'all' ? 'all' : Number(range), data);
     const netIncomeSeries = income.map((v, i) => v - expense[i]);
 
     if (chartMain) chartMain.destroy();
@@ -1793,7 +1731,6 @@
       const clearBtn = document.getElementById('msClear');
       const applyBtn = document.getElementById('msApply');
 
-      // Populate Checkboxes
       const categories = BASE_CATS.filter(c => !['Investments','Credit Card Payment'].includes(c));
       list.innerHTML = categories.map(cat => `
           <div class="ms-item">
@@ -1802,27 +1739,14 @@
           </div>
       `).join('');
 
-      // Button listeners
-      btn.onclick = (e) => {
-          e.stopPropagation();
-          dropdown.classList.toggle('show');
-      };
-
+      btn.onclick = (e) => { e.stopPropagation(); dropdown.classList.toggle('show'); };
       dropdown.onclick = (e) => e.stopPropagation();
-
-      // Click outside to close
-      document.addEventListener('click', (e) => {
-          if (!container.contains(e.target)) {
-              dropdown.classList.remove('show');
-          }
-      });
+      document.addEventListener('click', (e) => { if (!container.contains(e.target)) dropdown.classList.remove('show'); });
 
       applyBtn.onclick = () => {
           const checkboxes = document.querySelectorAll('.expense-chk');
           selectedExpenseCategories = [];
-          checkboxes.forEach(chk => {
-              if (chk.checked) selectedExpenseCategories.push(chk.value);
-          });
+          checkboxes.forEach(chk => { if (chk.checked) selectedExpenseCategories.push(chk.value); });
           dropdown.classList.remove('show');
           btn.textContent = selectedExpenseCategories.length > 0 ? `${selectedExpenseCategories.length} selected ▾` : 'Select Categories ▾';
           renderWalletUnified();
@@ -1830,8 +1754,7 @@
       };
 
       clearBtn.onclick = () => {
-          const checkboxes = document.querySelectorAll('.expense-chk');
-          checkboxes.forEach(chk => chk.checked = false);
+          document.querySelectorAll('.expense-chk').forEach(chk => chk.checked = false);
           selectedExpenseCategories = [];
           dropdown.classList.remove('show');
           btn.textContent = 'Select Categories ▾';
@@ -1847,7 +1770,6 @@
     const infoEl = document.getElementById('walletInfo');
     const colors = getColorPalette(12);
 
-    // Hide/Show correct controls
     if (mode === 'wallet') {
       document.getElementById('expenseFilterContainer').classList.add('hidden');
       document.getElementById('resetExpenseDrilldown').classList.add('hidden');
@@ -1890,10 +1812,7 @@
       `).join('') || '<div style="text-align:center; padding-top:20px;">No liquid cash accounts with a positive balance.</div>';
       infoEl.innerText = 'Liquid balances by account (positive only).';
     } else {
-      // EXPENSE MODE
       document.getElementById('expenseFilterContainer').classList.remove('hidden');
-      
-      // Filter data by selected categories if any
       const filteredData = data.filter(d => {
           if (d.type !== 'expense' || d.category === 'Investments' || d.category === 'Credit Card Payment') return false;
           if (selectedExpenseCategories.length > 0 && !selectedExpenseCategories.includes(d.category)) return false;
@@ -1919,9 +1838,7 @@
         data: { labels, datasets: [{ data: amounts, backgroundColor: getColorPalette(labels.length), hoverOffset: 4 }] },
         options: {
           maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'right', labels: { boxWidth: 10 } }
-          }
+          plugins: { legend: { position: 'right', labels: { boxWidth: 10 } } }
         }
       });
       legendEl.innerHTML = labels.map((lbl, i) => `
@@ -1945,33 +1862,78 @@
     renderWalletUnified();
   }
 
-  // --- Advanced Analytics (Modal only) ---
+  // --- ADVANCED ANALYTICS WITH SYNCED FILTERS ---
+  
+  function populateAnalyticsDropdowns() {
+      const groupSelect = document.getElementById('anlInvGroup');
+      const options = Object.keys(INVESTMENT_STRUCTURE).map(group => `<option value="${group}">${group}</option>`).join('');
+      groupSelect.innerHTML = '<option value="">All Groups</option>' + options;
+  }
+
+  function updateAnlSubDropdown() {
+      const group = document.getElementById('anlInvGroup').value;
+      const subSelect = document.getElementById('anlInvSub');
+      let options = '<option value="">All Types</option>';
+      if(group && INVESTMENT_STRUCTURE[group]) {
+          options += Object.keys(INVESTMENT_STRUCTURE[group]).map(sub => `<option value="${sub}">${sub}</option>`).join('');
+      }
+      subSelect.innerHTML = options;
+  }
+
   function renderAdvancedCharts() {
       if (typeof Chart === 'undefined') return;
+      
+      // 1. GET FILTERS
       const range = document.getElementById('dateFilter').value;
       const chartType = document.getElementById('chartType').value;
-      const { labels, income, expense } = prepareMonthlyData(range === 'all' ? 'all' : Number(range));
+      const invGroup = document.getElementById('anlInvGroup').value;
+      const invSub = document.getElementById('anlInvSub').value;
+
+      // 2. PREPARE BASE DATA (Filtered by Investment type if selected)
+      // If investment filters are active, the "Net Worth" chart becomes "Cumulative Investment Value" for that type
+      let relevantData = data;
+      if (invGroup || invSub) {
+          relevantData = data.filter(d => {
+              if (invGroup && d.investmentGroup !== invGroup) return false;
+              if (invSub && d.investmentSub !== invSub) return false;
+              // Include only investment related transactions for net worth calc when filtering
+              const isInv = (d.type === 'opening_balance' && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments');
+              return isInv;
+          });
+      }
+
+      // 3. RENDER NET WORTH / CUMULATIVE VALUE CHART
+      const { labels, income, expense, investment } = prepareMonthlyData(range === 'all' ? 'all' : Number(range), relevantData);
+      
+      // Calculate cumulative value
       const sum = (arr) => arr.reduce((a,b)=>a+Number(b.amount||0),0);
-      let initialNetWorth = sum(data.filter(d => d.type === 'opening_balance'));
-      let currentNetWorth = initialNetWorth;
-      const netWorthData = labels.map((label, idx) => {
-          const monthIncome = income[idx] || 0;
-          const monthExpense = expense[idx] || 0;
-          const netChange = monthIncome - monthExpense;
-          currentNetWorth += netChange;
-          return currentNetWorth;
+      // If filtering investments, initial is just opening balance of that type
+      let initialValue = sum(relevantData.filter(d => d.type === 'opening_balance' && (invGroup ? d.investmentGroup === invGroup : true)));
+      
+      let currentValue = initialValue;
+      const valueData = labels.map((label, idx) => {
+          if(invGroup || invSub) {
+              // For investment specific view: Value increases by investment amount
+              currentValue += (investment[idx] || 0); 
+          } else {
+              // Global Net Worth
+              const monthIncome = income[idx] || 0;
+              const monthExpense = expense[idx] || 0;
+              currentValue += (monthIncome - monthExpense);
+          }
+          return currentValue;
       });
+
       if (chartNetWorth) chartNetWorth.destroy();
       const ctxNetWorth = document.getElementById('chartNetWorth').getContext('2d');
-
       chartNetWorth = new Chart(ctxNetWorth, {
         type: chartType,
         data: {
           labels: labels,
           datasets: [{
-            label: 'Cumulative Net Worth',
-            data: netWorthData,
-            backgroundColor: 'rgba(59, 130, 246, 0.6)',
+            label: (invGroup || invSub) ? 'Cumulative Value (Filtered)' : 'Cumulative Net Worth',
+            data: valueData,
+            backgroundColor: 'rgba(59, 130, 246, 0.2)',
             borderColor: 'rgba(59, 130, 246, 1)',
             borderWidth: 2,
             fill: chartType === 'line' ? 'start' : false,
@@ -1981,56 +1943,63 @@
         options: {
           maintainAspectRatio: false,
           responsive: true,
-          scales: {
-            y: { beginAtZero: false, ticks: { callback: function(value) { return fmt(value).replace('₹', '₹ '); } } }
-          }
+          scales: { y: { beginAtZero: false, ticks: { callback: (v)=>fmt(v).replace('₹','₹ ') } } }
         }
       });
-      renderInvestmentAnalytics('modal');
+
+      // 4. RENDER BREAKDOWN CHARTS (Synced with same data)
+      renderInvestmentAnalytics('modal', relevantData);
   }
 
-  function renderInvestmentAnalytics(scope = 'modal') {
+  function renderInvestmentAnalytics(scope, dataset) {
     if (typeof Chart === 'undefined') return;
-    const invs = data.filter(d => (d.type === 'opening_balance' && d.investmentGroup && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments' ));
+    
+    // Filter to only investments within the dataset passed (which might already be time-filtered or type-filtered)
+    const invs = dataset.filter(d => (d.type === 'opening_balance' && d.investmentGroup && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments' ));
+    
+    // Type Breakdown
     const byType = invs.reduce((acc,curr) => {
-      const key = curr.investmentGroup || 'Uncategorized';
+      const key = curr.investmentSub || curr.investmentGroup || 'Uncategorized';
       acc[key] = (acc[key] || 0) + Number(curr.amount);
       return acc;
     }, {});
     const labels = Object.keys(byType).sort((a,b) => byType[b]-byType[a]);
     const values = labels.map(l => byType[l]);
+
+    // Growth Trend
     const points = invs.map(i => ({ date: new Date(i.date), amount: Number(i.amount) })).sort((a,b)=>a.date-b.date);
     let cumulative = 0;
     const growthLabels = points.map(p => p.date.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' }));
     const growthValues = points.map(p => { cumulative += p.amount; return cumulative; });
 
     const colors = getColorPalette(labels.length);
+    
+    // Render Type Chart
     const ctxTypes = document.getElementById('chartInvTypesModal')?.getContext('2d');
     if (ctxTypes) {
       if (chartInvTypesModal) chartInvTypesModal.destroy();
       chartInvTypesModal = new Chart(ctxTypes, {
-        type: 'bar',
-        data: { labels, datasets: [{ label: 'Investment by type (historical cost)', data: values, backgroundColor: colors.map(c=>c+'cc'), borderColor: colors, borderWidth:1.5, borderRadius:6 }] },
+        type: 'doughnut', // Changed to doughnut for better breakdown visualization in small space
+        data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth:1 }] },
         options: {
           maintainAspectRatio: false,
-          responsive: true,
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true, ticks: { callback: (v)=>fmt(v).replace('₹','₹ ') }, grid:{color:'#eef2ff'} }, x:{grid:{display:false}} }
+          plugins: { legend: { position:'right', labels:{boxWidth:10} } },
+          cutout: '60%'
         }
       });
     }
 
+    // Render Growth Chart
     const ctxGrowth = document.getElementById('chartInvGrowthModal')?.getContext('2d');
     if (ctxGrowth) {
       if (chartInvGrowthModal) chartInvGrowthModal.destroy();
       chartInvGrowthModal = new Chart(ctxGrowth, {
         type: 'line',
-        data: { labels: growthLabels, datasets: [{ label: 'Cumulative invested (historical cost)', data: growthValues, borderColor: '#2980b9', tension: 0.3, borderWidth:2, pointRadius:0 }] },
+        data: { labels: growthLabels, datasets: [{ label: 'Invested Amount', data: growthValues, borderColor: '#10b981', tension: 0.3, borderWidth:2, pointRadius:0 }] },
         options: {
           maintainAspectRatio: false,
-          responsive: true,
-          plugins: { legend: { position: 'top' } },
-          scales: { y: { beginAtZero: false, ticks: { callback: (v)=>fmt(v).replace('₹','₹ ') }, grid:{color:'#eef2ff'} }, x:{grid:{display:false}} }
+          plugins: { legend: { display:false } },
+          scales: { y: { beginAtZero: false, ticks: { callback: (v)=>fmt(v).replace('₹','') } }, x:{ display:false } }
         }
       });
     }
@@ -2210,8 +2179,74 @@
       return dataRows;
   }
 
+  // --- NEW RECENT ENTRIES RENDER WITH SEARCH/FILTER ---
+  function renderRecentEntries() {
+    const t = document.getElementById('recentTable').querySelector('tbody');
+    const limitEl = document.getElementById('entryLimit');
+    const limit = limitEl.value === 'all' ? data.length : Number(limitEl.value);
+    
+    // Get Filter Values
+    const searchText = document.getElementById('recentSearch')?.value.toLowerCase() || '';
+    const sortMode = document.getElementById('recentSort')?.value || 'dateDesc';
+    const categoryFilter = document.getElementById('recentCategory')?.value || '';
+
+    // Filter Logic
+    let filtered = data.filter(e => {
+        const matchSearch = (e.desc.toLowerCase().includes(searchText) || 
+                             e.category.toLowerCase().includes(searchText) || 
+                             String(e.amount).includes(searchText));
+        const matchCat = categoryFilter ? e.category === categoryFilter : true;
+        return matchSearch && matchCat;
+    });
+
+    // Sort Logic
+    filtered.sort((a, b) => {
+        if (sortMode === 'dateDesc') return new Date(b.date) - new Date(a.date);
+        if (sortMode === 'dateAsc') return new Date(a.date) - new Date(b.date);
+        if (sortMode === 'amtDesc') return b.amount - a.amount;
+        if (sortMode === 'amtAsc') return a.amount - b.amount;
+        return 0;
+    });
+
+    const recent = filtered.slice(0, limit);
+    
+    t.innerHTML = recent.map(e => {
+      const amountDisplay = e.type === 'income' || e.type === 'opening_balance' ? `<span style="color:var(--success)">+${fmt(e.amount)}</span>` : `<span style="color:var(--danger)">-${fmt(e.amount)}</span>`;
+
+      let methodDisplay = '';
+      if (e.type === 'opening_balance' && e.investmentGroup !== 'Cash') {
+          methodDisplay = e.investmentSub || e.investmentGroup;
+      } else if (e.type === 'expense' && e.category === 'Investments') {
+          methodDisplay = e.investmentSub || e.investmentGroup;
+      } else if (e.method === 'credit_card_payment') {
+          methodDisplay = 'N/A (Transfer)';
+      } else {
+          methodDisplay = methodNames[e.method] || e.method || '--';
+      }
+
+      let categoryDisplay = e.category === 'Investments' ? e.investmentSub :
+                            e.category === 'Insurance' ? `${e.insuranceType} (${e.insuranceFor})` :
+                            e.type === 'expense' ? e.category : '--';
+      return `
+        <tr>
+          <td>${getBadge(e)}</td>
+          <td>${e.date}</td>
+          <td style="font-weight:600; text-align:right">${amountDisplay}</td>
+          <td>${e.desc}</td>
+          <td>${categoryDisplay}</td>
+          <td>${methodDisplay}</td>
+          <td class="flex-row">
+            <button onclick="loadEdit('${e.id}')" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px" title="Edit">✎</button>
+            <button onclick="deleteEntry('${e.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:4px" title="Delete">×</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // Sample Data
   function loadSampleData() {
-      if (!confirm("This will overwrite all existing data for your current profile. Continue?")) return;
+      if (!confirm("Overwrite data with sample?")) return;
       function randBetween(min, max) { return Math.floor(Math.random() * (max - min + 1) + min); }
       function pick(arr) { return arr[randBetween(0, arr.length - 1)]; }
       function dateInLastMonths(months) {
