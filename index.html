@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MoneyMirror — v4.9 (Google Sign-In only, full dashboard)</title>
+  <title>MoneyMirror — v4.9 (Google Sign-In, full dashboard)</title>
 
   <!-- Fonts & Charts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@1,400&display=swap" rel="stylesheet">
@@ -15,7 +15,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
   <script>
-    // --- Firebase Config ---
+    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyCAZvHT6dG61ISR57AJoZh8GSO7nY_mEGc",
       authDomain: "moneymirror-22543.firebaseapp.com",
@@ -30,30 +30,27 @@
     let auth = null;
     let USE_FIRESTORE = false;
     const FIRESTORE_COLLECTION_NAME = 'moneymirror_v4_transactions';
-    let currentProfile = null; // Google displayName/email
+    let currentProfile = null;
 
     try {
       const app = firebase.initializeApp(firebaseConfig);
       db = app.firestore();
       auth = app.auth();
       USE_FIRESTORE = true;
-      console.log("Firebase initialized:", db.app.options.projectId);
+      console.log("Firebase initialized.");
     } catch (e) {
-      console.warn("Firebase init failed, using LocalStorage:", e);
+      console.warn("Firebase init failed, falling back to LocalStorage:", e);
     }
 
-    // --- Auth helpers ---
     async function signInWithGoogle() {
       if (!auth) return alert('Auth not initialized. Please refresh.');
       const provider = new firebase.auth.GoogleAuthProvider();
-
       try {
-        // Try popup first
         const result = await auth.signInWithPopup(provider);
         const user = result.user;
         onUserSignedIn(user);
-      } catch (popupErr) {
-        console.warn("Popup sign-in failed:", popupErr?.message || popupErr);
+      } catch (err) {
+        console.error("Login failed:", err);
         alert('Sign-in popup blocked. Allow popups and try again.');
       }
     }
@@ -62,12 +59,9 @@
       currentProfile = user.displayName || user.email || 'User';
       localStorage.setItem('mm_last_profile', currentProfile);
       document.getElementById('profileNameDisplay').textContent = currentProfile;
-
-      // Show dashboard
       document.getElementById('authGate').style.display = 'none';
       document.querySelector('main').style.filter = 'none';
       document.getElementById('logoutBtn').style.display = 'block';
-
       loadProfileData();
     }
 
@@ -83,11 +77,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      // Attach handlers
       document.getElementById('loginBtn').addEventListener('click', signInWithGoogle);
       document.getElementById('logoutBtn').addEventListener('click', signOutUser);
-
-      // Auth state listener
       if (auth) {
         auth.onAuthStateChanged(user => {
           if (user) onUserSignedIn(user);
@@ -123,7 +114,7 @@
     * { box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg-color); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
 
-    /* Layout */
+    /* Sidebar and main layout */
     aside { width: 260px; background: var(--sidebar-bg); display: flex; flex-direction: column; padding: 24px 16px; color: white; flex-shrink: 0; transition: all 0.3s; justify-content: space-between; }
     main { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; position: relative; filter: blur(5px); }
 
@@ -149,14 +140,15 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      gap: 12px;
+      gap: 6px;
       color: white;
       text-align: center;
       padding: 0 24px;
     }
-    #authGate h2 { font-size: 22px; font-weight: 600; margin: 0; }
-    #authGate h3 { font-size: 20px; margin: 0; font-weight: 600; }
-    #authGate h4 { font-family: 'Merriweather', serif; font-style: italic; font-size: 18px; margin: 4px 0 12px; }
+    #authGate .line { margin: 0; }
+    #authGate .line-1 { font-size: 22px; font-weight: 600; }
+    #authGate .line-2 { font-size: 20px; font-weight: 600; }
+    #authGate .line-3 { font-family: 'Merriweather', serif; font-style: italic; font-size: 18px; margin: 6px 0 14px; }
 
     /* Buttons */
     button { padding: 10px 16px; border-radius: 6px; border: none; font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.2s; }
@@ -211,7 +203,7 @@
     .badge-expense { background: #fee2e2; color: #991b1b; }
     .badge-inv { background: #e0f2fe; color: #075985; }
     .badge-ins { background: #f3e8ff; color: #6b21a8; }
-    .badge-opening { background: #efe6ff; color: #6b21a8; }
+    .badge-opening { background: #efe6ff; color: var(--opening-balance); }
     .badge-cc { background: #fef3c7; color: #b45309; }
 
     /* Modals */
@@ -275,9 +267,9 @@
 
 <!-- Auth Gate -->
 <div id="authGate">
-  <h2>Welcome to</h2>
-  <h3>MoneyMirror – Personal Finance Dashboard</h3>
-  <h4>by Rehan Hamdulay</h4>
+  <p class="line line-1">Welcome to</p>
+  <p class="line line-2">MoneyMirror – Personal Finance Dashboard</p>
+  <p class="line line-3">by Rehan Hamdulay</p>
   <button id="loginBtn" class="btn-primary" style="padding:12px 24px; font-size:16px;">Sign in with Google</button>
 </div>
 
@@ -326,7 +318,7 @@
       <button class="btn-outline" id="sampleBtn">Load Sample</button>
       <button class="btn-primary" id="importDataBtn">Import Data (CSV/JSON)</button>
       <button class="btn-outline" id="exportBtn">Export CSV</button>
-      <div id="calc-toggle" title="Toggle calculator" class="btn-primary" style="padding:8px 12px;">
+      <div id="calc-toggle" title="Toggle calculator" class="btn-primary" style="padding:8px 12px; display:flex; align-items:center;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line><line x1="12" y1="14" x2="12.01" y2="14"></line><line x1="8" y1="10" x2="8.01" y2="10"></line><line x1="16" y1="10" x2="16.01" y2="10"></line></svg>
       </div>
     </div>
@@ -648,7 +640,7 @@
 </div>
 
 <script>
-// ----------------------------------------------------------- LOGIC LAYER -----------------------------------------------------------
+// ------------------------ LOGIC LAYER ------------------------
 const BASE_STORAGE_KEY = 'mm_v4_data';
 const BASE_METHOD_KEY = 'mm_v4_methods';
 const BASE_INCOME_KEY = 'mm_v4_income';
@@ -697,11 +689,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const d = new Date();
   document.getElementById('currentDate').innerText =
     d.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
   const today = new Date().toISOString().slice(0,10);
   const dateEl = document.getElementById('date');
   if (dateEl) dateEl.value = today;
-
   dragElement(document.getElementById("calculator"));
 });
 
@@ -737,7 +727,6 @@ function loadFromLocalStorage() {
 }
 
 async function loadProfileData() {
-  // Reset
   data = [];
   methodNames = {...CANONICAL_METHODS};
   incomeSources = [];
@@ -1212,10 +1201,11 @@ function renderMainChart(months) {
     netCashFlowData.push(m.netCashFlow || 0);
   });
 
-  const colorInvestment = getComputedStyle(document.documentElement).getPropertyValue('--investment-savings').trim() || '#0ea5e9';
-  const colorExpense = getComputedStyle(document.documentElement).getPropertyValue('--danger').trim() || '#ef4444';
-  const colorIncome = getComputedStyle(document.documentElement).getPropertyValue('--success').trim() || '#10b981';
-  const colorNetLine = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#3b82f6';
+  const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const colorInvestment = cssVar('--investment-savings') || '#0ea5e9';
+  const colorExpense = cssVar('--danger') || '#ef4444';
+  const colorIncome = cssVar('--success') || '#10b981';
+  const colorNetLine = cssVar('--primary') || '#3b82f6';
 
   mainChart = new Chart(ctx, {
     type: 'bar',
@@ -1406,9 +1396,7 @@ function calcCalculate() {
 function toggleCalculator() {
   const isHidden = calculator.style.display === 'none' || calculator.style.display === '';
   calculator.style.display = isHidden ? 'flex' : 'none';
-  if (isHidden) {
-    calcClear();
-  }
+  if (isHidden) { calcClear(); }
 }
 document.getElementById('calc-toggle').onclick = toggleCalculator;
 
