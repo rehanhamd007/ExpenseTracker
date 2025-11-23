@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>MoneyMirror — v5.0.6 (Mobile Responsive)</title>
+  <title>MoneyMirror — v5.0.7 (Restored & Responsive)</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@1,400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -45,7 +45,7 @@
     aside { width: 260px; background: var(--sidebar-bg); display: flex; flex-direction: column; padding: 24px 16px; color: white; flex-shrink: 0; transition: all 0.3s; z-index: 100; }
     main { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; position: relative; filter: blur(5px); transition: filter 0.3s; }
 
-    /* TYPOGRAPHY & BRAND */
+    /* BRAND & NAV */
     .brand { font-size: 20px; font-weight: 700; color: white; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; padding-left: 10px; }
     .brand span { color: var(--sidebar-active); }
     .nav-group { margin-bottom: 24px; }
@@ -98,7 +98,6 @@
     .action-header .card-title { color: white; }
     .action-body { padding: 20px; display: flex; flex-wrap: wrap; gap: 20px; }
 
-    /* INPUT GROUPS - Responsive base */
     .input-group-small { width: 15%; min-width: 120px; flex-grow: 1; }
     .input-group-med { width: 25%; min-width: 180px; flex-grow: 1; }
     .input-group-large { width: 45%; min-width: 250px; flex-grow: 1; }
@@ -115,7 +114,7 @@
     input:focus, select:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
 
     .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    table { width: 100%; border-collapse: collapse; min-width: 600px; /* Force scroll on small screens */ }
+    table { width: 100%; border-collapse: collapse; min-width: 600px; }
     th { text-align: left; font-size: 11px; color: var(--text-muted); padding: 12px; border-bottom: 1px solid var(--border); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
@@ -144,7 +143,7 @@
     .modal-small { width: 90%; max-width: 400px; height: auto; max-height: 90vh; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-    /* Calculator - Mobile Friendly */
+    /* Calculator */
     #calculator { position: fixed; bottom: 20px; right: 20px; width: 280px; height: 480px; max-height: 80vh; z-index: 3000; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); background: #f8fafc; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
     #calc-header { background: var(--sidebar-bg); color: white; padding: 10px 15px; cursor: move; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 13px; height: 40px; }
     #calc-close-btn { background: transparent; border: none; color: #ef4444; font-size: 18px; font-weight: 700; cursor: pointer; padding: 0; line-height: 1; }
@@ -159,7 +158,7 @@
     .calc-equals { grid-row: span 2; background: var(--primary) !important; color: white !important; }
     #calc-toggle { margin-left: 10px; padding: 8px 12px; background: var(--primary); color: white; border-radius: 8px; cursor: pointer; display: flex; align-items: center; }
 
-    /* Investment KPI breakdown grid */
+    /* Breakdown Grid */
     .kpi-breakdown-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 16px; align-items: stretch; }
     .quick-sub-card { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: white; display:flex; flex-direction:column; justify-content:space-between; }
     .quick-sub-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
@@ -179,10 +178,10 @@
     .ms-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; cursor: pointer; }
     .ms-actions { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
     
-    /* Analytics Filters Grid */
+    /* Analytics Filters */
     .analytics-filter-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
 
-    /* --- RESPONSIVE MEDIA QUERIES --- */
+    /* MEDIA QUERIES */
     @media(max-width: 1200px) {
       .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
       .col-span-1 { grid-column: span 1; }
@@ -191,38 +190,23 @@
 
     @media(max-width: 768px) {
       body { flex-direction: column; height: auto; overflow: auto; }
-      
-      /* Sidebar Mobile */
       aside { width: 100%; padding: 15px; flex-direction: row; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 500; height: 60px; }
       aside .brand { margin-bottom: 0; }
       aside nav, .sidebar-footer { display: none; }
       #mobileMenuBtn { display: block; }
-      
       aside.mobile-open nav { display: block; position: absolute; top: 60px; left: 0; right: 0; background: var(--sidebar-bg); padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 501; height: calc(100vh - 60px); overflow-y: auto; }
       aside.mobile-open .sidebar-footer { display: block; position: fixed; bottom: 20px; left: 20px; right: 20px; z-index: 501; }
-
-      /* Main Layout Mobile */
       main { padding: 15px; gap: 15px; }
       .dashboard-grid { grid-template-columns: 1fr; gap: 15px; }
       .col-span-1, .col-span-2, .col-span-3, .col-span-4 { grid-column: span 1; }
-      
-      /* Inputs Mobile */
       .input-group-small, .input-group-med, .input-group-large, .full-width, #categoryContainer { width: 100% !important; min-width: 100%; }
       .action-body { gap: 12px; }
-      
-      /* Cards & Graphs Mobile */
       .kpi-breakdown-grid { grid-template-columns: 1fr; }
       #invQuickSubs { grid-template-columns: 1fr !important; }
       .card-header { align-items: flex-start; }
-      
-      /* Calculator Mobile */
       #calculator { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; bottom: auto; right: auto; }
-      
-      /* Filters Mobile */
       .analytics-filter-grid { grid-template-columns: 1fr; gap: 10px; }
       .flex-row input, .flex-row select, .flex-row button { flex-grow: 1; width: 100%; max-width: none !important; }
-      
-      /* Modal Mobile */
       .modal-content { width: 100%; height: 100%; border-radius: 0; max-width: none; }
       .modal-small { height: auto; min-height: 50vh; border-radius: 12px; }
     }
@@ -243,7 +227,7 @@
     <div style="display:flex; justify-content:space-between; align-items:center; width:100%">
       <div class="brand">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
-        MoneyMirror <span>v5.0.6</span>
+        MoneyMirror <span>v5.0.7</span>
       </div>
       <button id="mobileMenuBtn">
         <svg class="icon-menu" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
@@ -270,7 +254,7 @@
       <span>Current profile</span>
       <span class="sys-val" id="profileNameDisplay">--</span>
     </div>
-    <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v5.0.6 • Mobile Optimized</div>
+    <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v5.0.7 • Functionality Restored</div>
   </div>
 </aside>
 
@@ -325,8 +309,8 @@
       <div class="card-header" style="padding:16px 20px 0 20px;">
         <div class="card-title" style="color:#075985">Total investment value</div>
         <div style="display:flex;gap:8px;align-items:center; flex-wrap:wrap;">
-          <button id="toggleInvBreakdown" class="btn-outline" style="padding:6px 10px; font-size:12px;">Breakdown</button>
-          <button id="viewCategoriesBtn" class="btn-outline" style="padding:6px 10px; font-size:12px;">Subcategories</button>
+          <button id="toggleInvBreakdown" class="btn-outline" style="padding:6px 10px; font-size:12px;">View breakdown</button>
+          <button id="viewCategoriesBtn" class="btn-outline" style="padding:6px 10px; font-size:12px;">View subcategories</button>
         </div>
       </div>
       <div class="card-body" style="padding-top:6px;">
@@ -575,31 +559,31 @@
 <div id="settingsModal" class="modal">
   <div class="modal-content modal-small">
     <div class="action-header" style="border-radius:12px 12px 0 0">
-      <div class="card-title" style="color:white">Settings</div>
+      <div class="card-title" style="color:white">Settings & Configuration</div>
       <button class="btn-outline" id="closeSettings" style="background:transparent; color:white; border-color:white; padding:4px 10px">Close</button>
     </div>
     <div class="modal-pad">
       <div style="margin-bottom:20px">
         <label style="margin-bottom:8px">Payment methods</label>
-        <div id="methodEditor" style="border:1px solid var(--border); border-radius:8px; padding:10px;"></div>
-        <div class="flex-row" style="margin-top:10px">
+        <div id="methodEditor" style="border:1px solid var(--border); border-radius:8px; padding:10px; margin-bottom:10px; max-height:150px; overflow-y:auto;"></div>
+        <div class="flex-row">
           <input id="newMethod" placeholder="New method (e.g. SBI UPI)" />
           <button class="btn-primary" id="addMethod">Add</button>
         </div>
       </div>
       <div style="margin-bottom:20px">
         <label style="margin-bottom:8px">Income sources</label>
-        <div class="flex-row">
+        <div class="flex-row" style="margin-bottom:10px;">
           <input id="newIncome" placeholder="New source name" />
            <button class="btn-primary" id="addIncomeBtn">Add</button>
         </div>
-        <div id="incomeList" style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap"></div>
+        <div id="incomeList" style="display:flex; gap:6px; flex-wrap:wrap"></div>
       </div>
       <div style="margin-bottom:20px">
         <label style="margin-bottom:8px">Credit card limit</label>
         <div class="flex-row">
           <input id="ccLimitInput" type="number" placeholder="Set limit (e.g. 200000)" />
-          <button class="btn-primary" id="saveCCLimit">Save</button>
+          <button class="btn-primary" id="saveCCLimit">Save limit</button>
         </div>
       </div>
       <div style="border-top:1px solid var(--border); padding-top:15px; margin-top:15px">
@@ -827,6 +811,7 @@
       }
       
       setupExpenseMultiSelect();
+      setupInvestmentFilters(); // Fixed button logic setup
     });
 
   // --- UTILS AND CONSTANTS ---
@@ -1029,9 +1014,6 @@
     document.querySelectorAll('#calc-buttons button').forEach(button => {
       button.addEventListener('click', handleCalculatorInput);
     });
-    
-    // Investment breakdown filters and setup
-    setupInvestmentFilters();
   });
 
   // Persistence
@@ -1509,6 +1491,7 @@
     return items;
   }
 
+  // FIX 3: RESTORED INVESTMENT BUTTON LOGIC
   function setupInvestmentFilters() {
     const bucketSelect = document.getElementById('invBucketFilter');
     const uniqueBuckets = Array.from(new Set(Object.values(MAJOR_BUCKETS)));
@@ -1891,7 +1874,6 @@
   }
 
   // --- ADVANCED ANALYTICS WITH SYNCED FILTERS ---
-  
   function populateAnalyticsDropdowns() {
       const groupSelect = document.getElementById('anlInvGroup');
       const options = Object.keys(INVESTMENT_STRUCTURE).map(group => `<option value="${group}">${group}</option>`).join('');
@@ -2018,7 +2000,182 @@
     }
   }
 
-  // --- RECENT ENTRIES RENDER WITH SEARCH/FILTER ---
+  // --- FIX 1: RESTORED SETTINGS ---
+  function renderSettings() {
+    const methodContainer = document.getElementById('methodEditor');
+    methodContainer.innerHTML = Object.entries(methodNames).map(([key, name]) => `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:8px; background:#f8fafc; border:1px solid var(--border); border-radius:6px;">
+        <input type="text" value="${name}" data-key="${key}" onchange="updateMethodName(this)" style="flex:1; margin-right:10px; border:none; background:transparent; font-weight:500;" />
+        <button class="btn-danger" style="padding:4px 8px; font-size:11px" onclick="deleteMethod('${key}')">Remove</button>
+      </div>
+    `).join('');
+    
+    const incomeContainer = document.getElementById('incomeList');
+    incomeContainer.innerHTML = incomeSources.map(source => `
+      <span style="border:1px solid var(--border); padding:6px 10px; border-radius:6px; font-size:12px; display:inline-flex; align-items:center; background:#f8fafc; margin-bottom:4px;">
+        ${source}
+        <button style="background:none; border:none; color:var(--danger); margin-left:8px; padding:0; line-height:1; cursor:pointer; font-weight:bold;" onclick="deleteIncome('${source}')">×</button>
+      </span>
+    `).join('');
+    document.getElementById('ccLimitInput').value = settings.ccLimit;
+  }
+
+  document.getElementById('addMethod').addEventListener('click', addMethod);
+  document.getElementById('addIncomeBtn').addEventListener('click', addIncome);
+  document.getElementById('saveCCLimit').addEventListener('click', () => {
+      const limit = Number(document.getElementById('ccLimitInput').value);
+      if (limit > 0) {
+          settings.ccLimit = limit;
+          saveAll();
+          renderKPIs();
+          alert('Credit Card Limit saved.');
+      } else {
+          alert('Please enter a valid credit card limit.');
+      }
+  });
+
+  function updateMethodName(el) {
+      const key = el.dataset.key;
+      const newName = el.value.trim();
+      if (newName && key) {
+          methodNames[key] = newName;
+          saveAll();
+          renderAll();
+      }
+  }
+
+  function deleteMethod(key) {
+      if (confirm(`Are you sure you want to remove the method "${methodNames[key]}"?`)) {
+          delete methodNames[key];
+          saveAll();
+          renderAll();
+      }
+  }
+
+  function addMethod() {
+      const input = document.getElementById('newMethod');
+      const name = input.value.trim();
+      if (name) {
+          const key = toKey(name);
+          if (!methodNames[key]) {
+              methodNames[key] = name;
+              input.value = '';
+              saveAll();
+              renderAll();
+          } else {
+              alert('Method already exists.');
+          }
+      }
+  }
+
+  function deleteIncome(source) {
+      if (confirm(`Remove income source "${source}"?`)) {
+          incomeSources = incomeSources.filter(s => s !== source);
+          saveAll();
+          renderAll();
+      }
+  }
+
+  function addIncome() {
+      const input = document.getElementById('newIncome');
+      const source = input.value.trim();
+      if (source && !incomeSources.includes(source)) {
+          incomeSources.push(source);
+          input.value = '';
+          saveAll();
+          renderAll();
+      } else if (source) {
+          alert('Income source already exists.');
+      }
+  }
+
+  function convertToCSV(data) {
+      const headers = ['id', 'type', 'amount', 'date', 'desc', 'category', 'method', 'incomeSource', 'investmentGroup', 'investmentSub', 'insuranceType', 'insuranceFor'];
+      const rows = data.map(obj => headers.map(header => {
+          let value = obj[header] ?? '';
+          if (typeof value === 'string' && value.includes(',')) {
+              return `"${value.replace(/"/g, '""')}"`;
+          }
+          return value;
+      }).join(','));
+      const csvContent = [headers.join(','), ...rows].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      if (link.download !== undefined) {
+          const url = URL.createObjectURL(blob);
+          link.setAttribute('href', url);
+          link.setAttribute('download', 'MoneyMirror_Export.csv');
+          link.style.visibility = 'hidden';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+      }
+  }
+
+  function processImportedData() {
+      const fileInput = document.getElementById('importFile');
+      const file = fileInput.files[0];
+      if (!file) return alert('Please select a file.');
+      const reader = new FileReader();
+      reader.onload = function(e) {
+          const content = e.target.result;
+          let importedData = [];
+          if (file.name.endsWith('.json')) {
+              try { importedData = JSON.parse(content); } catch (err) { return alert('Error parsing JSON file: ' + err.message); }
+          } else if (file.name.endsWith('.csv')) {
+              importedData = parseCSV(content);
+          } else { return alert('Unsupported file type. Please use CSV or JSON.'); }
+
+          if (!importedData || importedData.length === 0) return alert('No valid data found.');
+          let newEntries = 0;
+          importedData.forEach(item => {
+              const entry = {
+                  id: uid(),
+                  type: item.type ? item.type.toLowerCase().trim() : 'expense',
+                  amount: Number(item.amount),
+                  date: item.date || new Date().toISOString().slice(0, 10),
+                  desc: item.desc || item.description || '',
+                  category: item.category || 'Misc',
+                  method: item.method ? toKey(item.method) : 'cash',
+                  incomeSource: item.income_source || item.incomeSource || '',
+                  investmentGroup: item.investment_group || item.investmentGroup || '',
+                  investmentSub: item.investment_sub || item.investmentSub || '',
+                  insuranceType: item.insurance_type || item.insuranceType || '',
+                  insuranceFor: item.insurance_for || item.insuranceFor || '',
+              };
+              if (entry.amount > 0 && entry.desc) {
+                  data.push(entry);
+                  newEntries++;
+              }
+          });
+          saveAll();
+          renderAll();
+          document.getElementById('importModal').classList.remove('open');
+          alert(`Successfully imported ${newEntries} new entries.`);
+      };
+      reader.readAsText(file);
+  }
+
+  function parseCSV(csvText) {
+      const lines = csvText.split('\n').filter(line => line.trim() !== '');
+      if (lines.length < 2) return [];
+      const headerLine = lines[0];
+      const headers = headerLine.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g).map(h => h.replace(/"/g, '').toLowerCase().trim());
+      const dataRows = [];
+      for (let i = 1; i < lines.length; i++) {
+          const values = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+          if (!values || values.length !== headers.length) continue;
+          const entry = {};
+          for (let j = 0; j < headers.length; j++) {
+              let value = values[j] ? values[j].replace(/^"|"$/g, '').replace(/""/g, '"') : '';
+              entry[headers[j]] = value;
+          }
+          dataRows.push(entry);
+      }
+      return dataRows;
+  }
+
+  // --- FIX 2: RECENT ENTRIES RENDER WITH LIVE DATA ---
   function renderRecentEntries() {
     const t = document.getElementById('recentTable').querySelector('tbody');
     const limitEl = document.getElementById('entryLimit');
