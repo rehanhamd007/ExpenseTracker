@@ -63,11 +63,23 @@
     aside.mobile-open .icon-menu { display: none; }
     aside.mobile-open .icon-close { display: block; }
 
-    /* AUTH GATE */
     #authGate {
-      position: fixed; inset: 0; background: linear-gradient(135deg, #1e293b, #3b82f6);
-      z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;
-      gap: 10px; color: white; text-align: center; padding: 0 24px;
+  /* Critical CSS for positioning and clickability */
+  position: fixed; /* Ensures it covers the entire viewport */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999; /* Ensures it is on top of ALL other elements */
+
+  /* Existing visual styles */
+  background: #f7f7f7; /* Match your background color */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
     }
     #authGate .line { margin: 0; }
     #authGate .line-1 { font-size: 22px; font-weight: 600; }
