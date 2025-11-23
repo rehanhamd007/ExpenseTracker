@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MoneyMirror — v5.0.2 (Analytics relocation + KPI breakdown charts)</title>
+  <title>MoneyMirror   v5.0.2 (Analytics relocation + KPI breakdown charts)</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@1,400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -298,7 +298,7 @@
 
 <div id="authGate">
   <p class="line line-1">Welcome to</p>
-  <p class="line line-2">MoneyMirror – Personal Finance Dashboard</p>
+  <p class="line line-2">MoneyMirror   Personal Finance Dashboard</p>
   <p class="line line-3">by Rehan Hamdulay</p>
   <button id="loginBtn" class="btn-primary" style="padding:12px 24px; font-size:16px;">Sign in with Google</button>
 </div>
@@ -335,7 +335,7 @@
       <span>Current profile</span>
       <span class="sys-val" id="profileNameDisplay">--</span>
     </div>
-    <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v5.0.2 • Analytics relocation + KPI charts</div>
+    <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v5.0.2   Analytics relocation + KPI charts</div>
   </div>
 </aside>
 
@@ -359,21 +359,21 @@
   <div class="dashboard-grid">
     <div class="card kpi-card col-span-1">
       <div class="card-title" style="color:var(--success)">Monthly income</div>
-      <div class="kpi-value" id="kpiIncome">?0</div>
+      <div class="kpi-value" id="kpiIncome">₹0</div>
       <div class="kpi-sub" id="momIncome"></div>
     </div>
     <div class="card kpi-card col-span-1">
       <div class="card-title" style="color:var(--danger)">Monthly expenses</div>
-      <div class="kpi-value" id="kpiExpense">?0</div>
+      <div class="kpi-value" id="kpiExpense">₹0</div>
       <div class="kpi-sub" id="momExpense"></div>
     </div>
     <div class="card kpi-card col-span-1" id="ccCard" style="border-color:var(--warning); background:#fffbeb">
       <div class="card-title" id="ccTitle" style="color:var(--warning)">Credit card due</div>
-      <div class="kpi-value" id="kpiCCDue">?0</div>
+      <div class="kpi-value" id="kpiCCDue">₹0</div>
       <!-- Black, bold wording for next payment and limit -->
       <div class="kpi-sub" style="color:#000; font-weight:700; margin-top: 6px; position:relative;">
         <span id="ccPaymentDate">Next Payment: 10th of December</span>
-        <span style="font-weight:700; margin-left:10px;">Limit: <span id="ccLimitDisplay">?2,00,000</span></span>
+        <span style="font-weight:700; margin-left:10px;">Limit: <span id="ccLimitDisplay">₹2,00,000</span></span>
         <div id="ccAlert" class="hidden" style="position:absolute; right:0; top:0; color:var(--danger)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
         </div>
@@ -382,7 +382,7 @@
 
     <div class="card kpi-card col-span-1">
       <div class="card-title" style="color:var(--primary)">Net liquidity</div>
-      <div class="kpi-value" id="kpiNet">?0</div>
+      <div class="kpi-value" id="kpiNet">₹0</div>
       <div class="kpi-sub">Total available cash</div>
       <div class="account-list" id="netLiquidityBreakdown"></div>
     </div>
@@ -394,7 +394,7 @@
         <button id="toggleInvBreakdown" class="btn-outline" style="padding:6px 10px; font-size:12px;">View breakdown</button>
       </div>
       <div class="card-body" style="padding-top:6px;">
-        <div class="kpi-value" id="kpiInvest">?0</div>
+        <div class="kpi-value" id="kpiInvest">₹0</div>
         <div class="kpi-sub" id="momInvest" style="color:#075985"></div>
 
         <!-- Charts + concise list (Top 4 buckets only) -->
@@ -484,7 +484,7 @@
           </select>
         </div>
         <div class="input-group-small">
-          <label>Amount (?)</label>
+          <label>Amount (₹)</label>
           <input id="amount" type="number" placeholder="0.00" style="font-weight:700; font-size:16px" step="any" />
         </div>
         <div class="input-group-small">
@@ -739,7 +739,7 @@
 
 <script>
     // --- UTILS AND CONSTANTS ---
-    const DEFAULT_CC_LIMIT = 200000; // Updated default to ?2,00,000
+    const DEFAULT_CC_LIMIT = 200000; // Updated default to ₹2,00,000
     const CANONICAL_METHODS = {
       'cash': 'Cash',
       'salary_acct': 'Bank Account (Salary)',
@@ -1343,15 +1343,14 @@
       const momInc = (inc / (prevInc || 1) - 1) * 100;
       const momExp = (exp / (prevExp || 1) - 1) * 100;
 
-      const momIncEl = document.getElementById('momIncome');
+            const momIncEl = document.getElementById('momIncome');
       momIncEl.className = momInc >= 0 ? 'trend-up' : 'trend-down';
-      momIncEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="${momInc >= 0 ? '18 15 12 9 6 15' : '18 9 12 15 6 9'}"></polyline></svg> ${pct(Math.abs(momInc))} vs Last Month`;
-
+      momIncEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="${momInc >= 0 ? '18 15 12 9 6 15' : '18 9 12 15 6 9'}"></polyline></svg> ${pct(momInc)}`;
       const momExpEl = document.getElementById('momExpense');
-      momExpEl.className = momExp <= 0 ? 'trend-up' : 'trend-down';
-      momExpEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="${momExp <= 0 ? '18 15 12 9 6 15' : '18 9 12 15 6 9'}"></polyline></svg> ${pct(Math.abs(momExp))} vs Last Month`;
+      momExpEl.className = momExp >= 0 ? 'trend-up' : 'trend-down';
+      momExpEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="${momExp >= 0 ? '18 15 12 9 6 15' : '18 9 12 15 6 9'}"></polyline></svg> ${pct(momExp)}`;
 
-      // Credit card logic
+           // Credit card logic
       const ccOpen = sum(data.filter(d => d.type === 'opening_balance' && d.method === 'credit_card'));
       const ccExp = sum(data.filter(d => d.type === 'expense' && d.method === 'credit_card'));
       const ccPay = sum(data.filter(d => d.type === 'expense' && d.category === 'Credit Card Payment'));
@@ -1429,7 +1428,7 @@
             maintainAspectRatio: false,
             responsive: true,
             plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c)=>`${c.label}: ${fmt(c.parsed.y)}` } } },
-            scales: { y: { beginAtZero: true, ticks: { callback: (v)=>fmt(v).replace('?','? ') } } }
+            scales: { y: { beginAtZero: true, ticks: { callback: (v)=>fmt(v).replace('₹','₹ ') } } }
           }
         });
       }
@@ -1531,8 +1530,8 @@
             <td>${categoryDisplay}</td>
             <td>${methodDisplay}</td>
             <td class="flex-row">
-              <button onclick="loadEdit('${e.id}')" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px" title="Edit">?</button>
-              <button onclick="deleteEntry('${e.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:4px" title="Delete">×</button>
+              <button onclick="loadEdit('${e.id}')" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px" title="Edit">✎</button>
+              <button onclick="deleteEntry('${e.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:4px" title="Delete">✕</button>
             </td>
           </tr>
         `;
@@ -1612,7 +1611,7 @@
             y: {
               stacked: true,
               ticks: {
-                callback: function(value) { return fmt(Math.abs(value)).replace('?', '? '); }
+                callback: function(value) { return fmt(Math.abs(value)).replace('₹', '₹ '); }
               }
             }
           },
@@ -1819,7 +1818,7 @@
             scales: {
               y: {
                 beginAtZero: false,
-                ticks: { callback: function(value) { return fmt(value).replace('?', '? '); } }
+                ticks: { callback: function(value) { return fmt(value).replace('₹', '₹ '); } }
               }
             },
             plugins: {
@@ -1866,7 +1865,7 @@
             maintainAspectRatio: false,
             responsive: true,
             plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c)=>`${c.label}: ${fmt(c.parsed.y)}` } } },
-            scales: { y: { beginAtZero: true, ticks: { callback: (v)=>fmt(v).replace('?','? ') } } }
+            scales: { y: { beginAtZero: true, ticks: { callback: (v)=>fmt(v).replace('₹','₹ ') } } }
           }
         });
       }
@@ -1881,7 +1880,7 @@
             maintainAspectRatio: false,
             responsive: true,
             plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: (c)=>`${c.dataset.label}: ${fmt(c.parsed.y)}` } } },
-            scales: { y: { beginAtZero: false, ticks: { callback: (v)=>fmt(v).replace('?','? ') } } }
+            scales: { y: { beginAtZero: false, ticks: { callback: (v)=>fmt(v).replace('₹','₹ ') } } }
           }
         });
       }
@@ -1901,7 +1900,7 @@
       incomeContainer.innerHTML = incomeSources.map(source => `
         <span style="border:1px solid var(--border); padding:4px 8px; border-radius:4px; font-size:12px; display:inline-flex; align-items:center; background:#f8fafc">
           ${source}
-          <button style="background:none; border:none; color:var(--danger); margin-left:5px; padding:0; line-height:1; cursor:pointer;" onclick="deleteIncome('${source}')">×</button>
+          <button style="background:none; border:none; color:var(--danger); margin-left:5px; padding:0; line-height:1; cursor:pointer;" onclick="deleteIncome('${source}')">✕</button>
         </span>
       `).join('');
 
