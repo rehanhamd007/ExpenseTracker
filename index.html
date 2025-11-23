@@ -9,145 +9,119 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-  <!-- Firebase SDKs (compat versions for plain HTML) -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
- <script>
-  /* --- FIREBASE CONFIGURATION --- */
-  const firebaseConfig = {
-    apiKey: "AIzaSyCAZvHT6dG61ISR57AJoZh8GSO7nY_mEGc",
-    authDomain: "moneymirror-22543.firebaseapp.com",
-    projectId: "moneymirror-22543",
-    storageBucket: "moneymirror-22543.firebasestorage.app",
-    messagingSenderId: "61775081584",
-    appId: "1:61775081584:web:3ec184985e324cf6f1c4b5",
-    measurementId: "G-8RPXH1VEFG"
-  };
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCAZvHT6dG61ISR57AJoZh8GSO7nY_mEGc",
+      authDomain: "moneymirror-22543.firebaseapp.com",
+      projectId: "moneymirror-22543",
+      storageBucket: "moneymirror-22543.firebasestorage.app",
+      messagingSenderId: "61775081584",
+      appId: "1:61775081584:web:3ec184985e324cf6f1c4b5",
+      measurementId: "G-8RPXH1VEFG"
+    };
 
-  let db = null;
-  let auth = null;
-  let USE_FIRESTORE = false;
-  const FIRESTORE_COLLECTION_NAME = 'moneymirror_v4_transactions';
+    let db = null;
+    let auth = null;
+    let USE_FIRESTORE = false;
+    const FIRESTORE_COLLECTION_NAME = 'moneymirror_v4_transactions';
 
-  try {
-    const app = firebase.initializeApp(firebaseConfig);
-    db = app.firestore();
-    auth = app.auth();
-    USE_FIRESTORE = true;
-    console.log("Firebase initialized for project:", db.app.options.projectId);
-  } catch (e) {
-    console.warn("Firebase init failed. Falling back to LocalStorage.", e);
-  }
+    try {
+      const app = firebase.initializeApp(firebaseConfig);
+      db = app.firestore();
+      auth = app.auth();
+      USE_FIRESTORE = true;
+      console.log("Firebase initialized for project:", db.app.options.projectId);
+    } catch (e) {
+      console.warn("Firebase init failed. Falling back to LocalStorage.", e);
+    }
 
-  function signInWithGoogle() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider)
-      .then((result) => {
-        const user = result.user;
-        console.log("Signed in:", user.displayName, user.email);
-        updateUIAuthState(user);
-      })
-      .catch((error) => {
-        console.error("Login failed:", error.code, error.message);
+    function signInWithGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
+        .then((result) => {
+          const user = result.user;
+          console.log("Signed in:", user.displayName, user.email);
+          updateUIAuthState(user);
+        })
+        .catch((error) => {
+          console.error("Login failed:", error.code, error.message);
+        });
+    }
+
+    function signOutUser() {
+      auth.signOut().then(() => {
+        console.log("Signed out");
+        updateUIAuthState(null);
       });
-  }
-
-  function signOutUser() {
-    auth.signOut().then(() => {
-      console.log("Signed out");
-      updateUIAuthState(null);
-    });
-  }
-
-  function updateUIAuthState(user) {
-    const main = document.querySelector('main');
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const profileModal = document.getElementById('profileModal');
-    const lastProfile = localStorage.getItem('mm_last_profile');
-
-    if (loginBtn && logoutBtn) {
-      loginBtn.style.display = user ? 'none' : 'inline-block';
-      logoutBtn.style.display = user ? 'inline-block' : 'none';
     }
 
-    if (user && lastProfile) {
-      window.currentProfile = lastProfile;
-      profileModal?.classList.remove('open');
-      main.style.filter = 'none';
-      if (typeof loadProfileData === 'function') {
-        loadProfileData();
-      }
-    } else if (user) {
-      profileModal?.classList.add('open');
-      main.style.filter = 'blur(5px)';
-    } else {
-      profileModal?.classList.add('open');
-      main.style.filter = 'blur(5px)';
-    }
-  }
+    function updateUIAuthState(user) {
+      const main = document.querySelector('main');
+      const authGate = document.getElementById('authGate');
+      const profileModal = document.getElementById('profileModal');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const lastProfile = localStorage.getItem('mm_last_profile');
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const authGate = document.getElementById('authGate');
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const main = document.querySelector('main');
-    const profileModal = document.getElementById('profileModal');
-
-    loginBtn.onclick = signInWithGoogle;
-    logoutBtn.onclick = signOutUser;
-
-    auth.onAuthStateChanged(user => {
       if (user) {
-        console.log("User is signed in:", user.uid);
         authGate.style.display = 'none';
-        logoutBtn.style.display = 'inline-block';
+        logoutBtn.style.display = 'block';
 
-        const lastProfile = localStorage.getItem('mm_last_profile');
         if (lastProfile) {
           window.currentProfile = lastProfile;
-          main.style.filter = 'none';
           profileModal?.classList.remove('open');
+          main.style.filter = 'none';
           if (typeof loadProfileData === 'function') loadProfileData();
         } else {
           profileModal?.classList.add('open');
           main.style.filter = 'blur(5px)';
         }
       } else {
-        console.log("No user signed in");
         authGate.style.display = 'flex';
         logoutBtn.style.display = 'none';
-        main.style.filter = 'blur(5px)';
         profileModal?.classList.remove('open');
+        main.style.filter = 'blur(5px)';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const loginBtn = document.getElementById('loginBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const loadProfileBtn = document.getElementById('loadProfileBtn');
+
+      loginBtn.onclick = signInWithGoogle;
+      logoutBtn.onclick = signOutUser;
+
+      auth.onAuthStateChanged(user => {
+        updateUIAuthState(user);
+      });
+
+      if (loadProfileBtn) {
+        loadProfileBtn.onclick = () => {
+          const input = document.getElementById('profileInput');
+          const profileName = input?.value.trim();
+          if (!profileName) {
+            alert("Please enter a profile name.");
+            return;
+          }
+
+          localStorage.setItem('mm_last_profile', profileName);
+          window.currentProfile = profileName;
+
+          document.getElementById('profileModal')?.classList.remove('open');
+          document.querySelector('main').style.filter = 'none';
+
+          if (typeof loadProfileData === 'function') {
+            loadProfileData();
+          }
+        };
       }
     });
-
-    // ✅ Load Dashboard button logic
-    const loadProfileBtn = document.getElementById('loadProfileBtn');
-    if (loadProfileBtn) {
-      loadProfileBtn.onclick = () => {
-        const input = document.getElementById('profileInput');
-        const profileName = input?.value.trim();
-        if (!profileName) {
-          alert("Please enter a profile name.");
-          return;
-        }
-
-        localStorage.setItem('mm_last_profile', profileName);
-        window.currentProfile = profileName;
-
-        profileModal?.classList.remove('open');
-        main.style.filter = 'none';
-
-        if (typeof loadProfileData === 'function') {
-          loadProfileData();
-        }
-      };
-    }
-  });
-</script>
+  </script>
 
 <style>
     :root {
@@ -434,19 +408,7 @@
 </head>
 <body>
 
-<div id="profileModal" class="modal open">
-  <div class="modal-content modal-small modal-pad">
-    <h3 style="margin-top:0;">Select or Create Profile</h3>
-    <label for="profileInput" style="margin-top:10px;">PROFILE NAME (USED AS KEY)</label>
-    <input id="profileInput" type="text" placeholder="e.g. RH" style="width:100%; padding:10px; margin-top:5px;" />
-    <p style="font-size:12px; color:var(--text-muted); margin-top:5px;">This name separates your data from others.</p>
-    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-      <button class="btn-outline" id="viewProfilesBtn">View Existing</button>
-      <button class="btn-primary" id="loadProfileBtn">Load Dashboard</button>
-    </div>
-  </div>
-</div>
-
+<!-- Full-screen auth gate (single instance) -->
 <div id="authGate" style="
   position: fixed;
   inset: 0;
@@ -462,412 +424,394 @@
   <button id="loginBtn" class="btn-primary" style="padding:12px 24px; font-size:16px;">Sign in with Google</button>
 </div>
 
-  <!-- Simple auth controls -->
-  <button id="logoutBtn" style="display:none;">Logout</button>
+<!-- Profile modal (single instance) -->
+<div id="profileModal" class="modal">
+  <div class="modal-content modal-small modal-pad">
+    <h3 style="margin-top:0;">Select or Create Profile</h3>
+    <label for="profileInput" style="margin-top:10px;">PROFILE NAME (USED AS KEY)</label>
+    <input id="profileInput" type="text" placeholder="e.g. RH" style="width:100%; padding:10px; margin-top:5px;" />
+    <p style="font-size:12px; color:var(--text-muted); margin-top:5px;">This name separates your data from others.</p>
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+      <button class="btn-outline" id="viewProfilesBtn" onclick="showExistingProfiles()">View Existing</button>
+      <button class="btn-primary" id="loadProfileBtn">Load Dashboard</button>
+    </div>
+    <div id="existingProfilesList" style="margin-top:15px; display:flex; gap:6px; flex-wrap:wrap; font-size:12px"></div>
+  </div>
+</div>
 
-  <aside>
+<!-- Sidebar (single) -->
+<aside>
+  <div>
+    <div class="brand">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
+      MoneyMirror <span>v4.9</span>
+    </div>
+
+    <nav>
+      <div class="nav-group">
+        <div class="nav-label">Main Menu</div>
+        <div class="nav-item active">Dashboard</div>
+        <div class="nav-item" id="navAnalytics">Advanced Analytics</div>
+      </div>
+
+      <div class="nav-group">
+        <div class="nav-label">Configuration</div>
+        <div class="nav-item" id="navSwitchProfile">Switch Profile</div>
+        <div class="nav-item" id="navSettings">Settings & Backup</div>
+        <div class="nav-item" id="navLogout">
+          <button id="logoutBtn" class="btn-outline" style="width:100%;">Logout</button>
+        </div>
+      </div>
+    </nav>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="sys-stat">
+      <span>Current Profile</span>
+      <span class="sys-val" id="profileNameDisplay">--</span>
+    </div>
+    <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v4.9.0 • Full Logic Restore</div>
+  </div>
+</aside>
+
+<!-- Main dashboard (single) -->
+<main style="filter: blur(5px);">
+
+  <!-- Header + actions -->
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
     <div>
-        <div class="brand">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
-            MoneyMirror <span>v4.9</span>
+      <h1 style="margin:0; font-size:24px; font-weight:700">Financial Overview</h1>
+      <div style="font-size:13px; color:var(--text-muted); margin-top:4px" id="currentDate"></div>
+    </div>
+    <div class="flex-row">
+      <button class="btn-outline" id="sampleBtn">Load Sample</button>
+      <button class="btn-primary" id="importDataBtn">Import Data (CSV/JSON)</button>
+      <button class="btn-outline" id="exportBtn">Export CSV</button>
+      <div id="calc-toggle" title="Toggle calculator">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line><line x1="12" y1="14" x2="12.01" y2="14"></line><line x1="8" y1="10" x2="8.01" y2="10"></line><line x1="16" y1="10" x2="16.01" y2="10"></line></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="dashboard-grid">
+    <div class="card kpi-card col-span-1">
+      <div class="card-title" style="color:var(--success)">Monthly Income</div>
+      <div class="kpi-value" id="kpiIncome">₹0</div>
+      <div class="kpi-sub" id="momIncome"></div>
+    </div>
+    <div class="card kpi-card col-span-1">
+      <div class="card-title" style="color:var(--danger)">Monthly Expenses</div>
+      <div class="kpi-value" id="kpiExpense">₹0</div>
+      <div class="kpi-sub" id="momExpense"></div>
+    </div>
+    <div class="card kpi-card col-span-1" id="ccCard" style="border-color:var(--warning); background:#fffbeb">
+      <div class="card-title" id="ccTitle" style="color:var(--warning)">Credit Card Due</div>
+      <div class="kpi-value" id="kpiCCDue">₹0</div>
+      <div class="kpi-sub" style="color:var(--warning); margin-top: 6px; position:relative;">
+        <span id="ccPaymentDate">Next Payment: 10th of Jan</span>
+        <span style="font-weight:600; margin-left:10px;">Limit: <span id="ccLimitDisplay">₹13,000</span></span>
+        <div id="ccAlert" class="hidden" style="position:absolute; right:0; top:0; color:var(--danger)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
         </div>
+      </div>
+    </div>
+    <div class="card kpi-card col-span-1">
+      <div class="card-title" style="color:var(--primary)">Net Liquidity</div>
+      <div class="kpi-value" id="kpiNet">₹0</div>
+      <div class="kpi-sub">Total Available Cash</div>
+    </div>
+    <div class="card kpi-card col-span-4" style="background:#e0f2fe; border-color:#075985;">
+      <div class="card-title" style="color:#075985">Total Investment Value (Historical Cost)</div>
+      <div class="kpi-value" id="kpiInvest">₹0</div>
+      <div class="kpi-sub" id="momInvest" style="color:#075985"></div>
+    </div>
+  </div>
 
-        <nav>
-            <div class="nav-group">
-                <div class="nav-label">Main Menu</div>
-                <div class="nav-item active">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                    Dashboard
-                </div>
-                <div class="nav-item" id="navAnalytics">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18.7 8l-5 5-2.2-2.2-6.5 6.5"></path></svg>
-                    Advanced Analytics
-                </div>
-            </div>
-
-            <div class="nav-group">
-                <div class="nav-label">Configuration</div>
-                <div class="nav-item" id="navSwitchProfile">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                    Switch Profile
-                </div>
-                <div class="nav-item" id="navSettings">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                    Settings & Backup
-                </div>
-            </div>
-        </nav>
+  <!-- Charts -->
+  <div class="dashboard-grid">
+    <div class="card col-span-2">
+      <div class="card-header">
+        <div class="card-title">Cash Flow & Investments</div>
+        <select id="mainChartFilter" onchange="renderCharts()">
+          <option value="6">Last 6 Months</option>
+          <option value="12">Last 12 Months</option>
+          <option value="all">All Time</option>
+        </select>
+      </div>
+      <div class="card-body">
+        <div style="height:320px; width:100%; position:relative">
+          <canvas id="mainChart"></canvas>
+        </div>
+      </div>
     </div>
 
-    <div class="sidebar-footer">
-        <div class="sys-stat">
-            <span>Current Profile</span>
-            <span class="sys-val" id="profileNameDisplay">--</span>
+    <div class="card col-span-2">
+      <div class="card-header">
+        <div class="card-title">Wallet Breakdown (Liquid Cash & Savings)</div>
+      </div>
+      <div class="card-body" style="display:flex; flex-direction:row; align-items:center; gap:20px; flex:1">
+        <div style="height:280px; width:50%; max-width: 280px; position:relative;">
+          <canvas id="donutChart"></canvas>
         </div>
-        <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v4.9.0 • Full Logic Restore</div>
+        <div id="walletLegend" style="font-size:12px; color:var(--text-muted); flex:1; display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
     </div>
-  </aside>
+  </div>
 
-  <main style="filter: blur(5px);">
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-        <div>
-            <h1 style="margin:0; font-size:24px; font-weight:700">Financial Overview</h1>
-            <div style="font-size:13px; color:var(--text-muted); margin-top:4px" id="currentDate"></div>
+  <!-- Add entry -->
+  <div class="dashboard-grid">
+    <div class="card action-card col-span-4" id="addEntryCard">
+      <div class="action-header">
+        <div class="card-title">Add New Entry</div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      </div>
+      <div class="action-body" style="flex-direction:row; flex-wrap:wrap; gap:20px;">
+        <div style="width:15%">
+          <label>Type</label>
+          <select id="type">
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+            <option value="opening_balance">Opening Balance</option>
+          </select>
         </div>
-        <div class="flex-row">
-            <button class="btn-outline" id="sampleBtn">Load Sample</button>
-            <button class="btn-primary" id="importDataBtn">Import Data (CSV/JSON)</button>
-            <button class="btn-outline" id="exportBtn">Export CSV</button>
-            <div id="calc-toggle">
-                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line><line x1="12" y1="14" x2="12.01" y2="14"></line><line x1="8" y1="10" x2="8.01" y2="10"></line><line x1="16" y1="10" x2="16.01" y2="10"></line></svg>
+        <div style="width:15%">
+          <label>Amount (₹)</label>
+          <input id="amount" type="number" placeholder="0.00" style="font-weight:700; font-size:16px" step="any" />
+        </div>
+        <div style="width:15%">
+          <label>Date</label>
+          <input id="date" type="date" />
+        </div>
+        <div style="width:45%; display:flex; flex-direction:column;">
+          <label>Description</label>
+          <input id="desc" placeholder="What is this for?" style="flex:1" />
+        </div>
+
+        <div id="dynamicFieldsContainer" class="full-width" style="border-top:1px solid var(--border); padding-top:15px">
+          <div id="regularFields" style="display:flex; gap:20px; flex-wrap:wrap">
+            <div id="categoryContainer" style="width:15%">
+              <label>Category</label>
+              <select id="category"></select>
             </div>
-        </div>
-    </div>
-
-    <div class="dashboard-grid">
-        <div class="card kpi-card col-span-1">
-            <div class="card-title" style="color:var(--success)">Monthly Income</div>
-            <div class="kpi-value" id="kpiIncome">₹0</div>
-            <div class="kpi-sub" id="momIncome"></div>
-        </div>
-        <div class="card kpi-card col-span-1">
-            <div class="card-title" style="color:var(--danger)">Monthly Expenses</div>
-            <div class="kpi-value" id="kpiExpense">₹0</div>
-            <div class="kpi-sub" id="momExpense"></div>
-        </div>
-        <div class="card kpi-card col-span-1" id="ccCard" style="border-color:var(--warning); background:#fffbeb">
-            <div class="card-title" id="ccTitle" style="color:var(--warning)">Credit Card Due</div>
-            <div class="kpi-value" id="kpiCCDue">₹0</div>
-            <div class="kpi-sub" style="color:var(--warning); margin-top: 6px; position:relative;">
-                <span id="ccPaymentDate">Next Payment: 10th of Jan</span>
-                <span style="font-weight:600; margin-left:10px;">Limit: <span id="ccLimitDisplay">₹13,000</span></span>
-                <div id="ccAlert" class="hidden" style="position:absolute; right:0; top:0; color:var(--danger)">
-                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                </div>
+            <div style="width:15%">
+              <label>Method</label>
+              <select id="method"></select>
             </div>
-        </div>
-        <div class="card kpi-card col-span-1">
-            <div class="card-title" style="color:var(--primary)">Net Liquidity</div>
-            <div class="kpi-value" id="kpiNet">₹0</div>
-            <div class="kpi-sub">Total Available Cash</div>
-        </div>
-        
-        <div class="card kpi-card col-span-4" style="background:#e0f2fe; border-color:#075985;">
-             <div class="card-title" style="color:#075985">Total Investment Value (Historical Cost)</div>
-             <div class="kpi-value" id="kpiInvest">₹0</div>
-             <div class="kpi-sub" id="momInvest" style="color:#075985"></div>
-        </div>
-    </div>
 
-    <div class="dashboard-grid">
-        
-        <div class="card col-span-2">
-            <div class="card-header">
-                <div class="card-title">Cash Flow & Investments (6 Months)</div>
-                <select id="mainChartFilter" onchange="renderCharts()">
-                    <option value="6">Last 6 Months</option>
-                    <option value="12">Last 12 Months</option>
-                    <option value="all">All Time</option>
+            <div id="incomeSourceRow" class="hidden" style="width:15%">
+              <label>Source</label>
+              <select id="incomeSource"></select>
+            </div>
+            <div id="investmentRow" class="hidden" style="width:25%">
+              <label>Investment Details</label>
+              <div class="flex-row">
+                <select id="invGroup">
+                  <option value="">Group</option>
+                  <option value="Cash">Cash</option>
+                  <option value="MFs">MFs</option>
+                  <option value="Commodities">Commodities</option>
+                  <option value="Stocks">Stocks</option>
                 </select>
+                <select id="invSub"><option value="">Instrument</option></select>
+              </div>
             </div>
-            <div class="card-body">
-                <div style="height:320px; width:100%; position:relative">
-                    <canvas id="mainChart"></canvas>
-                </div>
+            <div id="insuranceRow" class="hidden" style="width:25%">
+              <label>Insurance Details</label>
+              <div class="flex-row">
+                <select id="insType"><option value="">Type</option><option value="Health">Health</option><option value="Life">Life</option></select>
+                <select id="insFor"><option value="">Insured</option><option value="Family">Family</option></select>
+              </div>
             </div>
+          </div>
+
+          <div id="openingBalanceRow" class="hidden" style="display:flex; gap:20px; width:50%">
+            <div style="width:45%">
+              <label>Asset Type</label>
+              <select id="openingType"><option value="Cash">Cash (Liquid)</option><option value="Investment">Investment Asset</option></select>
+            </div>
+            <div style="width:45%">
+              <label>Asset Sub-type</label>
+              <select id="openingSub" disabled><option value="">Select Asset</option></select>
+            </div>
+          </div>
         </div>
 
-        <div class="card col-span-2">
-            <div class="card-header">
-                <div class="card-title">Wallet Breakdown (Liquid Cash & Savings)</div>
-            </div>
-            <div class="card-body" style="display:flex; flex-direction:row; align-items:center; gap:20px; flex:1">
-                <div style="height:280px; width:50%; max-width: 280px; position:relative;">
-                    <canvas id="donutChart"></canvas>
-                </div>
-                <div id="walletLegend" style="font-size:12px; color:var(--text-muted); flex:1; display:flex; flex-direction:column; gap:8px;"></div>
-            </div>
+        <div style="display:flex; gap:8px; margin-top:8px; width:100%; justify-content:flex-end;">
+          <button id="addBtn" class="btn-primary" style="width:150px">Add Transaction</button>
+          <button id="saveBtn" class="btn-primary" style="display:none; background:var(--success); width:150px">Update</button>
+          <button id="cancelBtn" class="btn-outline" style="display:none; width:150px">Cancel</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tables -->
+  <div class="dashboard-grid">
+    <div class="card col-span-2">
+      <div class="card-header">
+        <div class="card-title">Recent Activity</div>
+        <div class="flex-row">
+          <input type="text" id="searchTx" placeholder="Search entries..." style="padding:6px; width:180px">
+        </div>
+      </div>
+      <div class="card-body table-container">
+        <table id="mainTable">
+          <thead>
+            <tr>
+              <th width="12%">Date</th>
+              <th width="20%">Type / Category</th>
+              <th width="35%">Description</th>
+              <th width="15%">Method / Asset</th>
+              <th width="18%" style="text-align:right">Amount</th>
+              <th width="10%" style="text-align:center">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="txBody"></tbody>
+        </table>
+      </div>
     </div>
 
-    <div class="dashboard-grid">
-        <div class="card action-card col-span-4" id="addEntryCard">
-             <div class="action-header">
-                <div class="card-title">Add New Entry</div>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            </div>
-            
-            <div class="action-body" style="flex-direction:row; flex-wrap:wrap; gap:20px;">
-                <div style="width:15%">
-                    <label>Type</label>
-                    <select id="type">
-                        <option value="expense">Expense</option>
-                        <option value="income">Income</option>
-                        <option value="opening_balance">Opening Balance</option>
-                    </select>
-                </div>
-                <div style="width:15%">
-                    <label>Amount (₹)</label>
-                    <input id="amount" type="number" placeholder="0.00" style="font-weight:700; font-size:16px" step="any" />
-                </div>
-                <div style="width:15%">
-                    <label>Date</label>
-                    <input id="date" type="date" />
-                </div>
-                <div style="width:45%; display:flex; flex-direction:column;">
-                    <label>Description</label>
-                    <input id="desc" placeholder="What is this for?" style="flex:1" />
-                </div>
-
-
-                <div id="dynamicFieldsContainer" class="full-width" style="border-top:1px solid var(--border); padding-top:15px">
-                    
-                    <div id="regularFields" style="display:flex; gap:20px; flex-wrap:wrap">
-                        <div id="categoryContainer" style="width:15%">
-                            <label>Category</label>
-                            <select id="category"></select>
-                        </div>
-                        <div style="width:15%">
-                            <label>Method</label>
-                            <select id="method"></select>
-                        </div>
-
-                        <div id="incomeSourceRow" class="hidden" style="width:15%">
-                            <label>Source</label>
-                            <select id="incomeSource"></select>
-                        </div>
-                        <div id="investmentRow" class="hidden" style="width:25%">
-                            <label>Investment Details</label>
-                            <div class="flex-row">
-                                <select id="invGroup"><option value="">Group</option><option value="Cash">Cash</option><option value="MFs">MFs</option><option value="Commodities">Commodities</option><option value="Stocks">Stocks</option></select>
-                                <select id="invSub"><option value="">Instrument</option></select>
-                            </div>
-                        </div>
-                        <div id="insuranceRow" class="hidden" style="width:25%">
-                            <label>Insurance Details</label>
-                            <div class="flex-row">
-                                <select id="insType"><option value="">Type</option><option value="Health">Health</option><option value="Life">Life</option></select>
-                                <select id="insFor"><option value="">Insured</option><option value="Family">Family</option></select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="openingBalanceRow" class="hidden" style="display:flex; gap:20px; width:50%">
-                        <div style="width:45%">
-                            <label>Asset Type</label>
-                            <select id="openingType"><option value="Cash">Cash (Liquid)</option><option value="Investment">Investment Asset</option></select>
-                        </div>
-                        <div style="width:45%">
-                            <label>Asset Sub-type</label>
-                            <select id="openingSub" disabled><option value="">Select Asset</option></select>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="display:flex; gap:8px; margin-top:8px; width:100%; justify-content:flex-end;">
-                    <button id="addBtn" class="btn-primary" style="width:150px">Add Transaction</button>
-                    <button id="saveBtn" class="btn-primary" style="display:none; background:var(--success); width:150px">Update</button>
-                    <button id="cancelBtn" class="btn-outline" style="display:none; width:150px">Cancel</button>
-                </div>
-            </div>
-        </div>
+    <div class="card col-span-2">
+      <div class="card-header">
+        <div class="card-title">Investment Portfolio (Historical Cost)</div>
+      </div>
+      <div class="card-body table-container">
+        <table id="invTable">
+          <thead><tr><th>Asset Class</th><th>Sub-Class</th><th style="text-align:right">Current Invested Value</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
+  </div>
 
+</main>
 
-    <div class="dashboard-grid">
-        <div class="card col-span-2">
-            <div class="card-header">
-                <div class="card-title">Recent Activity</div>
-                <div class="flex-row">
-                     <input type="text" id="searchTx" placeholder="Search entries..." style="padding:6px; width:180px">
-                </div>
-            </div>
-            <div class="card-body table-container">
-                <table id="mainTable">
-                    <thead>
-                        <tr>
-                            <th width="12%">Date</th>
-                            <th width="20%">Type / Category</th>
-                            <th width="35%">Description</th>
-                            <th width="15%">Method / Asset</th>
-                            <th width="18%" style="text-align:right">Amount</th>
-                            <th width="10%" style="text-align:center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="txBody"></tbody>
-                </table>
-            </div>
-        </div>
+<!-- Calculator (single instance) -->
+<div id="calculator" class="hidden">
+  <div id="calc-header">
+    <span>Calculator</span>
+    <button id="calc-close-btn" onclick="toggleCalculator()">×</button>
+  </div>
+  <div id="calc-display">0</div>
+  <div id="calc-buttons">
+    <button class="calc-clear" onclick="calcClear()">AC</button>
+    <button class="calc-operator" onclick="calcBackspace()">←</button>
+    <button class="calc-operator" onclick="calcHandleOperator('/')">÷</button>
+    <button class="calc-operator" onclick="calcHandleOperator('*')">×</button>
+    <button onclick="calcAppend('7')">7</button>
+    <button onclick="calcAppend('8')">8</button>
+    <button onclick="calcAppend('9')">9</button>
+    <button class="calc-operator" onclick="calcHandleOperator('-')">-</button>
+    <button onclick="calcAppend('4')">4</button>
+    <button onclick="calcAppend('5')">5</button>
+    <button onclick="calcAppend('6')">6</button>
+    <button class="calc-operator" onclick="calcHandleOperator('+')">+</button>
+    <button onclick="calcAppend('1')">1</button>
+    <button onclick="calcAppend('2')">2</button>
+    <button onclick="calcAppend('3')">3</button>
+    <button class="calc-equals" onclick="calcCalculate()">=</button>
+    <button class="calc-zero" onclick="calcAppend('0')">0</button>
+    <button onclick="calcAppend('.')">.</button>
+  </div>
+</div>
 
-        <div class="card col-span-2">
-             <div class="card-header">
-                <div class="card-title">Investment Portfolio (Historical Cost)</div>
-            </div>
-            <div class="card-body table-container">
-                <table id="invTable">
-                    <thead><tr><th>Asset Class</th><th>Sub-Class</th><th style="text-align:right">Current Invested Value</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
+<!-- Settings Modal (single) -->
+<div id="settingsModal" class="modal">
+  <div class="modal-content">
+    <div class="action-header" style="border-radius:12px 12px 0 0">
+      <div class="card-title" style="color:white">System Configuration</div>
+      <button class="btn-outline" id="closeSettings" style="background:transparent; color:white; border-color:white; padding:4px 10px">Close</button>
     </div>
+    <div class="modal-pad">
+      <div style="margin-bottom:20px">
+        <label style="margin-bottom:8px">Payment Method Labels</label>
+        <div id="methodEditor" style="display:flex; flex-direction:column; gap:8px; max-height:200px; overflow-y:auto; border:1px solid var(--border); padding:10px; border-radius:6px;"></div>
+        <div class="flex-row" style="margin-top:10px">
+          <input id="newMethodId" placeholder="ID (e.g. sbi_upi)" />
+          <input id="newMethodName" placeholder="Display Name (e.g. SBI UPI)" />
+          <button class="btn-primary" id="addMethod">Add</button>
+        </div>
+      </div>
 
-  </main>
-  
-  <div id="calculator" class="hidden">
-      <div id="calc-header">
-          <span>Calculator</span>
-          <button id="calc-close-btn" onclick="toggleCalculator()">×</button>
+      <div style="margin-bottom:20px">
+        <label style="margin-bottom:8px">Income Sources</label>
+        <div class="flex-row">
+          <input id="newIncome" placeholder="New Source Name" />
+          <button class="btn-primary" id="addIncomeBtn">Add</button>
+        </div>
+        <div id="incomeList" style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap"></div>
       </div>
       
-      <div id="calc-display">0</div>
-      
-      <div id="calc-buttons">
-          <button class="calc-clear" onclick="calcClear()">AC</button>
-          <button class="calc-operator" onclick="calcBackspace()">←</button>
-          <button class="calc-operator" onclick="calcHandleOperator('/')">÷</button>
-          <button class="calc-operator" onclick="calcHandleOperator('*')">×</button>
-          
-          <button onclick="calcAppend('7')">7</button>
-          <button onclick="calcAppend('8')">8</button>
-          <button onclick="calcAppend('9')">9</button>
-          <button class="calc-operator" onclick="calcHandleOperator('-')">-</button>
-          
-          <button onclick="calcAppend('4')">4</button>
-          <button onclick="calcAppend('5')">5</button>
-          <button onclick="calcAppend('6')">6</button>
-          <button class="calc-operator" onclick="calcHandleOperator('+')">+</button>
-          
-          <button onclick="calcAppend('1')">1</button>
-          <button onclick="calcAppend('2')">2</button>
-          <button onclick="calcAppend('3')">3</button>
-          <button class="calc-equals" onclick="calcCalculate()">=</button>
-          
-          <button class="calc-zero" onclick="calcAppend('0')">0</button>
-          <button onclick="calcAppend('.')">.</button>
+      <div style="margin-bottom:20px">
+        <label style="margin-bottom:8px">Credit Card Limit</label>
+        <div class="flex-row">
+          <input id="ccLimitInput" type="number" placeholder="Set Limit (e.g. 13000)" />
+          <button class="btn-primary" id="saveCCLimit">Save Limit</button>
+        </div>
       </div>
-  </div>
 
-
-  <div id="profileModal" class="modal open">
-    <div class="modal-content modal-small">
-        <div class="action-header" style="border-radius:12px 12px 0 0">
-            <div class="card-title" style="color:white">Select or Create Profile</div>
+      <div style="border-top:1px solid var(--border); padding-top:15px; margin-top:15px">
+        <label style="color:var(--danger)">Danger Zone</label>
+        <div class="flex-row">
+          <button class="btn-outline" id="importJson">Import JSON Backup (Deprecated)</button>
+          <button class="btn-danger" id="resetBtn">Factory Reset Profile</button>
         </div>
-        
-        <div class="modal-pad">
-            <form id="profileForm">
-                <label>Profile Name (Used as Key)</label>
-                <input id="profileInput" placeholder="E.g., Personal, Joint Account, Sarah" required style="font-weight:600" />
-                <div style="font-size:11px; color:var(--text-muted); margin-top:5px">This name separates your data from others.</div>
-                
-                <div style="margin-top:20px; display:flex; gap:10px">
-                    <button type="submit" class="btn-primary full-width">Load Dashboard</button>
-                    <button type="button" class="btn-outline" onclick="showExistingProfiles()">View Existing</button>
-                </div>
-                <div id="existingProfilesList" style="margin-top:15px; display:flex; gap:6px; flex-wrap:wrap; font-size:12px"></div>
-            </form>
-        </div>
+      </div>
     </div>
   </div>
+</div>
 
-  <div id="settingsModal" class="modal">
-    <div class="modal-content">
-        <div class="action-header" style="border-radius:12px 12px 0 0">
-            <div class="card-title" style="color:white">System Configuration</div>
-            <button class="btn-outline" id="closeSettings" style="background:transparent; color:white; border-color:white; padding:4px 10px">Close</button>
+<!-- Analytics Modal (single) -->
+<div id="analyticsModal" class="modal">
+  <div class="modal-content">
+    <div class="action-header" style="border-radius:12px 12px 0 0">
+      <div class="card-title" style="color:white">Advanced Financial Analytics</div>
+      <button class="btn-outline" id="closeAnalytics" style="background:transparent; color:white; border-color:white; padding:4px 10px">Close</button>
+    </div>
+    <div class="modal-pad" id="analyticsContent">
+      <div id="analyticsFilters">
+        <div class="filter-group">
+          <h3 style="margin-top:0; font-size:16px;">Filter Data</h3>
+          <div>
+            <label>Date Range</label>
+            <select id="dateFilter" onchange="renderAdvancedCharts()">
+              <option value="6">Last 6 Months</option>
+              <option value="12">Last 12 Months</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+          <div style="margin-top:10px">
+            <label>Chart Type</label>
+            <select id="chart1Type" onchange="renderAdvancedCharts()">
+              <option value="line">Line Chart</option>
+              <option value="bar">Bar Chart</option>
+            </select>
+          </div>
         </div>
-        
-        <div class="modal-pad">
-            <div style="margin-bottom:20px">
-                <label style="margin-bottom:8px">Payment Method Labels</label>
-                <div id="methodEditor" style="display:flex; flex-direction:column; gap:8px; max-height:200px; overflow-y:auto; border:1px solid var(--border); padding:10px; border-radius:6px;"></div>
-                <div class="flex-row" style="margin-top:10px">
-                    <input id="newMethodId" placeholder="ID (e.g. sbi_upi)" />
-                    <input id="newMethodName" placeholder="Display Name (e.g. SBI UPI)" />
-                    <button class="btn-primary" id="addMethod">Add</button>
-                </div>
-            </div>
-
-            <div style="margin-bottom:20px">
-                <label style="margin-bottom:8px">Income Sources</label>
-                <div class="flex-row">
-                    <input id="newIncome" placeholder="New Source Name" />
-                    <button class="btn-primary" id="addIncomeBtn">Add</button>
-                </div>
-                <div id="incomeList" style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap"></div>
-            </div>
-            
-             <div style="margin-bottom:20px">
-                <label style="margin-bottom:8px">Credit Card Limit</label>
-                <div class="flex-row">
-                    <input id="ccLimitInput" type="number" placeholder="Set Limit (e.g. 13000)" />
-                    <button class="btn-primary" id="saveCCLimit">Save Limit</button>
-                </div>
-            </div>
-
-            <div style="border-top:1px solid var(--border); padding-top:15px; margin-top:15px">
-                <label style="color:var(--danger)">Danger Zone</label>
-                <div class="flex-row">
-                    <button class="btn-outline" id="importJson">Import JSON Backup (Deprecated)</button>
-                    <button class="btn-danger" id="resetBtn">Factory Reset Profile</button>
-                </div>
-            </div>
+      </div>
+      <div id="chartContainer">
+        <div class="card chart-card">
+          <div class="card-header"><div class="card-title">Cumulative Net Worth Trend (Historical Cost)</div></div>
+          <div class="card-body" style="height:100%; position:relative;">
+            <canvas id="chartNetWorth"></canvas>
+          </div>
         </div>
+        <div class="card chart-card" style="height: auto;"> 
+          <div class="card-header">
+            <div class="card-title" id="expenseDonutTitle">Expense Distribution by Category</div>
+            <button class="btn-outline hidden" id="resetExpenseDrilldown" onclick="resetExpenseDrilldown()" style="padding:4px 8px; font-size:12px;">← Back to Main</button>
+          </div>
+          <div class="card-body" style="display:flex; justify-content:center; align-items:center;">
+            <div style="height:300px; width:100%; max-width:500px; position:relative;">
+              <canvas id="chartExpenseDistribution"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-  
-  <div id="analyticsModal" class="modal">
-    <div class="modal-content">
-        <div class="action-header" style="border-radius:12px 12px 0 0">
-            <div class="card-title" style="color:white">Advanced Financial Analytics</div>
-            <button class="btn-outline" id="closeAnalytics" style="background:transparent; color:white; border-color:white; padding:4px 10px">Close</button>
-        </div>
-        
-        <div class="modal-pad" id="analyticsContent">
-            
-            <div id="analyticsFilters">
-                <div class="filter-group">
-                    <h3 style="margin-top:0; font-size:16px;">Filter Data</h3>
-                    <div>
-                        <label>Date Range</label>
-                        <select id="dateFilter" onchange="renderAdvancedCharts()">
-                            <option value="6">Last 6 Months</option>
-                            <option value="12">Last 12 Months</option>
-                            <option value="all">All Time</option>
-                        </select>
-                    </div>
-                    <div style="margin-top:10px">
-                        <label>Chart Type</label>
-                        <select id="chart1Type" onchange="renderAdvancedCharts()">
-                            <option value="line">Line Chart</option>
-                            <option value="bar">Bar Chart</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div id="chartContainer">
-                <div class="card chart-card">
-                    <div class="card-header"><div class="card-title">Cumulative Net Worth Trend (Historical Cost)</div></div>
-                    <div class="card-body" style="height:100%; position:relative;">
-                        <canvas id="chartNetWorth"></canvas>
-                    </div>
-                </div>
-                <div class="card chart-card" style="height: auto;"> 
-                    <div class="card-header">
-                        <div class="card-title" id="expenseDonutTitle">Expense Distribution by Category</div>
-                        <button class="btn-outline hidden" id="resetExpenseDrilldown" onclick="resetExpenseDrilldown()" style="padding:4px 8px; font-size:12px;">← Back to Main</button>
-                    </div>
-                    <div class="card-body" style="display:flex; justify-content:center; align-items:center;">
-                        <div style="height:300px; width:100%; max-width:500px; position:relative;">
-                            <canvas id="chartExpenseDistribution"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-  </div>
+</div>
 
 <script>
 /* ----------------------------------------------------------- LOGIC LAYER ----------------------------------------------------------- */
@@ -1137,8 +1081,8 @@ function addEntry(e){
     if (!currentProfile) return alert('Please select a profile first.');
 
     // Only get form data if not an import/edit update
-    const amount = Number(formEls.amount.value) || e.amount;
-    const type = formEls.type.value || e.type;
+    const amount = Number(formEls.amount.value) || (e ? e.amount : 0);
+    const type = formEls.type.value || (e ? e.type : '');
 
     if(!amount || amount <= 0) return alert('Please enter a valid amount');
 
@@ -1146,10 +1090,10 @@ function addEntry(e){
         id: isImportOrEdit ? e.id : uid(),
         type: type,
         amount: amount,
-        date: formEls.date.value || e.date || new Date().toISOString().slice(0,10),
-        desc: formEls.desc.value || e.desc || '',
+        date: formEls.date.value || (e ? e.date : new Date().toISOString().slice(0,10)),
+        desc: formEls.desc.value || (e ? e.desc : ''),
         category: '',
-        method: formEls.method.value || e.method || '', // Method is always required unless OB
+        method: formEls.method.value || (e ? e.method : ''), // Method is always required unless OB
         incomeSource: '',
         investmentGroup: '',
         investmentSub: '',
@@ -1165,43 +1109,46 @@ function addEntry(e){
             invGroup = e.investmentGroup;
             invSub = e.investmentSub;
             opType = invGroup === 'Cash' ? 'Cash' : 'Investment';
+            entry.method = e.method || ''; // keep original method
         } else {
             // Use form data for new entry
             opType = formEls.openingType.value;
             opSubSelection = formEls.openingSub.value;
             if (!opSubSelection) return alert('Please select an asset for the opening balance.');
+            entry.method = opSubSelection; // The sub-asset becomes the 'method' or account for tracking
         }
 
-        entry.method = opSubSelection; // The sub-asset becomes the 'method' or account for tracking
         entry.category = 'N/A'; // Opening Balance is not an expense/income category
 
         if(opType === 'Cash') {
-            if(!methodNames[opSubSelection] && !isImportOrEdit) {
-                methodNames[opSubSelection] = opSubSelection.replace(/_/g, ' ').replace(/(^\w)|(\s\w)/g, m => m.toUpperCase());
+            const key = isImportOrEdit ? entry.method : opSubSelection;
+            if(key && !methodNames[key] && !isImportOrEdit) {
+                methodNames[key] = key.replace(/_/g, ' ').replace(/(^\w)|(\s\w)/g, m => m.toUpperCase());
             }
             entry.investmentGroup = 'Cash';
-            entry.investmentSub = methodNames[opSubSelection] || opSubSelection; // Store the display name
+            entry.investmentSub = methodNames[key] || key; // Store the display name
         } else { // Investment Asset
-            entry.investmentGroup = opSubSelection; // The key (e.g., 'Stocks') acts as a grouping for tracking
-            entry.investmentSub = INVESTMENT_SUBTYPES[opSubSelection] || opSubSelection; // Store the display name
+            const invKey = isImportOrEdit ? entry.method : opSubSelection;
+            entry.investmentGroup = invKey; // The key (e.g., 'Stocks') acts as a grouping for tracking
+            entry.investmentSub = INVESTMENT_SUBTYPES[invKey] || invKey; // Store the display name
         }
     } else if (type === 'income') {
-        entry.incomeSource = formEls.incomeSource.value || e.incomeSource || '';
+        entry.incomeSource = formEls.incomeSource.value || (e ? e.incomeSource : '');
         if(!entry.incomeSource && !isImportOrEdit) return alert('Please select an Income Source.');
         entry.category = 'N/A';
     } else if(type === 'expense') {
-        entry.category = formEls.category.value || e.category;
+        entry.category = formEls.category.value || (e ? e.category : '');
         if(!entry.category && !isImportOrEdit) return alert('Please select a Category.');
 
         if(!entry.method && !isImportOrEdit) return alert('Please select a Payment Method.');
 
         if(entry.category === 'Investments') {
-            entry.investmentGroup = formEls.invGroup.value || e.investmentGroup || 'Unspecified';
-            entry.investmentSub = formEls.invSub.value || e.investmentSub || 'Unspecified';
+            entry.investmentGroup = formEls.invGroup.value || (e ? e.investmentGroup : 'Unspecified');
+            entry.investmentSub = formEls.invSub.value || (e ? e.investmentSub : 'Unspecified');
         }
         if(entry.category === 'Insurance') {
-            entry.insuranceType = formEls.insType.value || e.insuranceType || 'General';
-            entry.insuranceFor = formEls.insFor.value || e.insFor || 'Self';
+            entry.insuranceType = formEls.insType.value || (e ? e.insuranceType : 'General');
+            entry.insuranceFor = formEls.insFor.value || (e ? e.insuranceFor : 'Self');
         }
     }
 
@@ -1777,7 +1724,8 @@ document.getElementById('searchTx').addEventListener('input', (e) => {
 
 document.addEventListener('DOMContentLoaded', () => {
     const today = new Date().toISOString().slice(0,10);
-    document.getElementById('date').value = today;
+    const dateEl = document.getElementById('date');
+    if (dateEl) dateEl.value = today;
     
     const lastProfile = localStorage.getItem('mm_last_profile');
     if (lastProfile) {
@@ -1791,7 +1739,11 @@ document.addEventListener('DOMContentLoaded', () => {
     dragElement(document.getElementById("calculator"));
 });
 
-document.getElementById('profileForm').addEventListener('submit', (e) => {
+document.getElementById('profileModal').addEventListener('submit', (e) => {
+    // safeguard if any nested form is used differently
+});
+
+document.getElementById('profileForm')?.addEventListener('submit', (e) => {
     e.preventDefault();
     const profileName = document.getElementById('profileInput').value.trim();
     if (!profileName) return;
@@ -1967,8 +1919,9 @@ function dragElement(elmnt) {
   function dragMouseDown(e) {
     e = e || window.event;
     // get mouse cursor position at startup:
-    pos3 = e.clientX || e.touches[0].clientX;
-    pos4 = e.clientY || e.touches[0].clientY;
+    pos3 = e.clientX || (e.touches && e.touches[0].clientX);
+    pos4 = e.clientY || (e.touches && e.touches[0].clientY);
+    if (pos3 == null || pos4 == null) return;
     document.onmouseup = closeDragElement;
     document.onmousemove = elementDrag;
     document.ontouchend = closeDragElement;
@@ -1978,8 +1931,9 @@ function dragElement(elmnt) {
   function elementDrag(e) {
     e = e || window.event;
     // calculate new cursor position:
-    let clientX = e.clientX || e.touches[0].clientX;
-    let clientY = e.clientY || e.touches[0].clientY;
+    let clientX = e.clientX || (e.touches && e.touches[0].clientX);
+    let clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    if (clientX == null || clientY == null) return;
     
     pos1 = pos3 - clientX;
     pos2 = pos4 - clientY;
@@ -2454,6 +2408,14 @@ function resetExpenseDrilldown() {
         renderExpenseDistributionChart(filteredData);
     }
 }
+
+// Modal close handlers
+document.getElementById('closeSettings')?.addEventListener('click', () => {
+    document.getElementById('settingsModal').classList.remove('open');
+});
+document.getElementById('closeAnalytics')?.addEventListener('click', () => {
+    document.getElementById('analyticsModal').classList.remove('open');
+});
 </script>
 
 </body>
