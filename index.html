@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MoneyMirror — v5.0.2 (Analytics relocation + KPI breakdown charts)</title>
+  <title>MoneyMirror — v5.0.2 Copilot (Mobile fixes + KPI sub-filters + Checklist filters)</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@1,400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -122,6 +122,7 @@
     .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
     .nav-item.active { background: rgba(56, 189, 248, 0.1); color: var(--sidebar-active); }
     .sidebar-footer { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
+
     .sys-stat { font-size: 11px; color: var(--sidebar-text); display: flex; justify-content: space-between; margin-bottom: 4px; }
     .sys-val { color: white; font-weight: 600; }
 
@@ -251,12 +252,14 @@
     .calc-equals:hover { background: var(--primary-dark) !important; }
     #calc-toggle { margin-left: 10px; padding: 8px 12px; background: var(--primary); color: white; border-radius: 8px; cursor: pointer; display: flex; align-items: center; }
 
+    /* Desktop */
     @media(max-width: 1200px) {
       .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
       .col-span-1 { grid-column: span 1; }
       .col-span-2, .col-span-3, .col-span-4 { grid-column: span 2; }
     }
 
+    /* Mobile fixes: prevent truncation/squeezing */
     @media(max-width: 768px) {
       body { flex-direction: column; height: auto; overflow: auto; }
       aside { width: 100%; padding: 15px; flex-direction: row; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 500; }
@@ -290,7 +293,14 @@
       }
       .action-body { gap: 12px; }
 
+      /* Charts stack vertically with adequate height */
+      .kpi-breakdown-grid { grid-template-columns: 1fr !important; }
+      .chart-wrapper { height: 280px !important; min-height: 260px !important; }
       #calculator { top: 70px; left: 50%; transform: translateX(-50%); width: 90%; height: 480px; bottom: auto; right: auto; }
+      /* Wallet donut full width; legend below to avoid squeeze */
+      .wallet-layout { flex-direction: column !important; }
+      .wallet-chart { width: 100% !important; max-width: 100% !important; height: 280px !important; }
+      #walletLegend { order: 2; margin-top: 10px; }
     }
   </style>
 </head>
@@ -317,12 +327,12 @@
     </div>
 
     <nav>
-      - <div class="nav-group">
+      <div class="nav-group">
         <div class="nav-label">Main menu</div>
         <div class="nav-item active">Dashboard</div>
         <div class="nav-item" id="navAnalytics">Advanced analytics</div>
       </div>
-      - <div class="nav-group">
+      <div class="nav-group">
         <div class="nav-label">Configuration</div>
         <div class="nav-item" id="navSettings">Settings & Backup</div>
         <div class="nav-item"><button id="logoutBtn" class="btn-outline" style="width:100%; display:none;">Logout</button></div>
@@ -335,7 +345,7 @@
       <span>Current profile</span>
       <span class="sys-val" id="profileNameDisplay">--</span>
     </div>
-    <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v5.0.2 • Analytics relocation + KPI charts</div>
+    <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v5.0.2 • Mobile fixes + KPI sub-filters + Checklist filters</div>
   </div>
 </aside>
 
@@ -370,7 +380,6 @@
     <div class="card kpi-card col-span-1" id="ccCard" style="border-color:var(--warning); background:#fffbeb">
       <div class="card-title" id="ccTitle" style="color:var(--warning)">Credit card due</div>
       <div class="kpi-value" id="kpiCCDue">₹0</div>
-      <!-- Black, bold wording for next payment and limit -->
       <div class="kpi-sub" style="color:#000; font-weight:700; margin-top: 6px; position:relative;">
         <span id="ccPaymentDate">Next Payment: 10th of December</span>
         <span style="font-weight:700; margin-left:10px;">Limit: <span id="ccLimitDisplay">₹2,00,000</span></span>
@@ -387,36 +396,60 @@
       <div class="account-list" id="netLiquidityBreakdown"></div>
     </div>
 
-    <!-- KPI: Total Investment Value with breakdown charts -->
+    <!-- KPI: Total Investment Value with breakdown charts and sub-filters -->
     <div class="card kpi-card col-span-4" style="background:#e0f2fe; border-color:#075985;">
       <div class="card-header" style="padding:16px 20px 0 20px;">
         <div class="card-title" style="color:#075985">Total investment value (historical cost)</div>
-        <button id="toggleInvBreakdown" class="btn-outline" style="padding:6px 10px; font-size:12px;">View breakdown</button>
+        <div class="flex-row" style="gap:8px;">
+          <button id="toggleInvBreakdown" class="btn-outline" style="padding:6px 10px; font-size:12px;">View breakdown</button>
+        </div>
       </div>
       <div class="card-body" style="padding-top:6px;">
         <div class="kpi-value" id="kpiInvest">₹0</div>
         <div class="kpi-sub" id="momInvest" style="color:#075985"></div>
 
-        <!-- Charts + concise list (Top 4 buckets only) -->
+        <!-- Breakdown panel -->
         <div id="invBreakdownPanel" class="hidden" style="margin-top:12px; border-top:1px solid var(--border); padding-top:12px;">
-          <div style="display:grid; grid-template-columns: 1.2fr 0.8fr; gap:16px; align-items:stretch;">
+          <!-- Filters -->
+          <div class="card" style="border-color:#93c5fd; margin-bottom:12px;">
+            <div class="card-header">
+              <div class="card-title">Filters</div>
+              <div class="flex-row" style="gap:10px; flex-wrap:wrap;">
+                <div style="min-width:220px;">
+                  <label style="margin-bottom:6px;">Major bucket</label>
+                  <select id="invBucketFilter"></select>
+                </div>
+                <div style="min-width:220px;">
+                  <label style="margin-bottom:6px;">View mode</label>
+                  <select id="invViewMode">
+                    <option value="top4">Top 4 buckets</option>
+                    <option value="subcats">Subcategories of selected bucket</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts -->
+          <div class="kpi-breakdown-grid" style="display:grid; grid-template-columns: 1.2fr 0.8fr; gap:16px; align-items:stretch;">
             <div class="card" style="border-color:#93c5fd;">
-              <div class="card-header"><div class="card-title">Investment by major bucket</div></div>
-              <div class="card-body" style="height:260px;">
+              <div class="card-header"><div class="card-title" id="invBarTitle">Investment by major bucket</div></div>
+              <div class="card-body chart-wrapper" style="height:320px;">
                 <canvas id="invBreakdownBar"></canvas>
               </div>
             </div>
             <div class="card" style="border-color:#93c5fd;">
-              <div class="card-header"><div class="card-title">Share by bucket</div></div>
-              <div class="card-body" style="height:260px;">
+              <div class="card-header"><div class="card-title" id="invPieTitle">Share by bucket</div></div>
+              <div class="card-body chart-wrapper" style="height:320px;">
                 <canvas id="invBreakdownPie"></canvas>
               </div>
             </div>
           </div>
 
+          <!-- Quick subcategory dropdowns beside top 4 buckets -->
           <div style="margin-top:12px;">
-            <div class="card-title" style="font-size:13px; color:#075985;">Top 4 buckets</div>
-            <div id="invBreakdownList" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:8px;"></div>
+            <div class="card-title" style="font-size:13px; color:#075985;">Bucket subcategories quick view</div>
+            <div id="invQuickSubs" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:10px;"></div>
           </div>
         </div>
       </div>
@@ -444,24 +477,32 @@
     <div class="card col-span-2">
       <div class="card-header" style="gap:12px;">
         <div class="card-title">Wallet breakdown and expense analysis</div>
-        <div class="flex-row" style="gap:8px;">
+        <div class="flex-row" style="gap:12px; flex-wrap:wrap;">
           <select id="walletMode" onchange="renderWalletUnified()">
             <option value="wallet">Wallet breakdown (Liquid & Savings)</option>
             <option value="expenses">Expense distribution (Top 10)</option>
           </select>
-          <select id="walletCategoryFilter" class="hidden" onchange="renderWalletUnified()">
-            <option value="">All categories</option>
-          </select>
+          <!-- Checklist filter for expenses -->
+          <div id="walletChecklistContainer" class="hidden" style="position:relative;">
+            <button class="btn-outline" id="toggleChecklist" style="padding:6px 10px; font-size:12px;">Filter categories</button>
+            <div id="walletCategoryChecklist" class="hidden" style="position:absolute; top:34px; left:0; background:#fff; border:1px solid var(--border); border-radius:8px; padding:10px; width:240px; box-shadow:0 10px 20px rgba(0,0,0,0.15); z-index:10;">
+              <!-- checkboxes injected by JS -->
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                <button class="btn-outline" id="applyChecklist" style="padding:6px 10px; font-size:12px;">Apply</button>
+                <button class="btn-outline" id="clearChecklist" style="padding:6px 10px; font-size:12px;">Clear</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="card-body" style="display:flex; flex-direction:row; align-items:center; gap:20px; flex:1">
-        <div style="height:280px; width:50%; max-width: 320px; position:relative;">
+      <div class="card-body wallet-layout" style="display:flex; flex-direction:row; align-items:center; gap:20px; flex:1">
+        <div class="wallet-chart" style="height:280px; width:50%; max-width: 340px; position:relative;">
           <canvas id="donutChart"></canvas>
         </div>
         <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
           <div id="walletLegend" style="font-size:12px; color:var(--text-muted);"></div>
           <div id="walletInfo" style="font-size:12px; color:var(--text-muted);"></div>
-          <button id="resetExpenseDrilldown" class="btn-outline hidden" style="padding:6px; font-size:12px" onclick="resetExpenseDrilldown()">View all categories</button>
+          <button id="resetExpenseDrilldown" class="btn-outline hidden" style="padding:6px; font-size:12px" onclick="resetExpenseDrilldown()">Clear filters</button>
         </div>
       </div>
     </div>
@@ -632,7 +673,7 @@
   </div>
 </div>
 
-<!-- Analytics modal: charts live only here -->
+<!-- Analytics modal -->
 <div id="analyticsModal" class="modal">
   <div class="modal-content">
     <div class="action-header" style="border-radius:12px 12px 0 0">
@@ -739,7 +780,7 @@
 
 <script>
     // --- UTILS AND CONSTANTS ---
-    const DEFAULT_CC_LIMIT = 200000; // Updated default to ₹2,00,000
+    const DEFAULT_CC_LIMIT = 200000;
     const CANONICAL_METHODS = {
       'cash': 'Cash',
       'salary_acct': 'Bank Account (Salary)',
@@ -748,10 +789,8 @@
       'digital_wallet': 'Digital Wallet'
     };
 
-    // Main categories incl. Investments
     const BASE_CATS = ['Food', 'Rent', 'Utilities', 'Shopping', 'Entertainment', 'Travel', 'Health', 'Investments', 'Insurance', 'Credit Card Payment', 'Misc'];
 
-    // Investment structure
     const INVESTMENT_STRUCTURE = {
         'Equity (Stocks)': {
             'India - Large Cap/Mid Cap/Small Cap': 'Equity (Stocks)',
@@ -824,7 +863,6 @@
         }
     };
 
-    // Major buckets mapping for KPI breakdown (rollup)
     const MAJOR_BUCKETS = {
       'Equity (Stocks)': 'Equity',
       'Mutual Funds': 'Mutual Funds',
@@ -881,7 +919,6 @@
     let invBreakdownBarChart = null;
     let invBreakdownPieChart = null;
 
-    // Header date, calculator draggable, Mobile Menu logic
     document.addEventListener('DOMContentLoaded', () => {
       const d = new Date();
       document.getElementById('currentDate').innerText = d.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -942,13 +979,12 @@
           }
       });
 
-      // Calculator buttons
       document.querySelectorAll('#calc-buttons button').forEach(button => {
         button.addEventListener('click', handleCalculatorInput);
       });
 
-      // Wallet filters
       setupWalletFilters();
+      setupInvestmentFilters();
     });
 
     // Persistence
@@ -1020,7 +1056,7 @@
       renderAll();
     }
 
-    // --- RENDER & SETUP ---
+    // Render pipeline
     function renderAll() {
       data.sort((a,b) => new Date(b.date) - new Date(a.date));
       setupDropdowns();
@@ -1028,28 +1064,29 @@
       renderCharts();
       renderRecentEntries();
       renderSettings();
+
+      // keep analytics modal live
+      if (document.getElementById('analyticsModal').classList.contains('open')) {
+        renderAdvancedCharts();
+        renderInvestmentAnalytics('modal');
+      }
     }
 
     function setupDropdowns() {
-      // Methods
       formEls.method.innerHTML = Object.keys(methodNames)
         .filter(key => key !== 'credit_card')
         .map(key => `<option value="${key}">${methodNames[key]}</option>`).join('');
 
-      // Income sources
       formEls.incomeSource.innerHTML = '<option value="">Select Source</option>' + incomeSources.map(s => `<option value="${s}">${s}</option>`).join('');
 
-      // Categories
       formEls.category.innerHTML = BASE_CATS.map(c => `<option value="${c}">${c}</option>`).join('');
 
-      // Listeners
       formEls.type.onchange = updateTransactionFormFields;
       formEls.category.onchange = updateTransactionFormFields;
       formEls.openingType.onchange = updateTransactionFormFields;
       formEls.invGroup.onchange = () => updateInvestmentSubDropdown(formEls.invGroup, formEls.invSub);
       formEls.openingGroup.onchange = () => updateInvestmentSubDropdown(formEls.openingGroup, formEls.openingSub);
 
-      // Populate groups
       populateInvestmentGroupDropdowns();
       updateTransactionFormFields();
     }
@@ -1135,7 +1172,7 @@
         }
     }
 
-    // --- CRUD ---
+    // CRUD
     function uid() { return 'id' + Date.now() + Math.random().toString(16).slice(2); }
     function requireSignedIn() { if (!currentProfile) { alert('Please sign in to proceed.'); return false; } return true; }
 
@@ -1307,7 +1344,7 @@
       updateTransactionFormFields();
     }
 
-    // --- KPIs ---
+    // KPIs
     function fmt(n) { return (n || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
     function pct(n) { return (n || 0).toFixed(1) + '%'; }
     function getNextPaymentDate() {
@@ -1351,7 +1388,6 @@
       momExpEl.className = momExp <= 0 ? 'trend-up' : 'trend-down';
       momExpEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="${momExp <= 0 ? '18 15 12 9 6 15' : '18 9 12 15 6 9'}"></polyline></svg> ${pct(Math.abs(momExp))} vs Last Month`;
 
-      // Credit card logic
       const ccOpen = sum(data.filter(d => d.type === 'opening_balance' && d.method === 'credit_card'));
       const ccExp = sum(data.filter(d => d.type === 'expense' && d.method === 'credit_card'));
       const ccPay = sum(data.filter(d => d.type === 'expense' && d.category === 'Credit Card Payment'));
@@ -1371,19 +1407,22 @@
       document.getElementById('ccLimitDisplay').innerText = fmt(ccLimit);
       document.getElementById('ccPaymentDate').innerText = `Next Payment: 10th of ${getNextPaymentDate()}`;
 
-      // Net Liquidity Breakdown (accounts)
+      renderInvestmentKPICharts(allInvestments);
+      renderNetLiquidity();
+    }
+
+    function renderNetLiquidity() {
       const breakdownContainer = document.getElementById('netLiquidityBreakdown');
       let breakdownHtml = '';
       const liquidMethods = data.filter(d => (d.type === 'opening_balance' && d.investmentGroup === 'Cash') || (d.type === 'income') || (d.type === 'expense' && d.category !== 'Investments'));
-
       const methodBalances = liquidMethods.reduce((acc, curr) => {
         const key = curr.method || 'cash';
+        if (key === 'credit_card_payment') return acc;
         const isExpense = curr.type === 'expense' && curr.category !== 'Credit Card Payment';
         const amount = isExpense ? -Number(curr.amount) : Number(curr.amount);
         acc[key] = (acc[key] || 0) + amount;
         return acc;
       }, {});
-
       const allMethodKeys = new Set([...Object.keys(methodNames), ...Object.keys(methodBalances)].filter(key => key !== 'credit_card_payment'));
       allMethodKeys.forEach(key => {
         if(key === 'credit_card' || !key) return;
@@ -1394,9 +1433,20 @@
         }
       });
       breakdownContainer.innerHTML = breakdownHtml;
+    }
 
-      // Investment KPI breakdown charts + top 4
-      renderInvestmentKPICharts(allInvestments);
+    // Investment KPI filters and charts
+    function setupInvestmentFilters() {
+      const bucketSelect = document.getElementById('invBucketFilter');
+      const uniqueBuckets = Array.from(new Set(Object.values(MAJOR_BUCKETS)));
+      bucketSelect.innerHTML = '<option value="">Select bucket</option>' + uniqueBuckets.map(b => `<option value="${b}">${b}</option>`).join('');
+      document.getElementById('invViewMode').addEventListener('change', () => renderInvestmentKPICharts());
+      bucketSelect.addEventListener('change', () => renderInvestmentKPICharts());
+      const toggleBtn = document.getElementById('toggleInvBreakdown');
+      const panel = document.getElementById('invBreakdownPanel');
+      if (toggleBtn && panel) {
+        toggleBtn.onclick = () => { panel.classList.toggle('hidden'); };
+      }
     }
 
     function rollupMajorBuckets(entries) {
@@ -1411,20 +1461,52 @@
       return items;
     }
 
-    function renderInvestmentKPICharts(investmentEntries) {
-      const items = rollupMajorBuckets(investmentEntries);
-      const top4 = items.slice(0, 4);
-      const labels = top4.map(i => i.bucket);
-      const values = top4.map(i => i.amount);
-      const colors = getColorPalette(labels.length);
+    function rollupSubcategories(entries, selectedBucket) {
+      const groupsInBucket = Object.keys(MAJOR_BUCKETS).filter(g => MAJOR_BUCKETS[g] === selectedBucket);
+      const filtered = entries.filter(e => groupsInBucket.includes(e.investmentGroup));
+      const bySub = filtered.reduce((acc, curr) => {
+        const sub = curr.investmentSub || 'General';
+        acc[sub] = (acc[sub] || 0) + Number(curr.amount);
+        return acc;
+      }, {});
+      const items = Object.entries(bySub).map(([sub, amount]) => ({ sub, amount }));
+      items.sort((a,b) => b.amount - a.amount);
+      return items;
+    }
 
-      // Bar chart
+    function renderInvestmentKPICharts(investmentEntriesParam = null) {
+      const investmentEntries = investmentEntriesParam || data.filter(d => (d.type === 'opening_balance' && d.investmentGroup && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments'));
+      const viewMode = document.getElementById('invViewMode')?.value || 'top4';
+      const selectedBucket = document.getElementById('invBucketFilter')?.value || '';
+
+      let labels = [];
+      let values = [];
+      let colors;
+
+      if (viewMode === 'subcats' && selectedBucket) {
+        const items = rollupSubcategories(investmentEntries, selectedBucket);
+        labels = items.map(i => i.sub);
+        values = items.map(i => i.amount);
+        colors = getColorPalette(labels.length);
+        document.getElementById('invBarTitle').innerText = `Subcategory amounts (${selectedBucket})`;
+        document.getElementById('invPieTitle').innerText = `Share by subcategory (${selectedBucket})`;
+      } else {
+        const items = rollupMajorBuckets(investmentEntries);
+        const top4 = items.slice(0, 4);
+        labels = top4.map(i => i.bucket);
+        values = top4.map(i => i.amount);
+        colors = getColorPalette(labels.length);
+        document.getElementById('invBarTitle').innerText = 'Investment by major bucket (Top 4)';
+        document.getElementById('invPieTitle').innerText = 'Share by bucket (Top 4)';
+      }
+
       if (invBreakdownBarChart) invBreakdownBarChart.destroy();
-      const barCtx = document.getElementById('invBreakdownBar');
-      if (barCtx) {
-        invBreakdownBarChart = new Chart(barCtx.getContext('2d'), {
+      const barCtxEl = document.getElementById('invBreakdownBar');
+      if (barCtxEl) {
+        const barCtx = barCtxEl.getContext('2d');
+        invBreakdownBarChart = new Chart(barCtx, {
           type: 'bar',
-          data: { labels, datasets: [{ label: 'Historical cost (Top 4)', data: values, backgroundColor: colors }] },
+          data: { labels, datasets: [{ label: 'Historical cost', data: values, backgroundColor: colors }] },
           options: {
             maintainAspectRatio: false,
             responsive: true,
@@ -1434,11 +1516,11 @@
         });
       }
 
-      // Pie chart
       if (invBreakdownPieChart) invBreakdownPieChart.destroy();
-      const pieCtx = document.getElementById('invBreakdownPie');
-      if (pieCtx) {
-        invBreakdownPieChart = new Chart(pieCtx.getContext('2d'), {
+      const pieCtxEl = document.getElementById('invBreakdownPie');
+      if (pieCtxEl) {
+        const pieCtx = pieCtxEl.getContext('2d');
+        invBreakdownPieChart = new Chart(pieCtx, {
           type: 'doughnut',
           data: { labels, datasets: [{ data: values, backgroundColor: colors, hoverOffset: 4 }] },
           options: {
@@ -1455,31 +1537,59 @@
         });
       }
 
-      // List view
-      const listContainer = document.getElementById('invBreakdownList');
-      if (listContainer) {
-        listContainer.innerHTML = top4.map((i, idx) => `
-          <div style="display:flex; justify-content:space-between; padding:6px 8px; border:1px solid var(--border); border-radius:8px;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span style="width:10px; height:10px; border-radius:50%; background:${colors[idx]}"></span>
-              <div style="font-weight:600">${i.bucket}</div>
-            </div>
-            <div style="font-weight:700">${fmt(i.amount)}</div>
-          </div>
-        `).join('') || '<div style="color:var(--text-muted)">No investment entries.</div>';
-      }
-
-      // Toggle panel visibility
-      const toggleBtn = document.getElementById('toggleInvBreakdown');
-      const panel = document.getElementById('invBreakdownPanel');
-      if (toggleBtn && panel) {
-        toggleBtn.onclick = () => {
-          panel.classList.toggle('hidden');
-        };
-      }
+      renderQuickSubDropdowns(investmentEntries);
     }
 
-    // --- TABLES ---
+    function renderQuickSubDropdowns(investmentEntries) {
+      const container = document.getElementById('invQuickSubs');
+      if (!container) return;
+      const topBuckets = rollupMajorBuckets(investmentEntries).slice(0,4).map(i => i.bucket);
+      const html = topBuckets.map(bucket => {
+        const groupsInBucket = Object.keys(MAJOR_BUCKETS).filter(g => MAJOR_BUCKETS[g] === bucket);
+        const subs = new Set();
+        groupsInBucket.forEach(g => {
+          Object.keys(INVESTMENT_STRUCTURE[g] || {}).forEach(sub => subs.add(sub));
+        });
+        const options = Array.from(subs).map(s => `<option value="${s}">${s}</option>`).join('');
+        const selectId = `quickSub_${bucket.replace(/\s+/g,'_').toLowerCase()}`;
+        const valueId = `quickVal_${bucket.replace(/\s+/g,'_').toLowerCase()}`;
+        return `
+          <div style="border:1px solid var(--border); border-radius:8px; padding:10px;">
+            <div style="font-weight:700; margin-bottom:6px;">${bucket}</div>
+            <div class="flex-row" style="gap:8px;">
+              <select id="${selectId}" style="flex:1">
+                <option value="">Select subcategory</option>
+                ${options}
+              </select>
+              <div id="${valueId}" style="min-width:140px; text-align:right; font-weight:700;">—</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      container.innerHTML = html;
+
+      topBuckets.forEach(bucket => {
+        const selectId = `quickSub_${bucket.replace(/\s+/g,'_').toLowerCase()}`;
+        const valueId = `quickVal_${bucket.replace(/\s+/g,'_').toLowerCase()}`;
+        const sel = document.getElementById(selectId);
+        const valEl = document.getElementById(valueId);
+        if (sel && valEl) {
+          sel.addEventListener('change', () => {
+            const sub = sel.value;
+            if (!sub) { valEl.innerText = '—'; return; }
+            const groupsInBucket = Object.keys(MAJOR_BUCKETS).filter(g => MAJOR_BUCKETS[g] === bucket);
+            const sumAmt = data.filter(d =>
+              ((d.type === 'opening_balance' && d.investmentGroup && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments')) &&
+              groupsInBucket.includes(d.investmentGroup) &&
+              d.investmentSub === sub
+            ).reduce((acc,curr)=>acc+Number(curr.amount),0);
+            valEl.innerText = fmt(sumAmt);
+          });
+        }
+      });
+    }
+
+    // Tables
     function getBadge(entry) {
       let type = entry.type;
       let category = entry.category;
@@ -1539,7 +1649,7 @@
       }).join('');
     }
 
-    // --- CHART FUNCTIONS ---
+    // Charts
     function getColorPalette(count) {
       const colors = ['#3b82f6', '#10b981', '#f97316', '#ef4444', '#6b21a8', '#0ea5e9', '#facc15', '#a855f7', '#14b8a6', '#22c55e', '#f43f5e', '#eab308', '#000000'];
       return Array.from({length: count}, (_, i) => colors[i % colors.length]);
@@ -1588,9 +1698,8 @@
     function renderCharts() {
       const range = document.getElementById('mainChartFilter').value;
       const { labels, income, expense, investment } = prepareMonthlyData(range === 'all' ? 'all' : Number(range));
-      const netIncomeSeries = income.map((v, i) => v - expense[i]); // Net income
+      const netIncomeSeries = income.map((v, i) => v - expense[i]);
 
-      // Mixed Chart: Bars + black line
       if (chartMain) chartMain.destroy();
       const ctxMain = document.getElementById('mainChart').getContext('2d');
       chartMain = new Chart(ctxMain, {
@@ -1635,29 +1744,63 @@
       renderWalletUnified();
     }
 
-    // --- Wallet unified (wallet + expenses) ---
+    // Wallet unified with checklist filters
+    let expenseChecklistSelection = new Set();
+
     function setupWalletFilters() {
-      const catSelect = document.getElementById('walletCategoryFilter');
-      catSelect.innerHTML = '<option value="">All categories</option>' + BASE_CATS
-        .filter(c => !['Investments','Credit Card Payment'].includes(c))
-        .map(c => `<option value="${c}">${c}</option>`).join('');
+      const toggle = document.getElementById('toggleChecklist');
+      const pop = document.getElementById('walletCategoryChecklist');
+      const container = document.getElementById('walletChecklistContainer');
+
+      const cats = BASE_CATS.filter(c => !['Investments','Credit Card Payment'].includes(c));
+      const boxesHtml = cats.map(c => `
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; margin:4px 0;">
+          <input type="checkbox" class="wallet-cat" value="${c}" />
+          ${c}
+        </label>
+      `).join('');
+      pop.insertAdjacentHTML('afterbegin', boxesHtml);
+
+      toggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        pop.classList.toggle('hidden');
+      });
+      document.addEventListener('click', () => { pop.classList.add('hidden'); });
+
+      document.getElementById('applyChecklist').addEventListener('click', () => {
+        const checked = Array.from(document.querySelectorAll('.wallet-cat')).filter(cb => cb.checked).map(cb => cb.value);
+        expenseChecklistSelection = new Set(checked);
+        pop.classList.add('hidden');
+        renderWalletUnified();
+      });
+      document.getElementById('clearChecklist').addEventListener('click', () => {
+        document.querySelectorAll('.wallet-cat').forEach(cb => cb.checked = false);
+        expenseChecklistSelection.clear();
+        pop.classList.add('hidden');
+        renderWalletUnified();
+      });
+
+      document.getElementById('walletMode').addEventListener('change', () => {
+        const mode = document.getElementById('walletMode').value;
+        if (mode === 'expenses') container.classList.remove('hidden');
+        else container.classList.add('hidden');
+        renderWalletUnified();
+      });
     }
 
     function renderWalletUnified() {
       const mode = document.getElementById('walletMode').value;
-      const cat = document.getElementById('walletCategoryFilter').value;
       const legendEl = document.getElementById('walletLegend');
       const infoEl = document.getElementById('walletInfo');
       const colors = getColorPalette(12);
 
       if (mode === 'wallet') {
-        document.getElementById('walletCategoryFilter').classList.add('hidden');
         document.getElementById('resetExpenseDrilldown').classList.add('hidden');
         const liquidMethods = data.filter(d => (d.type === 'opening_balance' && d.investmentGroup === 'Cash') || (d.type === 'income') || (d.type === 'expense' && d.category !== 'Investments'));
         const methodBalances = liquidMethods.reduce((acc, curr) => {
           const key = curr.method || 'cash';
           if (key === 'credit_card_payment') return acc;
-          const isExpense = curr.type === 'expense' && curr.category !== 'Credit Card Payment';
+          const isExpense = curr.type === 'expense' && d.category !== 'Credit Card Payment';
           const amount = isExpense ? -Number(curr.amount) : Number(curr.amount);
           acc[key] = (acc[key] || 0) + amount;
           return acc;
@@ -1709,12 +1852,16 @@
         infoEl.innerText = 'Liquid balances by account (positive only).';
 
       } else {
-        document.getElementById('walletCategoryFilter').classList.remove('hidden');
-        const filteredData = data.filter(d => d.type === 'expense' && d.category !== 'Investments' && d.category !== 'Credit Card Payment' && (cat ? d.category === cat : true));
-        const title = cat ? `${cat} breakdown (Top 10 by description)` : 'All expenses (Top 10 categories)';
+        let filteredData = data.filter(d => d.type === 'expense' && d.category !== 'Investments' && d.category !== 'Credit Card Payment');
+        if (expenseChecklistSelection.size > 0) {
+          filteredData = filteredData.filter(d => expenseChecklistSelection.has(d.category));
+          document.getElementById('resetExpenseDrilldown').classList.remove('hidden');
+        } else {
+          document.getElementById('resetExpenseDrilldown').classList.add('hidden');
+        }
 
         const expenseMap = filteredData.reduce((acc, curr) => {
-          const key = cat ? curr.desc.substring(0, 30) : curr.category;
+          const key = curr.category;
           acc[key] = (acc[key] || 0) + Number(curr.amount);
           return acc;
         }, {});
@@ -1746,15 +1893,6 @@
                   }
                 }
               }
-            },
-            onClick: (e, elements) => {
-              if (elements.length > 0 && !cat) {
-                const index = elements[0].index;
-                const clickedCat = donutChart.data.labels[index];
-                document.getElementById('walletCategoryFilter').value = clickedCat;
-                renderWalletUnified();
-                document.getElementById('resetExpenseDrilldown').classList.remove('hidden');
-              }
             }
           }
         });
@@ -1768,24 +1906,24 @@
             <span style="font-weight:600; color:var(--text-main);">${fmt(amounts[i])}</span>
           </div>
         `).join('') || '<div style="text-align:center; padding-top:20px;">No expenses found in range.</div>';
-        infoEl.innerText = title;
+        infoEl.innerText = expenseChecklistSelection.size > 0 ? 'Filtered expenses (Top 10 categories)' : 'All expenses (Top 10 categories)';
       }
     }
 
     function resetExpenseDrilldown() {
-      document.getElementById('walletCategoryFilter').value = '';
-      document.getElementById('resetExpenseDrilldown').classList.add('hidden');
+      document.querySelectorAll('.wallet-cat').forEach(cb => cb.checked = false);
+      expenseChecklistSelection.clear();
       renderWalletUnified();
     }
 
-    // --- Advanced Analytics (Modal only) ---
+    // Advanced Analytics (Modal only)
     function renderAdvancedCharts() {
         const range = document.getElementById('dateFilter').value;
         const chartType = document.getElementById('chartType').value;
         const { labels, income, expense } = prepareMonthlyData(range === 'all' ? 'all' : Number(range));
 
-        const sum = (arr) => arr.reduce((a,b)=>a+Number(b.amount||0),0);
-        let initialNetWorth = sum(data.filter(d => d.type === 'opening_balance'));
+        const sumVals = (arr) => arr.reduce((a,b)=>a+Number(b.amount||0),0);
+        let initialNetWorth = sumVals(data.filter(d => d.type === 'opening_balance'));
         let currentNetWorth = initialNetWorth;
 
         const netWorthData = labels.map((label, idx) => {
@@ -1837,7 +1975,6 @@
     }
 
     function renderInvestmentAnalytics(scope = 'modal') {
-      // Breakdown by investment group
       const invs = data.filter(d => (d.type === 'opening_balance' && d.investmentGroup && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments') );
       const byType = invs.reduce((acc,curr) => {
         const key = curr.investmentGroup || 'Uncategorized';
@@ -1847,7 +1984,6 @@
       const labels = Object.keys(byType).sort((a,b) => byType[b]-byType[a]);
       const values = labels.map(l => byType[l]);
 
-      // Growth (cumulative invested over time)
       const points = invs.map(i => ({ date: new Date(i.date), amount: Number(i.amount) })).sort((a,b)=>a.date-b.date);
       let cumulative = 0;
       const growthLabels = points.map(p => p.date.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' }));
@@ -1855,7 +1991,6 @@
 
       const colors = getColorPalette(labels.length);
 
-      // Render only in modal
       const ctxTypes = document.getElementById('chartInvTypesModal')?.getContext('2d');
       if (ctxTypes) {
         if (chartInvTypesModal) chartInvTypesModal.destroy();
@@ -1887,7 +2022,7 @@
       }
     }
 
-    // --- SETTINGS ---
+    // Settings
     function renderSettings() {
       const methodContainer = document.getElementById('methodEditor');
       methodContainer.innerHTML = Object.entries(methodNames).map(([key, name]) => `
@@ -1977,7 +2112,7 @@
         }
     }
 
-    // --- IMPORT/EXPORT ---
+    // Import/Export
     function convertToCSV(data) {
         const headers = ['id', 'type', 'amount', 'date', 'desc', 'category', 'method', 'income_source', 'investment_group', 'investment_sub', 'insurance_type', 'insurance_for'];
         const rows = data.map(obj => headers.map(header => {
@@ -2082,7 +2217,7 @@
         return dataRows;
     }
 
-    // --- SAMPLE DATA ---
+    // Sample data
     function loadSampleData() {
         if (!confirm("This will overwrite all existing data for your current profile. Continue?")) return;
 
@@ -2114,7 +2249,7 @@
         data.push({id:uid(), type:'opening_balance', amount: 15000, date: dateInLastMonths([10,12]), desc:'Existing Gold ETF Holding', investmentGroup:'ETFs', investmentSub:'Gold ETF', method:'', category:'N/A'});
         data.push({id:uid(), type:'opening_balance', amount: 100000, date: dateInLastMonths([12,12]), desc:'Initial Fixed Deposit', investmentGroup:'Fixed Income / Savings Schemes', investmentSub:'FD (Fixed Deposit)', method:'', category:'N/A'});
 
-        // Income
+        // Income (monthly)
         const monthsIncome = 6;
         for (let i=0;i<monthsIncome;i++){
           data.push({id:uid(), type:'income', amount: randBetween(90000, 180000), incomeSource:'Salary (Primary)', method:'salary_acct', date: dateInLastMonths([i+1, i+1]), desc:'Monthly Salary Deposit'});
@@ -2126,8 +2261,8 @@
         const expenseCount = 50;
         for (let i=0;i<expenseCount;i++){
           const cat = pick(expenseCats);
-          const amtRanges = {'Rent':[18000, 40000],'Food':[800, 5000],'Utilities':[800, 4000],'Shopping':[1000, 12000],'Entertainment':[500, 4000],'Travel':[2000, 25000],'Health':[800, 6000],'Insurance':[1500, 6000]};
-          const amount = randBetween(amtRanges[cat][0], amtRanges[cat][1]);
+          const ranges = {'Rent':[18000, 40000],'Food':[800, 5000],'Utilities':[800, 4000],'Shopping':[1000, 12000],'Entertainment':[500, 4000],'Travel':[2000, 25000],'Health':[800, 6000],'Insurance':[1500, 6000]};
+          const amount = randBetween(ranges[cat][0], ranges[cat][1]);
           const method = pick(methodsPool);
 
           let insType = '';
@@ -2159,7 +2294,7 @@
         alert('Sample Data Loaded!');
     }
 
-    // --- CALCULATOR LOGIC (expression preview) ---
+    // Calculator
     let currentInput = '0';
     let previousInput = '';
     let operator = null;
@@ -2204,7 +2339,6 @@
 
         updateDisplay();
 
-        // Autofill amount field if empty
         if (document.getElementById('amount').value === '0' || document.getElementById('amount').value === '') {
             const num = parseFloat(currentInput);
             if (!isNaN(num)) document.getElementById('amount').value = num;
@@ -2240,7 +2374,7 @@
         isNewInput = true;
     }
 
-    // --- DRAG ELEMENT LOGIC ---
+    // Drag element
     function dragElement(elmnt) {
         let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
         const header = document.getElementById("calc-header");
