@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MoneyMirror — v4.9 (Google Sign-In only, default profile = display name)</title>
+  <title>MoneyMirror — v4.9 (Google Sign-In only, full dashboard)</title>
 
   <!-- Fonts & Charts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@1,400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
   <!-- Firebase SDKs -->
@@ -30,16 +30,16 @@
     let auth = null;
     let USE_FIRESTORE = false;
     const FIRESTORE_COLLECTION_NAME = 'moneymirror_v4_transactions';
-    let currentProfile = null; // Will be set to Google displayName/email after sign-in
+    let currentProfile = null; // Google displayName/email
 
     try {
       const app = firebase.initializeApp(firebaseConfig);
       db = app.firestore();
       auth = app.auth();
       USE_FIRESTORE = true;
-      console.log("Firebase initialized for project:", db.app.options.projectId);
+      console.log("Firebase initialized:", db.app.options.projectId);
     } catch (e) {
-      console.warn("Firebase init failed. Falling back to LocalStorage.", e);
+      console.warn("Firebase init failed, using LocalStorage:", e);
     }
 
     // --- Auth helpers ---
@@ -53,13 +53,8 @@
         const user = result.user;
         onUserSignedIn(user);
       } catch (popupErr) {
-        console.warn("Popup sign-in failed, trying redirect:", popupErr?.message || popupErr);
-        try {
-          await auth.signInWithRedirect(provider);
-        } catch (redirectErr) {
-          console.error("Redirect sign-in failed:", redirectErr);
-          alert('Sign-in failed. Please allow popups or try again.');
-        }
+        console.warn("Popup sign-in failed:", popupErr?.message || popupErr);
+        alert('Sign-in popup blocked. Allow popups and try again.');
       }
     }
 
@@ -68,16 +63,11 @@
       localStorage.setItem('mm_last_profile', currentProfile);
       document.getElementById('profileNameDisplay').textContent = currentProfile;
 
-      // Gate removal: show dashboard
-      const authGate = document.getElementById('authGate');
-      const mainEl = document.querySelector('main');
-      authGate.style.display = 'none';
-      mainEl.style.filter = 'none';
-
-      // Show logout
+      // Show dashboard
+      document.getElementById('authGate').style.display = 'none';
+      document.querySelector('main').style.filter = 'none';
       document.getElementById('logoutBtn').style.display = 'block';
 
-      // Load data for currentProfile
       loadProfileData();
     }
 
@@ -93,7 +83,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      // Attach handlers once
+      // Attach handlers
       document.getElementById('loginBtn').addEventListener('click', signInWithGoogle);
       document.getElementById('logoutBtn').addEventListener('click', signOutUser);
 
@@ -102,7 +92,6 @@
         auth.onAuthStateChanged(user => {
           if (user) onUserSignedIn(user);
           else {
-            // Show gate if signed out
             document.getElementById('authGate').style.display = 'flex';
             document.querySelector('main').style.filter = 'blur(5px)';
             document.getElementById('logoutBtn').style.display = 'none';
@@ -133,55 +122,43 @@
 
     * { box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg-color); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
+
+    /* Layout */
     aside { width: 260px; background: var(--sidebar-bg); display: flex; flex-direction: column; padding: 24px 16px; color: white; flex-shrink: 0; transition: all 0.3s; justify-content: space-between; }
     main { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; position: relative; filter: blur(5px); }
 
+    /* Sidebar */
     .brand { font-size: 20px; font-weight: 700; color: white; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; padding-left: 10px; }
     .brand span { color: var(--sidebar-active); }
-
     .nav-group { margin-bottom: 24px; }
     .nav-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #475569; font-weight: 700; margin-bottom: 8px; padding-left: 10px; }
-
     .nav-item { padding: 10px 12px; border-radius: 6px; color: var(--sidebar-text); cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500; margin-bottom: 2px; }
     .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
     .nav-item.active { background: rgba(56, 189, 248, 0.1); color: var(--sidebar-active); }
-
     .sidebar-footer { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
     .sys-stat { font-size: 11px; color: var(--sidebar-text); display: flex; justify-content: space-between; margin-bottom: 4px; }
     .sys-val { color: white; font-weight: 600; }
 
-    .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-    .col-span-1 { grid-column: span 1; }
-    .col-span-2 { grid-column: span 2; }
-    .col-span-3 { grid-column: span 3; }
-    .col-span-4 { grid-column: span 4; }
+    /* Auth Gate (Welcome) */
+    #authGate {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #1e293b, #3b82f6);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      color: white;
+      text-align: center;
+      padding: 0 24px;
+    }
+    #authGate h2 { font-size: 22px; font-weight: 600; margin: 0; }
+    #authGate h3 { font-size: 20px; margin: 0; font-weight: 600; }
+    #authGate h4 { font-family: 'Merriweather', serif; font-style: italic; font-size: 18px; margin: 4px 0 12px; }
 
-    .card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); display: flex; flex-direction: column; overflow: hidden; }
-    .card-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 10px 20px; }
-    .card-body { padding: 0 20px 20px 20px; flex: 1; }
-    .card-title { font-size: 15px; font-weight: 600; color: var(--text-main); }
-
-    .action-card { border-color: var(--primary); box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.15); }
-    .action-header { background: var(--primary); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-    .action-header .card-title { color: white; }
-    .action-body { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-
-    .kpi-card { padding: 20px; }
-    .kpi-value { font-size: 28px; font-weight: 700; margin-top: 4px; letter-spacing: -0.5px; }
-    .kpi-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
-    .trend-up { color: var(--success); font-weight: 600; }
-    .trend-down { color: var(--danger); font-weight: 600; }
-    .cc-danger-color { color: var(--danger); font-weight: 600; }
-    .cc-warning-color { color: var(--warning); font-weight: 600; }
-
-    .cc-alert-high { background: #fee2e2 !important; border-color: var(--danger) !important; }
-    .cc-alert-high .cc-danger-color { color: var(--danger) !important; }
-
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; display: block; letter-spacing: 0.5px; }
-    input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 13px; background: #f8fafc; outline: none; transition: border 0.2s; }
-    input:focus, select:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-
+    /* Buttons */
     button { padding: 10px 16px; border-radius: 6px; border: none; font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.2s; }
     .btn-primary { background: var(--primary); color: white; }
     .btn-primary:hover { background: var(--primary-dark); }
@@ -189,40 +166,61 @@
     .btn-outline:hover { background: #f8fafc; border-color: #94a3b8; }
     .btn-danger { background: #fee2e2; color: #991b1b; }
 
+    /* Grid */
+    .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    .col-span-1 { grid-column: span 1; }
+    .col-span-2 { grid-column: span 2; }
+    .col-span-3 { grid-column: span 3; }
+    .col-span-4 { grid-column: span 4; }
+
+    /* Cards */
+    .card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); display: flex; flex-direction: column; overflow: hidden; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 10px 20px; }
+    .card-body { padding: 0 20px 20px 20px; flex: 1; }
+    .card-title { font-size: 15px; font-weight: 600; color: var(--text-main); }
+
+    /* Action Card */
+    .action-card { border-color: var(--primary); box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.15); }
+    .action-header { background: var(--primary); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .action-header .card-title { color: white; }
+    .action-body { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+
+    /* KPI */
+    .kpi-card { padding: 20px; }
+    .kpi-value { font-size: 28px; font-weight: 700; margin-top: 4px; letter-spacing: -0.5px; }
+    .kpi-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+    .trend-up { color: var(--success); font-weight: 600; }
+    .trend-down { color: var(--danger); font-weight: 600; }
+    .cc-alert-high { background: #fee2e2 !important; border-color: var(--danger) !important; }
+
+    /* Form */
+    label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; display: block; letter-spacing: 0.5px; }
+    input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 13px; background: #f8fafc; outline: none; transition: border 0.2s; }
+    input:focus, select:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+
+    /* Table */
     .table-container { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; }
     th { text-align: left; font-size: 11px; color: var(--text-muted); padding: 12px; border-bottom: 1px solid var(--border); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
 
+    /* Badges */
     .badge { padding: 4px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block; }
     .badge-income { background: #dcfce7; color: #166534; }
     .badge-expense { background: #fee2e2; color: #991b1b; }
     .badge-inv { background: #e0f2fe; color: #075985; }
     .badge-ins { background: #f3e8ff; color: #6b21a8; }
-    .badge-opening { background: #efe6ff; color: var(--opening-balance); }
+    .badge-opening { background: #efe6ff; color: #6b21a8; }
     .badge-cc { background: #fef3c7; color: #b45309; }
 
-    .flex-row { display: flex; gap: 10px; align-items: center; }
-    .full-width { width: 100%; }
-    .hidden { display: none !important; }
-
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-
-    /* Auth gate */
-    #authGate {
-      position: fixed;
-      inset: 0;
-      background: var(--bg-color);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      gap: 20px;
-    }
+    /* Modals */
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+    .modal.open { display: flex; animation: fadeIn 0.2s ease-out; }
+    .modal-content { background: white; width: 95%; max-width: 1200px; padding: 0; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
+    .modal-pad { padding: 24px; }
+    .modal-small { width: 400px; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
     /* Calculator */
     #calculator {
@@ -238,7 +236,7 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
       background: #f8fafc;
       border: 1px solid var(--border);
-      display: flex;
+      display: none;
       flex-direction: column;
       overflow: hidden;
     }
@@ -255,19 +253,8 @@
     .calc-zero { grid-column: span 2; }
     .calc-equals { grid-row: span 2; background: var(--primary) !important; color: white !important; }
     .calc-equals:hover { background: var(--primary-dark) !important; }
-    #calc-toggle { margin-left: 10px; padding: 8px 12px; background: var(--primary); color: white; border-radius: 8px; cursor: pointer; display: flex; align-items: center; }
 
-    /* Analytics modal */
-    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
-    .modal.open { display: flex; animation: fadeIn 0.2s ease-out; }
-    .modal-content { background: white; width: 95%; max-width: 1200px; padding: 0; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
-    .modal-pad { padding: 24px; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    #analyticsContent { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
-    .chart-card { height: 400px; display: flex; flex-direction: column; }
-    .chart-card .card-body { padding: 10px 20px 20px 20px; }
-    .filter-group { padding: 15px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 15px; }
-
+    /* Responsive */
     @media(max-width: 1200px) {
       .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
       .col-span-1 { grid-column: span 1; }
@@ -286,9 +273,11 @@
 </head>
 <body>
 
-<!-- Auth gate (single instance) -->
+<!-- Auth Gate -->
 <div id="authGate">
-  <h2 style="font-size:24px; font-weight:600;">Welcome to MoneyMirror</h2>
+  <h2>Welcome to</h2>
+  <h3>MoneyMirror – Personal Finance Dashboard</h3>
+  <h4>by Rehan Hamdulay</h4>
   <button id="loginBtn" class="btn-primary" style="padding:12px 24px; font-size:16px;">Sign in with Google</button>
 </div>
 
@@ -296,7 +285,7 @@
 <aside>
   <div>
     <div class="brand">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
       MoneyMirror <span>v4.9</span>
     </div>
 
@@ -310,9 +299,7 @@
       <div class="nav-group">
         <div class="nav-label">Configuration</div>
         <div class="nav-item" id="navSettings">Settings & Backup</div>
-        <div class="nav-item">
-          <button id="logoutBtn" class="btn-outline" style="width:100%; display:none;">Logout</button>
-        </div>
+        <div class="nav-item"><button id="logoutBtn" class="btn-outline" style="width:100%; display:none;">Logout</button></div>
       </div>
     </nav>
   </div>
@@ -329,6 +316,7 @@
 <!-- Main dashboard -->
 <main>
 
+  <!-- Header -->
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
     <div>
       <h1 style="margin:0; font-size:24px; font-weight:700">Financial Overview</h1>
@@ -338,8 +326,8 @@
       <button class="btn-outline" id="sampleBtn">Load Sample</button>
       <button class="btn-primary" id="importDataBtn">Import Data (CSV/JSON)</button>
       <button class="btn-outline" id="exportBtn">Export CSV</button>
-      <div id="calc-toggle" title="Toggle calculator">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line><line x1="12" y1="14" x2="12.01" y2="14"></line><line x1="8" y1="10" x2="8.01" y2="10"></line><line x1="16" y1="10" x2="16.01" y2="10"></line></svg>
+      <div id="calc-toggle" title="Toggle calculator" class="btn-primary" style="padding:8px 12px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line><line x1="12" y1="14" x2="12.01" y2="14"></line><line x1="8" y1="10" x2="8.01" y2="10"></line><line x1="16" y1="10" x2="16.01" y2="10"></line></svg>
       </div>
     </div>
   </div>
@@ -363,7 +351,7 @@
         <span id="ccPaymentDate">Next Payment: 10th of Jan</span>
         <span style="font-weight:600; margin-left:10px;">Limit: <span id="ccLimitDisplay">₹13,000</span></span>
         <div id="ccAlert" class="hidden" style="position:absolute; right:0; top:0; color:var(--danger)">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
         </div>
       </div>
     </div>
@@ -502,9 +490,7 @@
     <div class="card col-span-2">
       <div class="card-header">
         <div class="card-title">Recent Activity</div>
-        <div class="flex-row">
-          <input type="text" id="searchTx" placeholder="Search entries..." style="padding:6px; width:180px">
-        </div>
+        <div class="flex-row"><input type="text" id="searchTx" placeholder="Search entries..." style="padding:6px; width:180px"></div>
       </div>
       <div class="card-body table-container">
         <table id="mainTable">
@@ -524,9 +510,7 @@
     </div>
 
     <div class="card col-span-2">
-      <div class="card-header">
-        <div class="card-title">Investment Portfolio (Historical Cost)</div>
-      </div>
+      <div class="card-header"><div class="card-title">Investment Portfolio (Historical Cost)</div></div>
       <div class="card-body table-container">
         <table id="invTable">
           <thead><tr><th>Asset Class</th><th>Sub-Class</th><th style="text-align:right">Current Invested Value</th></tr></thead>
@@ -539,7 +523,7 @@
 </main>
 
 <!-- Calculator -->
-<div id="calculator" class="hidden">
+<div id="calculator">
   <div id="calc-header">
     <span>Calculator</span>
     <button id="calc-close-btn" onclick="toggleCalculator()">×</button>
@@ -564,6 +548,51 @@
     <button class="calc-equals" onclick="calcCalculate()">=</button>
     <button class="calc-zero" onclick="calcAppend('0')">0</button>
     <button onclick="calcAppend('.')">.</button>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal">
+  <div class="modal-content">
+    <div class="action-header" style="border-radius:12px 12px 0 0">
+      <div class="card-title" style="color:white">System Configuration</div>
+      <button class="btn-outline" id="closeSettings" style="background:transparent; color:white; border-color:white; padding:4px 10px">Close</button>
+    </div>
+    <div class="modal-pad">
+      <div style="margin-bottom:20px">
+        <label style="margin-bottom:8px">Payment Method Labels</label>
+        <div id="methodEditor" style="display:flex; flex-direction:column; gap:8px; max-height:200px; overflow-y:auto; border:1px solid var(--border); padding:10px; border-radius:6px;"></div>
+        <div class="flex-row" style="margin-top:10px">
+          <input id="newMethodId" placeholder="ID (e.g. sbi_upi)" />
+          <input id="newMethodName" placeholder="Display Name (e.g. SBI UPI)" />
+          <button class="btn-primary" id="addMethod">Add</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <label style="margin-bottom:8px">Income Sources</label>
+        <div class="flex-row">
+          <input id="newIncome" placeholder="New Source Name" />
+          <button class="btn-primary" id="addIncomeBtn">Add</button>
+        </div>
+        <div id="incomeList" style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap"></div>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <label style="margin-bottom:8px">Credit Card Limit</label>
+        <div class="flex-row">
+          <input id="ccLimitInput" type="number" placeholder="Set Limit (e.g. 13000)" />
+          <button class="btn-primary" id="saveCCLimit">Save Limit</button>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border); padding-top:15px; margin-top:15px">
+        <label style="color:var(--danger)">Danger Zone</label>
+        <div class="flex-row">
+          <button class="btn-danger" id="resetBtn">Factory Reset Profile</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -663,9 +692,18 @@ let chartNetWorth = null;
 let chartExpenseDistribution = null;
 let expenseDrilldown = { active: false, parentCategory: null, parentData: null };
 
-function cssVar(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
+// Header date, calculator draggable
+document.addEventListener('DOMContentLoaded', () => {
+  const d = new Date();
+  document.getElementById('currentDate').innerText =
+    d.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  const today = new Date().toISOString().slice(0,10);
+  const dateEl = document.getElementById('date');
+  if (dateEl) dateEl.value = today;
+
+  dragElement(document.getElementById("calculator"));
+});
 
 // Persistence
 function saveToLocalStorage() {
@@ -715,7 +753,6 @@ async function loadProfileData() {
         incomeSources = loadedData.incomeSources || ['Salary', 'Freelance', 'Interest'];
         settings = loadedData.settings || { ccLimit: DEFAULT_CC_LIMIT };
       } else {
-        console.log("No Firestore doc for profile, using defaults/local.");
         loadFromLocalStorage();
       }
     } catch (e) {
@@ -730,19 +767,6 @@ async function loadProfileData() {
   document.querySelector('main').style.filter = 'none';
   renderAll();
 }
-
-// Header date
-document.addEventListener('DOMContentLoaded', () => {
-  const d = new Date();
-  document.getElementById('currentDate').innerText =
-    d.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-  const today = new Date().toISOString().slice(0,10);
-  const dateEl = document.getElementById('date');
-  if (dateEl) dateEl.value = today;
-
-  dragElement(document.getElementById("calculator"));
-});
 
 // Form refs
 const formEls = {
@@ -774,10 +798,8 @@ function populateSelects(){
   const cats = new Set(BASE_CATS);
   formEls.category.innerHTML = `<option value="">Select Category</option>` +
     Array.from(cats).sort().map(c=>`<option value="${c}">${c}</option>`).join('');
-
   formEls.method.innerHTML = Object.keys(methodNames)
     .map(key => `<option value="${key}">${methodNames[key]}</option>`).join('');
-
   formEls.incomeSource.innerHTML = `<option value="">Select Source</option>` +
     incomeSources.map(s => `<option value="${s}">${s}</option>`).join('');
 }
@@ -831,10 +853,7 @@ const fmt = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currenc
 let editId = null;
 
 function requireSignedIn() {
-  if (!currentProfile) {
-    alert('Please sign in with Google first.');
-    return false;
-  }
+  if (!currentProfile) { alert('Please sign in with Google first.'); return false; }
   return true;
 }
 
@@ -1193,10 +1212,10 @@ function renderMainChart(months) {
     netCashFlowData.push(m.netCashFlow || 0);
   });
 
-  const colorInvestment = cssVar('--investment-savings') || '#0ea5e9';
-  const colorExpense = cssVar('--danger') || '#ef4444';
-  const colorIncome = cssVar('--success') || '#10b981';
-  const colorNetLine = cssVar('--primary') || '#3b82f6';
+  const colorInvestment = getComputedStyle(document.documentElement).getPropertyValue('--investment-savings').trim() || '#0ea5e9';
+  const colorExpense = getComputedStyle(document.documentElement).getPropertyValue('--danger').trim() || '#ef4444';
+  const colorIncome = getComputedStyle(document.documentElement).getPropertyValue('--success').trim() || '#10b981';
+  const colorNetLine = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#3b82f6';
 
   mainChart = new Chart(ctx, {
     type: 'bar',
@@ -1213,7 +1232,7 @@ function renderMainChart(months) {
       responsive: true, maintainAspectRatio: false,
       scales: {
         x: { stacked: true, grid: { display: false } },
-        y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Income / Expense (₹)', color: cssVar('--text-muted') || '#64748b' } },
+        y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Income / Expense (₹)', color: '#64748b' } },
         y1: { type: 'linear', display: false, position: 'right', grid: { drawOnChartArea: false },
               min: Math.min(...netCashFlowData, 0) - 500, max: Math.max(...netCashFlowData, 0) + 500 }
       },
@@ -1356,7 +1375,7 @@ document.getElementById('searchTx').addEventListener('input', (e) => {
   renderTable(e.target.value.toLowerCase());
 });
 
-// Calculator
+// Calculator logic
 const calculator = document.getElementById('calculator');
 let expression = "";
 
@@ -1385,9 +1404,9 @@ function calcCalculate() {
   updateCalcDisplay();
 }
 function toggleCalculator() {
-  calculator.classList.toggle('hidden');
-  if(!calculator.classList.contains('hidden')) {
-    if(!calculator.style.top) { calculator.style.top = ""; calculator.style.left = ""; }
+  const isHidden = calculator.style.display === 'none' || calculator.style.display === '';
+  calculator.style.display = isHidden ? 'flex' : 'none';
+  if (isHidden) {
     calcClear();
   }
 }
@@ -1426,18 +1445,17 @@ function dragElement(elmnt) {
   }
 }
 
-// Settings & analytics gate
+// Settings modal logic
 const settingsModal = document.getElementById('settingsModal');
 document.getElementById('navSettings').onclick = () => {
   if (!requireSignedIn()) return;
   settingsModal.classList.add('open');
   renderSettings();
 };
-document.getElementById('closeSettings')?.addEventListener('click', () => settingsModal.classList.remove('open'));
+document.getElementById('closeSettings').onclick = () => settingsModal.classList.remove('open');
 
 function renderSettings(){
   const editor = document.getElementById('methodEditor');
-  if (!editor) return;
   editor.innerHTML = Object.keys(methodNames).map(id => `
     <div class="flex-row" style="justify-content:space-between">
       <span style="font-size:12px; color:#64748b">${CANONICAL_METHODS[id]||'Custom'}</span>
@@ -1447,15 +1465,13 @@ function renderSettings(){
   `).join('');
 
   const incomeListDiv = document.getElementById('incomeList');
-  if (incomeListDiv) {
-    incomeListDiv.innerHTML = incomeSources.map(s => `
-      <span class="badge" style="background:#e0f7fa; color:var(--primary);">${s}
-        <button onclick="removeIncome('${s}')" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:0 0 0 4px; font-size:10px; font-weight:700">×</button>
-      </span>
-    `).join('');
-  }
-  const ccLimitInput = document.getElementById('ccLimitInput');
-  if (ccLimitInput) ccLimitInput.value = settings.ccLimit || DEFAULT_CC_LIMIT;
+  incomeListDiv.innerHTML = incomeSources.map(s => `
+    <span class="badge" style="background:#e0f7fa; color:var(--primary);">${s}
+      <button onclick="removeIncome('${s}')" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:0 0 0 4px; font-size:10px; font-weight:700">×</button>
+    </span>
+  `).join('');
+
+  document.getElementById('ccLimitInput').value = settings.ccLimit || DEFAULT_CC_LIMIT;
 }
 
 function updateMethodName(id, newName) {
@@ -1463,15 +1479,14 @@ function updateMethodName(id, newName) {
   saveAll(); populateSelects(); renderSettings();
 }
 
-document.getElementById('addMethod')?.addEventListener('click', () => {
+document.getElementById('addMethod').addEventListener('click', () => {
   const idEl = document.getElementById('newMethodId');
   const nameEl = document.getElementById('newMethodName');
   const id = (idEl?.value || '').trim().toLowerCase().replace(/\s/g, '_');
   const name = (nameEl?.value || '').trim();
   if (id && name && !methodNames[id]) {
     methodNames[id] = name;
-    if (idEl) idEl.value = '';
-    if (nameEl) nameEl.value = '';
+    idEl.value = ''; nameEl.value = '';
     saveAll(); populateSelects(); renderSettings();
   } else {
     alert('Invalid ID or name, or ID already exists. ID must be unique.');
@@ -1486,12 +1501,12 @@ function removeMethod(id) {
   }
 }
 
-document.getElementById('addIncomeBtn')?.addEventListener('click', () => {
+document.getElementById('addIncomeBtn').addEventListener('click', () => {
   const nameEl = document.getElementById('newIncome');
   const name = (nameEl?.value || '').trim();
   if (name && !incomeSources.includes(name)) {
     incomeSources.push(name);
-    if (nameEl) nameEl.value = '';
+    nameEl.value = '';
     saveAll(); populateSelects(); renderSettings();
   } else {
     alert('Invalid or duplicate income source name.');
@@ -1505,7 +1520,7 @@ function removeIncome(name) {
   }
 }
 
-document.getElementById('saveCCLimit')?.addEventListener('click', () => {
+document.getElementById('saveCCLimit').addEventListener('click', () => {
   const limitEl = document.getElementById('ccLimitInput');
   const limit = Number(limitEl?.value || 0);
   if(limit > 0) {
@@ -1515,7 +1530,7 @@ document.getElementById('saveCCLimit')?.addEventListener('click', () => {
   } else { alert('Please enter a valid limit.'); }
 });
 
-document.getElementById('resetBtn')?.addEventListener('click', () => {
+document.getElementById('resetBtn').addEventListener('click', () => {
   if(!requireSignedIn()) return;
   if(confirm(`DANGER! Wipe all data for profile "${currentProfile}"? This cannot be undone.`)){
     data = [];
@@ -1523,7 +1538,7 @@ document.getElementById('resetBtn')?.addEventListener('click', () => {
     incomeSources = ['Salary', 'Freelance', 'Interest'];
     settings = { ccLimit: DEFAULT_CC_LIMIT };
     saveAll(); renderAll();
-    document.getElementById('settingsModal')?.classList.remove('open');
+    settingsModal.classList.remove('open');
     alert('Profile reset complete.');
   }
 });
@@ -1705,10 +1720,7 @@ function renderNetWorthChart(filteredData) {
         x: { grid: { display: false }, title: { display: true, text: 'Date' } },
         y: { title: { display: true, text: 'Net Worth (₹)' }, ticks: { callback: (value) => fmt(value) } }
       },
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: (context) => `Net Worth: ${fmt(context.parsed.y)}` } }
-      }
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context) => `Net Worth: ${fmt(context.parsed.y)}` } } }
     }
   });
 }
@@ -1851,51 +1863,6 @@ document.getElementById('sampleBtn').addEventListener('click', () => {
   saveAll(); renderAll();
 });
 </script>
-
-<!-- Settings Modal (kept for completeness) -->
-<div id="settingsModal" class="modal">
-  <div class="modal-content">
-    <div class="action-header" style="border-radius:12px 12px 0 0">
-      <div class="card-title" style="color:white">System Configuration</div>
-      <button class="btn-outline" id="closeSettings" style="background:transparent; color:white; border-color:white; padding:4px 10px">Close</button>
-    </div>
-    <div class="modal-pad">
-      <div style="margin-bottom:20px">
-        <label style="margin-bottom:8px">Payment Method Labels</label>
-        <div id="methodEditor" style="display:flex; flex-direction:column; gap:8px; max-height:200px; overflow-y:auto; border:1px solid var(--border); padding:10px; border-radius:6px;"></div>
-        <div class="flex-row" style="margin-top:10px">
-          <input id="newMethodId" placeholder="ID (e.g. sbi_upi)" />
-          <input id="newMethodName" placeholder="Display Name (e.g. SBI UPI)" />
-          <button class="btn-primary" id="addMethod">Add</button>
-        </div>
-      </div>
-
-      <div style="margin-bottom:20px">
-        <label style="margin-bottom:8px">Income Sources</label>
-        <div class="flex-row">
-          <input id="newIncome" placeholder="New Source Name" />
-          <button class="btn-primary" id="addIncomeBtn">Add</button>
-        </div>
-        <div id="incomeList" style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap"></div>
-      </div>
-
-      <div style="margin-bottom:20px">
-        <label style="margin-bottom:8px">Credit Card Limit</label>
-        <div class="flex-row">
-          <input id="ccLimitInput" type="number" placeholder="Set Limit (e.g. 13000)" />
-          <button class="btn-primary" id="saveCCLimit">Save Limit</button>
-        </div>
-      </div>
-
-      <div style="border-top:1px solid var(--border); padding-top:15px; margin-top:15px">
-        <label style="color:var(--danger)">Danger Zone</label>
-        <div class="flex-row">
-          <button class="btn-outline" id="resetBtn">Factory Reset Profile</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
