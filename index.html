@@ -68,42 +68,84 @@
     const profileModal = document.getElementById('profileModal');
     const lastProfile = localStorage.getItem('mm_last_profile');
 
-    // Toggle buttons
     if (loginBtn && logoutBtn) {
       loginBtn.style.display = user ? 'none' : 'inline-block';
       logoutBtn.style.display = user ? 'inline-block' : 'none';
     }
 
-    // If user is signed in and there's a profile, unblur and close modal
     if (user && lastProfile) {
-      window.currentProfile = lastProfile;  // ensure global is set
+      window.currentProfile = lastProfile;
       profileModal?.classList.remove('open');
       main.style.filter = 'none';
-      // Load profile data if needed
       if (typeof loadProfileData === 'function') {
         loadProfileData();
       }
     } else if (user) {
-      // Signed in but no profile yet — show modal, keep blur
       profileModal?.classList.add('open');
       main.style.filter = 'blur(5px)';
     } else {
-      // Not signed in — show modal, keep blur
       profileModal?.classList.add('open');
       main.style.filter = 'blur(5px)';
     }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    const authGate = document.getElementById('authGate');
     const loginBtn = document.getElementById('loginBtn');
     const logoutBtn = document.getElementById('logoutBtn');
+    const main = document.querySelector('main');
+    const profileModal = document.getElementById('profileModal');
+
     loginBtn.onclick = signInWithGoogle;
     logoutBtn.onclick = signOutUser;
 
     auth.onAuthStateChanged(user => {
-      console.log(user ? "User is signed in" : "No user signed in");
-      updateUIAuthState(user);
+      if (user) {
+        console.log("User is signed in:", user.uid);
+        authGate.style.display = 'none';
+        logoutBtn.style.display = 'inline-block';
+
+        const lastProfile = localStorage.getItem('mm_last_profile');
+        if (lastProfile) {
+          window.currentProfile = lastProfile;
+          main.style.filter = 'none';
+          profileModal?.classList.remove('open');
+          if (typeof loadProfileData === 'function') loadProfileData();
+        } else {
+          profileModal?.classList.add('open');
+          main.style.filter = 'blur(5px)';
+        }
+      } else {
+        console.log("No user signed in");
+        authGate.style.display = 'flex';
+        logoutBtn.style.display = 'none';
+        main.style.filter = 'blur(5px)';
+        profileModal?.classList.remove('open');
+      }
     });
+
+    // ✅ Load Dashboard button logic
+    const loadProfileBtn = document.getElementById('loadProfileBtn');
+    if (loadProfileBtn) {
+      loadProfileBtn.onclick = () => {
+        const input = document.getElementById('profileInput');
+        const profileName = input?.value.trim();
+        if (!profileName) {
+          alert("Please enter a profile name.");
+          return;
+        }
+
+        localStorage.setItem('mm_last_profile', profileName);
+        window.currentProfile = profileName;
+
+        profileModal?.classList.remove('open');
+        main.style.filter = 'none';
+
+        if (typeof loadProfileData === 'function') {
+          loadProfileData();
+        }
+      };
+    }
   });
 </script>
 
@@ -392,8 +434,35 @@
 </head>
 <body>
 
+<div id="profileModal" class="modal open">
+  <div class="modal-content modal-small modal-pad">
+    <h3 style="margin-top:0;">Select or Create Profile</h3>
+    <label for="profileInput" style="margin-top:10px;">PROFILE NAME (USED AS KEY)</label>
+    <input id="profileInput" type="text" placeholder="e.g. RH" style="width:100%; padding:10px; margin-top:5px;" />
+    <p style="font-size:12px; color:var(--text-muted); margin-top:5px;">This name separates your data from others.</p>
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+      <button class="btn-outline" id="viewProfilesBtn">View Existing</button>
+      <button class="btn-primary" id="loadProfileBtn">Load Dashboard</button>
+    </div>
+  </div>
+</div>
+
+<div id="authGate" style="
+  position: fixed;
+  inset: 0;
+  background: var(--bg-color);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+">
+  <h2 style="font-size:24px; font-weight:600;">Welcome to MoneyMirror</h2>
+  <button id="loginBtn" class="btn-primary" style="padding:12px 24px; font-size:16px;">Sign in with Google</button>
+</div>
+
   <!-- Simple auth controls -->
-  <button id="loginBtn">Sign in with Google</button>
   <button id="logoutBtn" style="display:none;">Logout</button>
 
   <aside>
