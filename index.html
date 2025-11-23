@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>MoneyMirror — v5.0.7 (Restored & Responsive)</title>
+  <title>MoneyMirror — v5.0.8 (Final Stable)</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@1,400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -113,7 +113,7 @@
     input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 13px; background: #f8fafc; outline: none; transition: border 0.2s; }
     input:focus, select:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
 
-    .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; min-height: 200px; }
     table { width: 100%; border-collapse: collapse; min-width: 600px; }
     th { text-align: left; font-size: 11px; color: var(--text-muted); padding: 12px; border-bottom: 1px solid var(--border); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
@@ -227,7 +227,7 @@
     <div style="display:flex; justify-content:space-between; align-items:center; width:100%">
       <div class="brand">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
-        MoneyMirror <span>v5.0.7</span>
+        MoneyMirror <span>v5.0.8</span>
       </div>
       <button id="mobileMenuBtn">
         <svg class="icon-menu" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
@@ -254,7 +254,7 @@
       <span>Current profile</span>
       <span class="sys-val" id="profileNameDisplay">--</span>
     </div>
-    <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v5.0.7 • Functionality Restored</div>
+    <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v5.0.8 • Settings & Table Fixed</div>
   </div>
 </aside>
 
@@ -811,7 +811,7 @@
       }
       
       setupExpenseMultiSelect();
-      setupInvestmentFilters(); // Fixed button logic setup
+      setupInvestmentFilters(); 
     });
 
   // --- UTILS AND CONSTANTS ---
@@ -1431,7 +1431,7 @@
     
     const breakdownContainer = document.getElementById('netLiquidityBreakdown');
     let breakdownHtml = '';
-    const liquidMethods = data.filter(d => (d.type === 'opening_balance' && d.investmentGroup === 'Cash') || (d.type === 'income') || (d.type === 'expense' && d.category !== 'Investments'));
+    const liquidMethods = data.filter(d => (d.type === 'opening_balance' && d.investmentGroup && d.investmentGroup !== 'Cash') || (d.type === 'income') || (d.type === 'expense' && d.category !== 'Investments'));
     const methodBalances = liquidMethods.reduce((acc, curr) => {
       const key = curr.method || 'cash';
       const isExpense = curr.type === 'expense' && curr.category !== 'Credit Card Payment';
@@ -1491,7 +1491,6 @@
     return items;
   }
 
-  // FIX 3: RESTORED INVESTMENT BUTTON LOGIC
   function setupInvestmentFilters() {
     const bucketSelect = document.getElementById('invBucketFilter');
     const uniqueBuckets = Array.from(new Set(Object.values(MAJOR_BUCKETS)));
@@ -2000,7 +1999,7 @@
     }
   }
 
-  // --- FIX 1: RESTORED SETTINGS ---
+  // --- RESTORED SETTINGS RENDER ---
   function renderSettings() {
     const methodContainer = document.getElementById('methodEditor');
     methodContainer.innerHTML = Object.entries(methodNames).map(([key, name]) => `
@@ -2175,66 +2174,86 @@
       return dataRows;
   }
 
-  // --- FIX 2: RECENT ENTRIES RENDER WITH LIVE DATA ---
+  // --- FIXED RECENT ENTRIES RENDER ---
   function renderRecentEntries() {
-    const t = document.getElementById('recentTable').querySelector('tbody');
-    const limitEl = document.getElementById('entryLimit');
-    const limit = limitEl.value === 'all' ? data.length : Number(limitEl.value);
-    
-    const searchText = document.getElementById('recentSearch')?.value.toLowerCase() || '';
-    const sortMode = document.getElementById('recentSort')?.value || 'dateDesc';
-    const categoryFilter = document.getElementById('recentCategory')?.value || '';
+    try {
+        const tbody = document.querySelector('#recentTable tbody');
+        if (!tbody) return;
 
-    let filtered = data.filter(e => {
-        const matchSearch = (e.desc.toLowerCase().includes(searchText) || 
-                             e.category.toLowerCase().includes(searchText) || 
-                             String(e.amount).includes(searchText));
-        const matchCat = categoryFilter ? e.category === categoryFilter : true;
-        return matchSearch && matchCat;
-    });
+        const searchEl = document.getElementById('recentSearch');
+        const sortEl = document.getElementById('recentSort');
+        const catEl = document.getElementById('recentCategory');
+        const limitEl = document.getElementById('entryLimit');
 
-    filtered.sort((a, b) => {
-        if (sortMode === 'dateDesc') return new Date(b.date) - new Date(a.date);
-        if (sortMode === 'dateAsc') return new Date(a.date) - new Date(b.date);
-        if (sortMode === 'amtDesc') return b.amount - a.amount;
-        if (sortMode === 'amtAsc') return a.amount - b.amount;
-        return 0;
-    });
+        const searchText = searchEl ? searchEl.value.toLowerCase() : '';
+        const sortMode = sortEl ? sortEl.value : 'dateDesc';
+        const categoryFilter = catEl ? catEl.value : '';
+        const limit = limitEl && limitEl.value !== 'all' ? Number(limitEl.value) : data.length;
 
-    const recent = filtered.slice(0, limit);
-    
-    t.innerHTML = recent.map(e => {
-      const amountDisplay = e.type === 'income' || e.type === 'opening_balance' ? `<span style="color:var(--success)">+${fmt(e.amount)}</span>` : `<span style="color:var(--danger)">-${fmt(e.amount)}</span>`;
+        let filtered = data.filter(e => {
+            if (!e) return false;
+            const desc = (e.desc || '').toLowerCase();
+            const cat = (e.category || '').toLowerCase();
+            const amt = String(e.amount || 0);
+            
+            const matchesSearch = desc.includes(searchText) || cat.includes(searchText) || amt.includes(searchText);
+            const matchesCat = categoryFilter ? e.category === categoryFilter : true;
+            
+            return matchesSearch && matchesCat;
+        });
 
-      let methodDisplay = '';
-      if (e.type === 'opening_balance' && e.investmentGroup !== 'Cash') {
-          methodDisplay = e.investmentSub || e.investmentGroup;
-      } else if (e.type === 'expense' && e.category === 'Investments') {
-          methodDisplay = e.investmentSub || e.investmentGroup;
-      } else if (e.method === 'credit_card_payment') {
-          methodDisplay = 'N/A (Transfer)';
-      } else {
-          methodDisplay = methodNames[e.method] || e.method || '--';
-      }
+        filtered.sort((a, b) => {
+            const dateA = new Date(a.date || 0);
+            const dateB = new Date(b.date || 0);
+            if (sortMode === 'dateDesc') return dateB - dateA;
+            if (sortMode === 'dateAsc') return dateA - dateB;
+            if (sortMode === 'amtDesc') return b.amount - a.amount;
+            if (sortMode === 'amtAsc') return a.amount - b.amount;
+            return 0;
+        });
 
-      let categoryDisplay = e.category === 'Investments' ? e.investmentSub :
-                            e.category === 'Insurance' ? `${e.insuranceType} (${e.insuranceFor})` :
-                            e.type === 'expense' ? e.category : '--';
-      return `
-        <tr>
-          <td>${getBadge(e)}</td>
-          <td>${e.date}</td>
-          <td style="font-weight:600; text-align:right">${amountDisplay}</td>
-          <td>${e.desc}</td>
-          <td>${categoryDisplay}</td>
-          <td>${methodDisplay}</td>
-          <td class="flex-row">
-            <button onclick="loadEdit('${e.id}')" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px" title="Edit">✎</button>
-            <button onclick="deleteEntry('${e.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:4px" title="Delete">×</button>
-          </td>
-        </tr>
-      `;
-    }).join('');
+        const slice = filtered.slice(0, limit);
+
+        if (slice.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--text-muted);">No transactions found.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = slice.map(e => {
+          const amountDisplay = e.type === 'income' || e.type === 'opening_balance' ? `<span style="color:var(--success)">+${fmt(e.amount)}</span>` : `<span style="color:var(--danger)">-${fmt(e.amount)}</span>`;
+
+          let methodDisplay = '';
+          if (e.type === 'opening_balance' && e.investmentGroup !== 'Cash') {
+              methodDisplay = e.investmentSub || e.investmentGroup;
+          } else if (e.type === 'expense' && e.category === 'Investments') {
+              methodDisplay = e.investmentSub || e.investmentGroup;
+          } else if (e.method === 'credit_card_payment') {
+              methodDisplay = 'N/A (Transfer)';
+          } else {
+              methodDisplay = methodNames[e.method] || e.method || '--';
+          }
+
+          let categoryDisplay = e.category === 'Investments' ? e.investmentSub :
+                                e.category === 'Insurance' ? `${e.insuranceType} (${e.insuranceFor})` :
+                                e.type === 'expense' ? e.category : '--';
+          return `
+            <tr>
+              <td>${getBadge(e)}</td>
+              <td>${e.date}</td>
+              <td style="font-weight:600; text-align:right">${amountDisplay}</td>
+              <td>${e.desc}</td>
+              <td>${categoryDisplay}</td>
+              <td>${methodDisplay}</td>
+              <td class="flex-row">
+                <button onclick="loadEdit('${e.id}')" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px" title="Edit">✎</button>
+                <button onclick="deleteEntry('${e.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:4px" title="Delete">×</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+    } catch (err) {
+        console.error("Error rendering table:", err);
+    }
   }
 
   // Sample Data
@@ -2378,7 +2397,7 @@
     }
 
     function elementTouchDrag(e) {
-        e.preventDefault(); // Prevent scrolling while dragging
+        e.preventDefault();
         const touch = e.touches[0];
         pos1 = pos3 - touch.clientX;
         pos2 = pos4 - touch.clientY;
