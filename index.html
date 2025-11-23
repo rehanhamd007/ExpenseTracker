@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MoneyMirror — v5.0.5 (Analytics & Search)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>MoneyMirror — v5.0.6 (Mobile Responsive)</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@1,400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -32,12 +32,20 @@
       --c8:#22c55e; --c9:#eab308; --c10:#f97316; --c11:#374151; --c12:#8b5cf6;
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg-color); color: var(--text-main); height: 100vh; display: flex; overflow: hidden; }
 
-    aside { width: 260px; background: var(--sidebar-bg); display: flex; flex-direction: column; padding: 24px 16px; color: white; flex-shrink: 0; transition: all 0.3s; justify-content: space-between; z-index: 100; }
+    /* SCROLLBARS */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* LAYOUT */
+    aside { width: 260px; background: var(--sidebar-bg); display: flex; flex-direction: column; padding: 24px 16px; color: white; flex-shrink: 0; transition: all 0.3s; z-index: 100; }
     main { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; position: relative; filter: blur(5px); transition: filter 0.3s; }
 
+    /* TYPOGRAPHY & BRAND */
     .brand { font-size: 20px; font-weight: 700; color: white; margin-bottom: 30px; display: flex; align-items: center; gap: 10px; padding-left: 10px; }
     .brand span { color: var(--sidebar-active); }
     .nav-group { margin-bottom: 24px; }
@@ -55,6 +63,7 @@
     aside.mobile-open .icon-menu { display: none; }
     aside.mobile-open .icon-close { display: block; }
 
+    /* AUTH GATE */
     #authGate {
       position: fixed; inset: 0; background: linear-gradient(135deg, #1e293b, #3b82f6);
       z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -65,7 +74,8 @@
     #authGate .line-2 { font-size: 20px; font-weight: 600; }
     #authGate .line-3 { font-family: 'Merriweather', serif; font-style: italic; font-size: 18px; margin: 6px 0 14px; }
 
-    button { padding: 10px 16px; border-radius: 6px; border: none; font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.2s; }
+    /* UI ELEMENTS */
+    button { padding: 10px 16px; border-radius: 6px; border: none; font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
     .btn-primary { background: var(--primary); color: white; }
     .btn-primary:hover { background: var(--primary-dark); }
     .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-main); }
@@ -79,18 +89,19 @@
     .col-span-4 { grid-column: span 4; }
 
     .card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); display: flex; flex-direction: column; overflow: hidden; position: relative; }
-    .card-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 10px 20px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 10px 20px; flex-wrap: wrap; gap: 10px; }
     .card-body { padding: 0 20px 20px 20px; flex: 1; }
-    .card-title { font-size: 15px; font-weight: 600; color: var(--text-main); }
+    .card-title { font-size: 15px; font-weight: 600; color: var(--text-main); white-space: nowrap; }
 
     .action-card { border-color: var(--primary); box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.15); }
     .action-header { background: var(--primary); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
     .action-header .card-title { color: white; }
     .action-body { padding: 20px; display: flex; flex-wrap: wrap; gap: 20px; }
 
-    .input-group-small { width: 15%; }
-    .input-group-med { width: 25%; }
-    .input-group-large { width: 45%; }
+    /* INPUT GROUPS - Responsive base */
+    .input-group-small { width: 15%; min-width: 120px; flex-grow: 1; }
+    .input-group-med { width: 25%; min-width: 180px; flex-grow: 1; }
+    .input-group-large { width: 45%; min-width: 250px; flex-grow: 1; }
 
     .kpi-card { padding: 20px; }
     .kpi-value { font-size: 28px; font-weight: 700; margin-top: 4px; letter-spacing: -0.5px; }
@@ -103,13 +114,13 @@
     input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 13px; background: #f8fafc; outline: none; transition: border 0.2s; }
     input:focus, select:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
 
-    .table-container { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; }
+    .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; min-width: 600px; /* Force scroll on small screens */ }
     th { text-align: left; font-size: 11px; color: var(--text-muted); padding: 12px; border-bottom: 1px solid var(--border); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
 
-    .badge { padding: 4px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block; }
+    .badge { padding: 4px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; display: inline-block; white-space: nowrap; }
     .badge-income { background: #dcfce7; color: #166534; }
     .badge-expense { background: #fee2e2; color: #991b1b; }
     .badge-inv { background: #e0f2fe; color: #075985; }
@@ -121,77 +132,99 @@
     .account-list div { display: flex; justify-content: space-between; }
     .account-list span:last-child { font-weight: 600; color: var(--text-main); }
 
-    .flex-row { display: flex; gap: 10px; align-items: center; }
+    .flex-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .full-width { width: 100%; }
     .hidden { display: none !important; }
 
-    /* Modal Updates: Bigger for analytics */
+    /* Modal */
     .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
     .modal.open { display: flex; animation: fadeIn 0.2s ease-out; }
-    .modal-content { background: white; width: 98%; max-width: 1400px; padding: 0; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); height: 95vh; display:flex; flex-direction:column; }
-    .modal-pad { padding: 24px; overflow-y: auto; flex: 1; }
-    .modal-small { width: 400px; height: auto; max-height: 90vh; }
+    .modal-content { background: white; width: 95%; max-width: 1400px; padding: 0; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 95vh; display:flex; flex-direction:column; overflow: hidden; }
+    .modal-pad { padding: 24px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
+    .modal-small { width: 90%; max-width: 400px; height: auto; max-height: 90vh; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-    /* Calculator */
-    #calculator { position: fixed; bottom: 20px; right: 20px; width: 280px; height: 480px; min-height: 480px; max-height: 480px; z-index: 3000; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); background: #f8fafc; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+    /* Calculator - Mobile Friendly */
+    #calculator { position: fixed; bottom: 20px; right: 20px; width: 280px; height: 480px; max-height: 80vh; z-index: 3000; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); background: #f8fafc; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
     #calc-header { background: var(--sidebar-bg); color: white; padding: 10px 15px; cursor: move; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 13px; height: 40px; }
     #calc-close-btn { background: transparent; border: none; color: #ef4444; font-size: 18px; font-weight: 700; cursor: pointer; padding: 0; line-height: 1; }
     #calc-display { background: var(--sidebar-bg); color: white; text-align: right; font-size: 24px; padding: 10px 15px; border-top: 1px solid rgba(255,255,255,0.1); font-family: monospace; overflow-x: auto; white-space: nowrap; height: 60px; }
     #calc-preview { background: #0b1323; color: #9fb3c8; text-align: right; font-size: 14px; padding: 6px 15px; font-family: monospace; height: 28px; border-top: 1px solid rgba(255,255,255,0.06); }
     #calc-buttons { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(5, 1fr); padding: 10px; gap: 8px; background: white; flex: 1; }
-    #calc-buttons button { width: 100%; height: 100%; font-size: 18px; font-weight: 500; border-radius: 8px; background: white; border: 1px solid #e2e8f0; transition: background 0.1s; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    #calc-buttons button { width: 100%; height: 100%; font-size: 18px; font-weight: 500; border-radius: 8px; background: white; border: 1px solid #e2e8f0; transition: background 0.1s; cursor: pointer; display: flex; align-items: center; justify-content: center; touch-action: manipulation; }
     #calc-buttons button:hover { background: #f1f5f9; }
     .calc-operator { background: #e0f7fa !important; color: var(--primary) !important; }
-    .calc-operator:hover { background: #c2e0e5 !important; }
     .calc-clear { background: #fef2f2 !important; color: var(--danger) !important; }
-    .calc-clear:hover { background: #fde8e8 !important; }
     .calc-zero { grid-column: span 2; }
     .calc-equals { grid-row: span 2; background: var(--primary) !important; color: white !important; }
-    .calc-equals:hover { background: var(--primary-dark) !important; }
     #calc-toggle { margin-left: 10px; padding: 8px 12px; background: var(--primary); color: white; border-radius: 8px; cursor: pointer; display: flex; align-items: center; }
 
-    /* Investment KPI breakdown grid and quick subcategories */
+    /* Investment KPI breakdown grid */
     .kpi-breakdown-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 16px; align-items: stretch; }
     .quick-sub-card { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: white; display:flex; flex-direction:column; justify-content:space-between; }
     .quick-sub-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .quick-sub-title { font-weight: 700; }
     .total-badge { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; color: var(--text-main); }
     
+    /* Dropdowns */
     .sub-dropdown-container { position: relative; }
-    .sub-dropdown-menu { position: absolute; top: 36px; left: 0; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 8px 0; width: 100%; min-width: 240px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); z-index: 50; display: none; max-height: 300px; overflow-y: auto; }
+    .sub-dropdown-menu { position: absolute; top: 36px; left: 0; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 8px 0; width: 100%; min-width: 240px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 50; display: none; max-height: 300px; overflow-y: auto; }
     .sub-dropdown-menu.show { display: block; }
     .sub-dropdown-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; font-size: 12px; color: var(--text-main); border-bottom: 1px solid #f1f5f9; }
     .sub-dropdown-item:last-child { border-bottom: none; }
-    .sub-dropdown-item:hover { background: #f8fafc; }
 
-    /* MULTI-SELECT CHECKBOX STYLES */
     .multiselect-container { position: relative; }
     .multiselect-dropdown { position: absolute; top: 100%; right: 0; background: white; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); width: 220px; padding: 10px; z-index: 60; display: none; }
     .multiselect-dropdown.show { display: block; }
     .ms-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; cursor: pointer; }
-    .ms-item input { width: auto; margin: 0; }
     .ms-actions { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
     
+    /* Analytics Filters Grid */
+    .analytics-filter-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+
+    /* --- RESPONSIVE MEDIA QUERIES --- */
     @media(max-width: 1200px) {
       .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
       .col-span-1 { grid-column: span 1; }
       .col-span-2, .col-span-3, .col-span-4 { grid-column: span 2; }
     }
+
     @media(max-width: 768px) {
       body { flex-direction: column; height: auto; overflow: auto; }
-      aside { width: 100%; padding: 15px; flex-direction: row; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 500; }
+      
+      /* Sidebar Mobile */
+      aside { width: 100%; padding: 15px; flex-direction: row; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 500; height: 60px; }
       aside .brand { margin-bottom: 0; }
       aside nav, .sidebar-footer { display: none; }
       #mobileMenuBtn { display: block; }
-      aside.mobile-open nav { display: block; position: absolute; top: 60px; left: 0; right: 0; background: var(--sidebar-bg); padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 501; }
+      
+      aside.mobile-open nav { display: block; position: absolute; top: 60px; left: 0; right: 0; background: var(--sidebar-bg); padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 501; height: calc(100vh - 60px); overflow-y: auto; }
       aside.mobile-open .sidebar-footer { display: block; position: fixed; bottom: 20px; left: 20px; right: 20px; z-index: 501; }
-      .dashboard-grid { grid-template-columns: 1fr; gap: 16px; }
+
+      /* Main Layout Mobile */
+      main { padding: 15px; gap: 15px; }
+      .dashboard-grid { grid-template-columns: 1fr; gap: 15px; }
       .col-span-1, .col-span-2, .col-span-3, .col-span-4 { grid-column: span 1; }
-      .input-group-small, .input-group-med, .input-group-large, .full-width, #categoryContainer { width: 100% !important; }
+      
+      /* Inputs Mobile */
+      .input-group-small, .input-group-med, .input-group-large, .full-width, #categoryContainer { width: 100% !important; min-width: 100%; }
       .action-body { gap: 12px; }
+      
+      /* Cards & Graphs Mobile */
       .kpi-breakdown-grid { grid-template-columns: 1fr; }
-      #calculator { top: 70px; left: 50%; transform: translateX(-50%); width: 90%; height: 480px; bottom: auto; right: auto; }
+      #invQuickSubs { grid-template-columns: 1fr !important; }
+      .card-header { align-items: flex-start; }
+      
+      /* Calculator Mobile */
+      #calculator { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; bottom: auto; right: auto; }
+      
+      /* Filters Mobile */
+      .analytics-filter-grid { grid-template-columns: 1fr; gap: 10px; }
+      .flex-row input, .flex-row select, .flex-row button { flex-grow: 1; width: 100%; max-width: none !important; }
+      
+      /* Modal Mobile */
+      .modal-content { width: 100%; height: 100%; border-radius: 0; max-width: none; }
+      .modal-small { height: auto; min-height: 50vh; border-radius: 12px; }
     }
   </style>
 </head>
@@ -210,7 +243,7 @@
     <div style="display:flex; justify-content:space-between; align-items:center; width:100%">
       <div class="brand">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
-        MoneyMirror <span>v5.0.5</span>
+        MoneyMirror <span>v5.0.6</span>
       </div>
       <button id="mobileMenuBtn">
         <svg class="icon-menu" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
@@ -237,7 +270,7 @@
       <span>Current profile</span>
       <span class="sys-val" id="profileNameDisplay">--</span>
     </div>
-    <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v5.0.5 • Deep Analytics & Search</div>
+    <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v5.0.6 • Mobile Optimized</div>
   </div>
 </aside>
 
@@ -250,7 +283,7 @@
     </div>
     <div class="flex-row">
       <button class="btn-outline" id="sampleBtn">Load sample</button>
-      <button class="btn-primary" id="importDataBtn">Import data (CSV/JSON)</button>
+      <button class="btn-primary" id="importDataBtn">Import data</button>
       <button class="btn-outline" id="exportBtn">Export CSV</button>
       <div id="calc-toggle" title="Toggle calculator">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line><line x1="12" y1="14" x2="12.01" y2="14"></line><line x1="8" y1="10" x2="8.01" y2="10"></line><line x1="16" y1="10" x2="16.01" y2="10"></line></svg>
@@ -273,8 +306,8 @@
       <div class="card-title" id="ccTitle" style="color:var(--warning)">Credit card due</div>
       <div class="kpi-value" id="kpiCCDue">₹0</div>
       <div class="kpi-sub" style="color:#000; font-weight:700; margin-top: 6px; position:relative;">
-        <span id="ccPaymentDate">Next Payment: 10th of December</span>
-        <span style="font-weight:700; margin-left:10px;">Limit: <span id="ccLimitDisplay">₹2,00,000</span></span>
+        <span id="ccPaymentDate">Next: 10th Dec</span>
+        <span style="font-weight:700; margin-left:10px;">Limit: <span id="ccLimitDisplay">₹2L</span></span>
         <div id="ccAlert" class="hidden" style="position:absolute; right:0; top:0; color:var(--danger)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
         </div>
@@ -290,10 +323,10 @@
 
     <div class="card kpi-card col-span-4" style="background:#e0f2fe; border-color:#075985;">
       <div class="card-header" style="padding:16px 20px 0 20px;">
-        <div class="card-title" style="color:#075985">Total investment value (historical cost)</div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button id="toggleInvBreakdown" class="btn-outline" style="padding:6px 10px; font-size:12px;">View breakdown</button>
-          <button id="viewCategoriesBtn" class="btn-outline" style="padding:6px 10px; font-size:12px;">View subcategories</button>
+        <div class="card-title" style="color:#075985">Total investment value</div>
+        <div style="display:flex;gap:8px;align-items:center; flex-wrap:wrap;">
+          <button id="toggleInvBreakdown" class="btn-outline" style="padding:6px 10px; font-size:12px;">Breakdown</button>
+          <button id="viewCategoriesBtn" class="btn-outline" style="padding:6px 10px; font-size:12px;">Subcategories</button>
         </div>
       </div>
       <div class="card-body" style="padding-top:6px;">
@@ -304,19 +337,19 @@
           <div class="card" style="border-color:#93c5fd; margin-bottom:12px;">
             <div class="card-header">
               <div class="card-title">Filters</div>
-              <div class="flex-row" style="gap:10px; flex-wrap:wrap;">
-                <div style="min-width:220px;">
+              <div class="flex-row" style="gap:10px; width:100%;">
+                <div class="input-group-med">
                   <label>Major bucket</label>
                   <select id="invBucketFilter"></select>
                 </div>
-                <div style="min-width:220px;">
+                <div class="input-group-med">
                   <label>View mode</label>
                   <select id="invViewMode">
                     <option value="top4">Top 4 buckets</option>
-                    <option value="subcats">Subcategories of selected bucket</option>
+                    <option value="subcats">Subcategories</option>
                   </select>
                 </div>
-                <div style="min-width:220px;">
+                <div class="input-group-med">
                   <label>Date range</label>
                   <select id="invDateRange">
                     <option value="6">Last 6 months</option>
@@ -330,13 +363,13 @@
 
           <div class="kpi-breakdown-grid">
             <div class="card" style="border-color:#93c5fd;">
-              <div class="card-header"><div class="card-title" id="invBarTitle">Investment by major bucket</div></div>
+              <div class="card-header"><div class="card-title" id="invBarTitle">Major buckets</div></div>
               <div class="card-body" style="height:300px;">
                 <canvas id="invBreakdownBar"></canvas>
               </div>
             </div>
             <div class="card" style="border-color:#93c5fd;">
-              <div class="card-header"><div class="card-title" id="invPieTitle">Share by bucket</div></div>
+              <div class="card-header"><div class="card-title" id="invPieTitle">Share</div></div>
               <div class="card-body" style="height:300px;">
                 <canvas id="invBreakdownPie"></canvas>
               </div>
@@ -344,7 +377,7 @@
           </div>
 
           <div style="margin-top:14px;">
-            <div class="card-title" style="font-size:13px; color:#075985;">Bucket subcategories quick view</div>
+            <div class="card-title" style="font-size:13px; color:#075985; margin-bottom:10px;">Bucket subcategories quick view</div>
             <div id="invQuickSubs" style="display:grid; grid-template-columns: repeat(2, 1fr); gap:12px;"></div>
           </div>
         </div>
@@ -356,9 +389,9 @@
     <div class="card col-span-2">
       <div class="card-header">
         <div class="card-title">Cash flow & investments</div>
-        <select id="mainChartFilter" onchange="renderCharts()">
-          <option value="6">Last 6 months</option>
-          <option value="12">Last 12 months</option>
+        <select id="mainChartFilter" onchange="renderCharts()" style="max-width:120px;">
+          <option value="6">Last 6m</option>
+          <option value="12">Last 12m</option>
           <option value="all">All time</option>
         </select>
       </div>
@@ -371,15 +404,15 @@
 
     <div class="card col-span-2">
       <div class="card-header" style="gap:12px;">
-        <div class="card-title">Wallet breakdown and expense analysis</div>
-        <div class="flex-row" style="gap:8px;">
-          <select id="walletMode" onchange="renderWalletUnified()">
-            <option value="wallet">Wallet breakdown (Liquid & Savings)</option>
-            <option value="expenses">Expense distribution (Top 10)</option>
+        <div class="card-title">Wallet & Expenses</div>
+        <div class="flex-row" style="gap:8px; width:100%;">
+          <select id="walletMode" onchange="renderWalletUnified()" style="flex:1;">
+            <option value="wallet">Wallet breakdown</option>
+            <option value="expenses">Expense distribution</option>
           </select>
           
-          <div id="expenseFilterContainer" class="multiselect-container hidden">
-              <button class="btn-outline" style="font-size:12px; padding:6px 10px;" id="expenseFilterBtn">Select Categories ▾</button>
+          <div id="expenseFilterContainer" class="multiselect-container hidden" style="flex:1;">
+              <button class="btn-outline" style="font-size:12px; padding:10px; width:100%;" id="expenseFilterBtn">Select Categories ▾</button>
               <div class="multiselect-dropdown" id="expenseMultiselectDropdown">
                   <div id="expenseCheckboxes" style="max-height:200px; overflow-y:auto;"></div>
                   <div class="ms-actions">
@@ -391,8 +424,8 @@
 
         </div>
       </div>
-      <div class="card-body" style="display:flex; flex-direction:row; align-items:center; gap:20px; flex:1">
-        <div style="height:280px; width:50%; max-width: 320px; position:relative;">
+      <div class="card-body" style="display:flex; flex-direction:column; gap:20px; flex:1">
+        <div style="height:280px; width:100%; position:relative;">
           <canvas id="donutChart"></canvas>
         </div>
         <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
@@ -408,7 +441,6 @@
     <div class="card action-card col-span-4" id="addEntryCard">
       <div class="action-header">
         <div class="card-title">Add new entry</div>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
       </div>
       <div class="action-body">
         <div class="input-group-small">
@@ -429,7 +461,7 @@
         </div>
         <div class="input-group-large">
           <label>Description</label>
-          <input id="desc" placeholder="What is this for?" style="flex:1" />
+          <input id="desc" placeholder="What is this for?" />
         </div>
       
         <div id="dynamicFieldsContainer" class="full-width" style="border-top:1px solid var(--border); padding-top:15px">
@@ -487,31 +519,31 @@
         </div>
 
         <div style="width:100%; display:flex; gap:10px; margin-top:10px">
-          <button class="btn-primary" id="addBtn">Add entry</button>
-          <button class="btn-primary hidden" id="saveBtn">Save changes</button>
-          <button class="btn-outline hidden" id="cancelBtn">Cancel edit</button>
+          <button class="btn-primary" id="addBtn" style="flex:1">Add entry</button>
+          <button class="btn-primary hidden" id="saveBtn" style="flex:1">Save changes</button>
+          <button class="btn-outline hidden" id="cancelBtn" style="flex:1">Cancel</button>
         </div>
       </div>
     </div>
 
     <div class="card col-span-4">
-      <div class="card-header">
+      <div class="card-header" style="flex-direction:column; align-items:flex-start; gap:15px;">
         <div class="card-title">Recent transactions</div>
-        <div class="flex-row" style="gap:10px; flex:1; justify-content:flex-end;">
-             <input type="text" id="recentSearch" placeholder="Search..." style="max-width:180px; padding:8px;" onkeyup="renderRecentEntries()" />
+        <div class="flex-row" style="gap:10px; width:100%;">
+             <input type="text" id="recentSearch" placeholder="Search..." style="padding:8px; flex:1;" onkeyup="renderRecentEntries()" />
              
-             <select id="recentSort" onchange="renderRecentEntries()" style="max-width:140px;">
-                 <option value="dateDesc">Date (Newest)</option>
-                 <option value="dateAsc">Date (Oldest)</option>
-                 <option value="amtDesc">Amount (High)</option>
-                 <option value="amtAsc">Amount (Low)</option>
+             <select id="recentSort" onchange="renderRecentEntries()" style="flex:1;">
+                 <option value="dateDesc">Newest</option>
+                 <option value="dateAsc">Oldest</option>
+                 <option value="amtDesc">Amt High</option>
+                 <option value="amtAsc">Amt Low</option>
              </select>
 
-             <select id="recentCategory" onchange="renderRecentEntries()" style="max-width:140px;">
-                 <option value="">All Categories</option>
+             <select id="recentCategory" onchange="renderRecentEntries()" style="flex:1;">
+                 <option value="">All Cats</option>
              </select>
 
-             <select id="entryLimit" onchange="renderRecentEntries()" style="max-width:80px;">
+             <select id="entryLimit" onchange="renderRecentEntries()" style="width:60px; flex:0;">
                 <option value="10">10</option>
                 <option value="25">25</option>
                 <option value="50">50</option>
@@ -532,8 +564,7 @@
               <th style="width:100px;">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            </tbody>
+          <tbody></tbody>
         </table>
       </div>
     </div>
@@ -544,7 +575,7 @@
 <div id="settingsModal" class="modal">
   <div class="modal-content modal-small">
     <div class="action-header" style="border-radius:12px 12px 0 0">
-      <div class="card-title" style="color:white">Settings & Configuration</div>
+      <div class="card-title" style="color:white">Settings</div>
       <button class="btn-outline" id="closeSettings" style="background:transparent; color:white; border-color:white; padding:4px 10px">Close</button>
     </div>
     <div class="modal-pad">
@@ -568,13 +599,13 @@
         <label style="margin-bottom:8px">Credit card limit</label>
         <div class="flex-row">
           <input id="ccLimitInput" type="number" placeholder="Set limit (e.g. 200000)" />
-          <button class="btn-primary" id="saveCCLimit">Save limit</button>
+          <button class="btn-primary" id="saveCCLimit">Save</button>
         </div>
       </div>
       <div style="border-top:1px solid var(--border); padding-top:15px; margin-top:15px">
         <label style="color:var(--danger)">Danger zone</label>
         <div class="flex-row">
-          <button class="btn-danger" id="resetBtn">Factory reset profile</button>
+          <button class="btn-danger" id="resetBtn" style="width:100%">Factory reset profile</button>
         </div>
       </div>
     </div>
@@ -591,7 +622,7 @@
       <div id="analyticsFilters">
         <div class="filter-group">
           <h3 style="margin-top:0; font-size:16px;">Deep Dive Filters</h3>
-          <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:15px; margin-bottom:20px;">
+          <div class="analytics-filter-grid">
             <div>
               <label>Date range</label>
               <select id="dateFilter" onchange="renderAdvancedCharts()">
@@ -620,9 +651,8 @@
       </div>
 
       <div style="display:flex; flex-direction:column; gap:20px; height:100%;">
-          
-          <div class="card" style="flex: 0 0 320px;">
-            <div class="card-header"><div class="card-title">Cumulative Growth (Filtered)</div></div>
+          <div class="card" style="flex: 0 0 auto;">
+            <div class="card-header"><div class="card-title">Cumulative Growth</div></div>
             <div class="card-body" style="padding-top:10px;">
               <div style="height:260px; width:100%; position:relative">
                 <canvas id="chartNetWorth"></canvas>
@@ -630,16 +660,16 @@
             </div>
           </div>
 
-          <div style="flex:1; display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-             <div class="card">
-                <div class="card-header"><div class="card-title">Investment Distribution</div></div>
+          <div class="dashboard-grid" style="flex:1;">
+             <div class="card col-span-2">
+                <div class="card-header"><div class="card-title">Distribution</div></div>
                 <div class="card-body" style="padding-top:10px;">
                     <div style="height:100%; min-height:250px; position:relative;">
                         <canvas id="chartInvTypesModal"></canvas>
                     </div>
                 </div>
              </div>
-             <div class="card">
+             <div class="card col-span-2">
                 <div class="card-header"><div class="card-title">Growth Trend</div></div>
                 <div class="card-body" style="padding-top:10px;">
                     <div style="height:100%; min-height:250px; position:relative;">
@@ -699,7 +729,6 @@
     <button>.</button>
     <button class="calc-equals">=</button>
   </div>
-</div>
 
   <script>
     // Firebase Config
@@ -1098,7 +1127,7 @@
     const recentCat = document.getElementById('recentCategory');
     if(recentCat) {
         const allCats = Array.from(new Set([...BASE_CATS, 'Income', 'Opening Balance']));
-        recentCat.innerHTML = '<option value="">All Categories</option>' + allCats.map(c => `<option value="${c}">${c}</option>`).join('');
+        recentCat.innerHTML = '<option value="">All Cats</option>' + allCats.map(c => `<option value="${c}">${c}</option>`).join('');
     }
 
     // Listeners
@@ -1366,7 +1395,7 @@
     const paymentDay = 10;
     let paymentDate = new Date(currentYear, currentMonth, paymentDay);
     if (today.getDate() > paymentDay) paymentDate.setMonth(currentMonth + 1);
-    return paymentDate.toLocaleDateString('en-IN', {month:'long'});
+    return paymentDate.toLocaleDateString('en-IN', {month:'short', day:'numeric'});
   }
 
   function renderKPIs(){
@@ -1394,10 +1423,10 @@
 
     const momIncEl = document.getElementById('momIncome');
     momIncEl.className = momInc >= 0 ? 'trend-up' : 'trend-down';
-    momIncEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="${momInc >= 0 ? '18 15 12 9 6 15' : '18 9 12 15 6 9'}"></polyline></svg> ${pct(Math.abs(momInc))} vs Last Month`;
+    momIncEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="${momInc >= 0 ? '18 15 12 9 6 15' : '18 9 12 15 6 9'}"></polyline></svg> ${pct(Math.abs(momInc))} vs Last`;
     const momExpEl = document.getElementById('momExpense');
     momExpEl.className = momExp <= 0 ? 'trend-up' : 'trend-down';
-    momExpEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="${momExp <= 0 ? '18 15 12 9 6 15' : '18 9 12 15 6 9'}"></polyline></svg> ${pct(Math.abs(momExp))} vs Last Month`;
+    momExpEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="${momExp <= 0 ? '18 15 12 9 6 15' : '18 9 12 15 6 9'}"></polyline></svg> ${pct(Math.abs(momExp))} vs Last`;
     // Credit card logic
     const ccOpen = sum(data.filter(d => d.type === 'opening_balance' && d.method === 'credit_card'));
     const ccExp = sum(data.filter(d => d.type === 'expense' && d.method === 'credit_card'));
@@ -1416,8 +1445,8 @@
     document.getElementById('kpiInvest').innerText = fmt(totalInvested);
     document.getElementById('kpiCCDue').innerText = fmt(creditCardDue);
     document.getElementById('ccLimitDisplay').innerText = fmt(ccLimit);
-    document.getElementById('ccPaymentDate').innerText = `Next Payment: 10th of ${getNextPaymentDate()}`;
-    // Net Liquidity Breakdown (accounts)
+    document.getElementById('ccPaymentDate').innerText = `Next: ${getNextPaymentDate()}`;
+    
     const breakdownContainer = document.getElementById('netLiquidityBreakdown');
     let breakdownHtml = '';
     const liquidMethods = data.filter(d => (d.type === 'opening_balance' && d.investmentGroup === 'Cash') || (d.type === 'income') || (d.type === 'expense' && d.category !== 'Investments'));
@@ -1439,7 +1468,6 @@
     });
     breakdownContainer.innerHTML = breakdownHtml;
 
-    // Investment KPI breakdown charts + subcategory quick view (with filters)
     renderInvestmentKPICharts();
   }
 
@@ -1883,40 +1911,31 @@
   function renderAdvancedCharts() {
       if (typeof Chart === 'undefined') return;
       
-      // 1. GET FILTERS
       const range = document.getElementById('dateFilter').value;
       const chartType = document.getElementById('chartType').value;
       const invGroup = document.getElementById('anlInvGroup').value;
       const invSub = document.getElementById('anlInvSub').value;
 
-      // 2. PREPARE BASE DATA (Filtered by Investment type if selected)
-      // If investment filters are active, the "Net Worth" chart becomes "Cumulative Investment Value" for that type
       let relevantData = data;
       if (invGroup || invSub) {
           relevantData = data.filter(d => {
               if (invGroup && d.investmentGroup !== invGroup) return false;
               if (invSub && d.investmentSub !== invSub) return false;
-              // Include only investment related transactions for net worth calc when filtering
               const isInv = (d.type === 'opening_balance' && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments');
               return isInv;
           });
       }
 
-      // 3. RENDER NET WORTH / CUMULATIVE VALUE CHART
       const { labels, income, expense, investment } = prepareMonthlyData(range === 'all' ? 'all' : Number(range), relevantData);
       
-      // Calculate cumulative value
       const sum = (arr) => arr.reduce((a,b)=>a+Number(b.amount||0),0);
-      // If filtering investments, initial is just opening balance of that type
       let initialValue = sum(relevantData.filter(d => d.type === 'opening_balance' && (invGroup ? d.investmentGroup === invGroup : true)));
       
       let currentValue = initialValue;
       const valueData = labels.map((label, idx) => {
           if(invGroup || invSub) {
-              // For investment specific view: Value increases by investment amount
               currentValue += (investment[idx] || 0); 
           } else {
-              // Global Net Worth
               const monthIncome = income[idx] || 0;
               const monthExpense = expense[idx] || 0;
               currentValue += (monthIncome - monthExpense);
@@ -1947,17 +1966,14 @@
         }
       });
 
-      // 4. RENDER BREAKDOWN CHARTS (Synced with same data)
       renderInvestmentAnalytics('modal', relevantData);
   }
 
   function renderInvestmentAnalytics(scope, dataset) {
     if (typeof Chart === 'undefined') return;
     
-    // Filter to only investments within the dataset passed (which might already be time-filtered or type-filtered)
     const invs = dataset.filter(d => (d.type === 'opening_balance' && d.investmentGroup && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments' ));
     
-    // Type Breakdown
     const byType = invs.reduce((acc,curr) => {
       const key = curr.investmentSub || curr.investmentGroup || 'Uncategorized';
       acc[key] = (acc[key] || 0) + Number(curr.amount);
@@ -1966,7 +1982,6 @@
     const labels = Object.keys(byType).sort((a,b) => byType[b]-byType[a]);
     const values = labels.map(l => byType[l]);
 
-    // Growth Trend
     const points = invs.map(i => ({ date: new Date(i.date), amount: Number(i.amount) })).sort((a,b)=>a.date-b.date);
     let cumulative = 0;
     const growthLabels = points.map(p => p.date.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' }));
@@ -1974,12 +1989,11 @@
 
     const colors = getColorPalette(labels.length);
     
-    // Render Type Chart
     const ctxTypes = document.getElementById('chartInvTypesModal')?.getContext('2d');
     if (ctxTypes) {
       if (chartInvTypesModal) chartInvTypesModal.destroy();
       chartInvTypesModal = new Chart(ctxTypes, {
-        type: 'doughnut', // Changed to doughnut for better breakdown visualization in small space
+        type: 'doughnut',
         data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth:1 }] },
         options: {
           maintainAspectRatio: false,
@@ -1989,7 +2003,6 @@
       });
     }
 
-    // Render Growth Chart
     const ctxGrowth = document.getElementById('chartInvGrowthModal')?.getContext('2d');
     if (ctxGrowth) {
       if (chartInvGrowthModal) chartInvGrowthModal.destroy();
@@ -2005,192 +2018,16 @@
     }
   }
 
-  // --- SETTINGS, IMPORT/EXPORT, SAMPLE DATA ---
-  function renderSettings() {
-    const methodContainer = document.getElementById('methodEditor');
-    methodContainer.innerHTML = Object.entries(methodNames).map(([key, name]) => `
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-        <input type="text" value="${name}" data-key="${key}" onchange="updateMethodName(this)" style="flex:1; margin-right:10px;" />
-        <button class="btn-danger" style="padding:5px 10px; font-size:11px" onclick="deleteMethod('${key}')">Remove</button>
-      </div>
-    `).join('');
-    const incomeContainer = document.getElementById('incomeList');
-    incomeContainer.innerHTML = incomeSources.map(source => `
-      <span style="border:1px solid var(--border); padding:4px 8px; border-radius:4px; font-size:12px; display:inline-flex; align-items:center; background:#f8fafc">
-        ${source}
-        <button style="background:none; border:none; color:var(--danger); margin-left:5px; padding:0; line-height:1; cursor:pointer;" onclick="deleteIncome('${source}')">×</button>
-      </span>
-    `).join('');
-    document.getElementById('ccLimitInput').value = settings.ccLimit;
-  }
-
-  document.getElementById('addMethod').addEventListener('click', addMethod);
-  document.getElementById('addIncomeBtn').addEventListener('click', addIncome);
-  document.getElementById('saveCCLimit').addEventListener('click', () => {
-      const limit = Number(document.getElementById('ccLimitInput').value);
-      if (limit > 0) {
-          settings.ccLimit = limit;
-          saveAll();
-          renderKPIs();
-          alert('Credit Card Limit saved.');
-      } else {
-          alert('Please enter a valid credit card limit.');
-      }
-  });
-
-  function updateMethodName(el) {
-      const key = el.dataset.key;
-      const newName = el.value.trim();
-      if (newName && key) {
-          methodNames[key] = newName;
-          saveAll();
-          renderAll();
-      }
-  }
-
-  function deleteMethod(key) {
-      if (confirm(`Are you sure you want to remove the method "${methodNames[key]}"?`)) {
-          delete methodNames[key];
-          saveAll();
-          renderAll();
-      }
-  }
-
-  function addMethod() {
-      const input = document.getElementById('newMethod');
-      const name = input.value.trim();
-      if (name) {
-          const key = toKey(name);
-          if (!methodNames[key]) {
-              methodNames[key] = name;
-              input.value = '';
-              saveAll();
-              renderAll();
-          } else {
-              alert('Method already exists.');
-          }
-      }
-  }
-
-  function deleteIncome(source) {
-      if (confirm(`Remove income source "${source}"?`)) {
-          incomeSources = incomeSources.filter(s => s !== source);
-          saveAll();
-          renderAll();
-      }
-  }
-
-  function addIncome() {
-      const input = document.getElementById('newIncome');
-      const source = input.value.trim();
-      if (source && !incomeSources.includes(source)) {
-          incomeSources.push(source);
-          input.value = '';
-          saveAll();
-          renderAll();
-      } else if (source) {
-          alert('Income source already exists.');
-      }
-  }
-
-  function convertToCSV(data) {
-      const headers = ['id', 'type', 'amount', 'date', 'desc', 'category', 'method', 'incomeSource', 'investmentGroup', 'investmentSub', 'insuranceType', 'insuranceFor'];
-      const rows = data.map(obj => headers.map(header => {
-          let value = obj[header] ?? '';
-          if (typeof value === 'string' && value.includes(',')) {
-              return `"${value.replace(/"/g, '""')}"`;
-          }
-          return value;
-      }).join(','));
-      const csvContent = [headers.join(','), ...rows].join('\n');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      if (link.download !== undefined) {
-          const url = URL.createObjectURL(blob);
-          link.setAttribute('href', url);
-          link.setAttribute('download', 'MoneyMirror_Export.csv');
-          link.style.visibility = 'hidden';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-      }
-  }
-
-  function processImportedData() {
-      const fileInput = document.getElementById('importFile');
-      const file = fileInput.files[0];
-      if (!file) return alert('Please select a file.');
-      const reader = new FileReader();
-      reader.onload = function(e) {
-          const content = e.target.result;
-          let importedData = [];
-          if (file.name.endsWith('.json')) {
-              try { importedData = JSON.parse(content); } catch (err) { return alert('Error parsing JSON file: ' + err.message); }
-          } else if (file.name.endsWith('.csv')) {
-              importedData = parseCSV(content);
-          } else { return alert('Unsupported file type. Please use CSV or JSON.'); }
-
-          if (!importedData || importedData.length === 0) return alert('No valid data found.');
-          let newEntries = 0;
-          importedData.forEach(item => {
-              const entry = {
-                  id: uid(),
-                  type: item.type ? item.type.toLowerCase().trim() : 'expense',
-                  amount: Number(item.amount),
-                  date: item.date || new Date().toISOString().slice(0, 10),
-                  desc: item.desc || item.description || '',
-                  category: item.category || 'Misc',
-                  method: item.method ? toKey(item.method) : 'cash',
-                  incomeSource: item.income_source || item.incomeSource || '',
-                  investmentGroup: item.investment_group || item.investmentGroup || '',
-                  investmentSub: item.investment_sub || item.investmentSub || '',
-                  insuranceType: item.insurance_type || item.insuranceType || '',
-                  insuranceFor: item.insurance_for || item.insuranceFor || '',
-              };
-              if (entry.amount > 0 && entry.desc) {
-                  data.push(entry);
-                  newEntries++;
-              }
-          });
-          saveAll();
-          renderAll();
-          document.getElementById('importModal').classList.remove('open');
-          alert(`Successfully imported ${newEntries} new entries.`);
-      };
-      reader.readAsText(file);
-  }
-
-  function parseCSV(csvText) {
-      const lines = csvText.split('\n').filter(line => line.trim() !== '');
-      if (lines.length < 2) return [];
-      const headerLine = lines[0];
-      const headers = headerLine.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g).map(h => h.replace(/"/g, '').toLowerCase().trim());
-      const dataRows = [];
-      for (let i = 1; i < lines.length; i++) {
-          const values = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-          if (!values || values.length !== headers.length) continue;
-          const entry = {};
-          for (let j = 0; j < headers.length; j++) {
-              let value = values[j] ? values[j].replace(/^"|"$/g, '').replace(/""/g, '"') : '';
-              entry[headers[j]] = value;
-          }
-          dataRows.push(entry);
-      }
-      return dataRows;
-  }
-
-  // --- NEW RECENT ENTRIES RENDER WITH SEARCH/FILTER ---
+  // --- RECENT ENTRIES RENDER WITH SEARCH/FILTER ---
   function renderRecentEntries() {
     const t = document.getElementById('recentTable').querySelector('tbody');
     const limitEl = document.getElementById('entryLimit');
     const limit = limitEl.value === 'all' ? data.length : Number(limitEl.value);
     
-    // Get Filter Values
     const searchText = document.getElementById('recentSearch')?.value.toLowerCase() || '';
     const sortMode = document.getElementById('recentSort')?.value || 'dateDesc';
     const categoryFilter = document.getElementById('recentCategory')?.value || '';
 
-    // Filter Logic
     let filtered = data.filter(e => {
         const matchSearch = (e.desc.toLowerCase().includes(searchText) || 
                              e.category.toLowerCase().includes(searchText) || 
@@ -2199,7 +2036,6 @@
         return matchSearch && matchCat;
     });
 
-    // Sort Logic
     filtered.sort((a, b) => {
         if (sortMode === 'dateDesc') return new Date(b.date) - new Date(a.date);
         if (sortMode === 'dateAsc') return new Date(a.date) - new Date(b.date);
@@ -2349,6 +2185,8 @@
     const header = document.getElementById(elmnt.id + "header") || document.getElementById('calc-header');
     let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
     header.onmousedown = dragMouseDown;
+    header.ontouchstart = dragTouchStart;
+
     function dragMouseDown(e) {
       e = e || window.event;
       e.preventDefault();
@@ -2357,6 +2195,7 @@
       document.onmouseup = closeDragElement;
       document.onmousemove = elementDrag;
     }
+
     function elementDrag(e) {
       e = e || window.event;
       e.preventDefault();
@@ -2367,9 +2206,29 @@
       elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
       elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
     }
+
     function closeDragElement() {
       document.onmouseup = null;
       document.onmousemove = null;
+    }
+
+    function dragTouchStart(e) {
+        const touch = e.touches[0];
+        pos3 = touch.clientX;
+        pos4 = touch.clientY;
+        document.ontouchend = closeDragElement;
+        document.ontouchmove = elementTouchDrag;
+    }
+
+    function elementTouchDrag(e) {
+        e.preventDefault(); // Prevent scrolling while dragging
+        const touch = e.touches[0];
+        pos1 = pos3 - touch.clientX;
+        pos2 = pos4 - touch.clientY;
+        pos3 = touch.clientX;
+        pos4 = touch.clientY;
+        elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+        elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
     }
   }
 
@@ -2384,3 +2243,4 @@
 </script>
 </body>
 </html>
+</div>
