@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MoneyMirror — v5.0.2 Copilot (Full build: visual polish + synced filters + mobile fixes)</title>
+  <title>MoneyMirror — v5.0.3 Copilot (Pro 3D UI + Fixed Quick Subs + Polished Tables + Mobile layout)</title>
 
   <!-- Fonts and Charts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:ital,wght@1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Merriweather:ital,wght@1,400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-  <!-- Firebase (Compat for simplicity) -->
+  <!-- Firebase (Compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
@@ -26,23 +26,19 @@
     };
     let db=null, auth=null, USE_FIRESTORE=false, currentProfile=null;
     const FIRESTORE_COLLECTION_NAME = 'moneymirror_v4_transactions';
-    try {
-      const app = firebase.initializeApp(firebaseConfig);
-      db = app.firestore(); auth = app.auth(); USE_FIRESTORE = true;
-    } catch(e) { console.warn('Firebase init failed, using local only'); }
+    try { const app = firebase.initializeApp(firebaseConfig); db = app.firestore(); auth = app.auth(); USE_FIRESTORE = true; } catch(e){ console.warn('Firebase init failed, using local only'); }
 
-    async function signInWithGoogle() {
+    async function signInWithGoogle(){
       if(!auth) return alert('Auth not initialized. Please refresh.');
       const provider = new firebase.auth.GoogleAuthProvider();
-      try { const res = await auth.signInWithPopup(provider); onUserSignedIn(res.user); }
-      catch(err){ alert('Sign-in popup blocked. Allow popups and try again.'); }
+      try { const res = await auth.signInWithPopup(provider); onUserSignedIn(res.user); } catch(err){ alert('Sign-in popup blocked. Allow popups and try again.'); }
     }
     function onUserSignedIn(user){
       currentProfile = user.displayName || user.email || 'User';
       localStorage.setItem('mm_last_profile', currentProfile);
       document.getElementById('profileNameDisplay').textContent = currentProfile;
       document.getElementById('authGate').style.display='none';
-      document.querySelector('main').style.filter='none';
+      document.querySelector('main').classList.remove('blurred');
       document.getElementById('logoutBtn').style.display='block';
       loadProfileData();
     }
@@ -53,133 +49,167 @@
         document.getElementById('profileNameDisplay').textContent='--';
         document.getElementById('logoutBtn').style.display='none';
         document.getElementById('authGate').style.display='flex';
-        document.querySelector('main').style.filter='blur(5px)';
+        document.querySelector('main').classList.add('blurred');
       });
     }
     document.addEventListener('DOMContentLoaded', ()=>{
       document.getElementById('loginBtn').addEventListener('click', signInWithGoogle);
       document.getElementById('logoutBtn').addEventListener('click', signOutUser);
       if(auth){
-        auth.onAuthStateChanged(user=>{ if(user) onUserSignedIn(user); else { document.getElementById('authGate').style.display='flex'; document.querySelector('main').style.filter='blur(5px)'; } });
+        auth.onAuthStateChanged(user=>{ if(user) onUserSignedIn(user); else { document.getElementById('authGate').style.display='flex'; document.querySelector('main').classList.add('blurred'); } });
       }
     });
   </script>
 
   <style>
     :root{
-      --sidebar-bg:#0f172a; --sidebar-text:#94a3b8; --sidebar-active:#38bdf8;
-      --bg-color:#f1f5f9; --card-bg:#ffffff; --text-main:#0f172a; --text-muted:#64748b;
-      --primary:#2563eb; --primary-2:#1d4ed8; --success:#10b981; --danger:#ef4444; --warning:#f59e0b;
-      --border:#e2e8f0;
-      /* Pro palette for charts */
-      --c1:#2563eb; --c2:#10b981; --c3:#f59e0b; --c4:#ef4444; --c5:#7c3aed; --c6:#0ea5e9; --c7:#14b8a6; --c8:#22c55e; --c9:#eab308; --c10:#f97316; --c11:#374151; --c12:#8b5cf6;
-      --kpi-glow: 0 10px 25px rgba(29,78,216,0.15);
+      --sidebar-bg:#0b1226; --sidebar-text:#94a3b8; --sidebar-active:#5ad3ff;
+      --bg-color:#0d142b; /* Pro dark app feel */
+      --surface-1:#0f1833; --surface-2:#111c3b; --surface-3:#122044;
+      --card-bg:#121a35; --card-border:#25325b;
+      --text-main:#e8eefc; --text-muted:#9fb1d1;
+      --primary:#3aa1ff; --primary-2:#2886d8; --success:#10b981; --danger:#ef4444; --warning:#f59e0b;
+      --accent-1:#7c3aed; --accent-2:#14b8a6;
+
+      /* Chart palette */
+      --c1:#3aa1ff; --c2:#10b981; --c3:#f59e0b; --c4:#ef4444; --c5:#7c3aed; --c6:#0ea5e9; --c7:#14b8a6; --c8:#22c55e; --c9:#eab308; --c10:#f97316; --c11:#8b5cf6; --c12:#374151;
+
+      /* Pro 3D effects */
+      --kpi-outer-shadow: 0 24px 50px rgba(26, 71, 180, 0.25);
+      --kpi-inner: inset 0 1px 0 rgba(255,255,255,0.08);
+      --kpi-border: 1px solid rgba(140,170,230,0.25);
     }
 
     *{box-sizing:border-box}
-    body{font-family:'Inter',sans-serif;margin:0;background:var(--bg-color);color:var(--text-main);height:100vh;display:flex;overflow:hidden}
-    aside{width:260px;background:var(--sidebar-bg);color:white;display:flex;flex-direction:column;padding:24px 16px;justify-content:space-between;flex-shrink:0}
-    main{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:24px;position:relative;filter:blur(5px)}
+    body{font-family:'Inter',sans-serif;margin:0;background:linear-gradient(180deg, var(--bg-color) 0%, #0c1530 100%);color:var(--text-main);height:100vh;display:flex;overflow:hidden}
 
-    .brand{font-size:20px;font-weight:800;margin-bottom:30px;display:flex;align-items:center;gap:10px;padding-left:10px}
+    /* Sidebar */
+    aside{width:280px;background:linear-gradient(180deg,#0b1226 0%, #0a1022 100%);color:white;display:flex;flex-direction:column;padding:24px 18px;justify-content:space-between;flex-shrink:0;border-right:1px solid #1e2a52}
+    .brand{font-size:20px;font-weight:900;margin-bottom:24px;display:flex;align-items:center;gap:10px;padding-left:10px}
     .brand span{color:var(--sidebar-active)}
-    .nav-group{margin-bottom:24px}
-    .nav-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#475569;font-weight:700;margin-bottom:8px;padding-left:10px}
-    .nav-item{padding:10px 12px;border-radius:8px;color:var(--sidebar-text);cursor:pointer;transition:.2s;display:flex;align-items:center;gap:12px;font-size:14px;font-weight:600;margin-bottom:2px}
-    .nav-item:hover{background:rgba(255,255,255,0.06);color:white}
-    .nav-item.active{background:rgba(56,189,248,0.12);color:var(--sidebar-active)}
-    .sidebar-footer{background:rgba(255,255,255,0.06);padding:15px;border-radius:10px;border:1px solid rgba(255,255,255,0.08)}
+    .nav-group{margin-bottom:20px}
+    .nav-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#5e6a8e;font-weight:800;margin-bottom:8px;padding-left:10px}
+    .nav-item{padding:12px 14px;border-radius:12px;color:#b7c4e1;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:12px;font-size:14px;font-weight:700;margin-bottom:4px}
+    .nav-item:hover{background:rgba(255,255,255,0.05);color:white}
+    .nav-item.active{background:linear-gradient(90deg,rgba(56,189,248,0.15),rgba(56,189,248,0.05));color:var(--sidebar-active);border:1px solid rgba(56,189,248,0.25)}
+    .sidebar-footer{background:rgba(255,255,255,0.04);padding:16px;border-radius:14px;border:1px solid rgba(255,255,255,0.08)}
 
-    #authGate{position:fixed;inset:0;background:linear-gradient(135deg,#0f172a,#2563eb);z-index:9999;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;color:white;text-align:center;padding:0 24px}
-    #authGate .line-1{font-size:22px;font-weight:700} #authGate .line-2{font-size:20px;font-weight:800}
-    #authGate .line-3{font-family:'Merriweather',serif;font-style:italic;font-size:18px;margin:6px 0 14px}
+    /* Main */
+    main{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:24px;position:relative}
+    main.blurred{filter:blur(5px)}
 
-    button{padding:10px 16px;border-radius:10px;border:1px solid transparent;font-weight:700;font-size:13px;cursor:pointer;transition:.2s}
-    .btn-primary{background:var(--primary);color:white;box-shadow:0 8px 20px rgba(37,99,235,0.25)}
-    .btn-primary:hover{background:var(--primary-2)}
-    .btn-outline{background:white;border:1px solid var(--border);color:var(--text-main)}
-    .btn-outline:hover{background:#f8fafc;border-color:#cbd5e1}
-    .btn-danger{background:#fee2e2;color:#991b1b;border-color:#fecaca}
+    /* Header row */
+    .header-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+    .header-row h1{margin:0;font-size:26px;font-weight:900}
+    .header-actions button{padding:10px 14px;border-radius:12px;border:1px solid rgba(120,150,220,0.2);font-weight:800;font-size:13px;cursor:pointer;transition:.2s}
+    .btn-primary{background:linear-gradient(180deg,#3aa1ff,#2886d8);color:white;box-shadow:0 12px 25px rgba(58,161,255,0.25)}
+    .btn-outline{background:transparent;color:#cfe1ff}
+    .btn-outline:hover{background:rgba(255,255,255,0.06)}
+    .btn-danger{background:#3c1212;color:#ffb9b9;border-color:#a94444}
 
-    .dashboard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+    /* Grid */
+    .dashboard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
     .col-span-1{grid-column:span 1} .col-span-2{grid-column:span 2} .col-span-3{grid-column:span 3} .col-span-4{grid-column:span 4}
 
     /* Pro 3D KPI cards */
-    .card{background:var(--card-bg);border-radius:16px;border:1px solid #e5e7eb;box-shadow:0 2px 6px rgba(15,23,42,0.06)}
-    .kpi-card{padding:20px;background:linear-gradient(180deg,#ffffff, #f8fafc);border:1px solid #e6edf6;box-shadow:0 12px 30px rgba(2,25,66,0.08), inset 0 1px 0 rgba(255,255,255,0.6)}
-    .kpi-title{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:#475569;font-weight:800}
-    .kpi-value{font-size:30px;font-weight:800;margin-top:6px;letter-spacing:-0.5px}
-    .kpi-sub{font-size:12px;color:#334155;margin-top:8px;display:flex;align-items:center;gap:6px;font-weight:700}
-    .kpi-card.emphasis{box-shadow:var(--kpi-glow)}
-    .strong-black{color:#0f172a;font-weight:800}
+    .card{background:linear-gradient(180deg, #111935, #0f1833);border-radius:16px;border:1px solid var(--card-border);box-shadow:0 6px 18px rgba(8, 18, 50, 0.45)}
+    .kpi-card{padding:18px;background:
+      radial-gradient(1000px 1000px at -200px -200px, rgba(64,126,255,0.15), rgba(64,126,255,0) 40%),
+      linear-gradient(180deg,#121c3f,#0f1833);
+      border:var(--kpi-border);
+      box-shadow:var(--kpi-outer-shadow), var(--kpi-inner); position:relative; overflow:hidden}
+    .kpi-title{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:#87a2da;font-weight:900}
+    .kpi-value{font-size:32px;font-weight:900;margin-top:6px;letter-spacing:-0.3px;color:#f2f6ff;text-shadow:0 1px 0 rgba(255,255,255,0.05)}
+    .kpi-sub{font-size:12px;color:#b9c7e6;margin-top:8px;display:flex;align-items:center;gap:6px;font-weight:800}
+    .kpi-card.emphasis{outline:1px solid rgba(140,170,230,0.35)}
+    .strong-black{color:#ffffff;font-weight:900}
 
+    /* KPI Invest breakdown cards */
     .card-header{display:flex;justify-content:space-between;align-items:center;padding:18px 18px 10px 18px}
     .card-body{padding:0 18px 18px 18px}
-    .card-title{font-size:15px;font-weight:800;color:#0f172a}
+    .card-title{font-size:15px;font-weight:900;color:#dbe7ff}
 
-    label{font-size:11px;font-weight:800;text-transform:uppercase;color:#64748b;margin-bottom:6px;display:block;letter-spacing:.5px}
-    input,select{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;font-family:inherit;font-size:13px;background:#f8fafc;outline:none;transition:border .2s}
-    input:focus,select:focus{border-color:var(--primary);background:white;box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
-    .flex-row{display:flex;gap:10px;align-items:center}
-    .hidden{display:none !important}
+    /* Labels/Inputs */
+    label{font-size:10px;font-weight:900;text-transform:uppercase;color:#7f95c8;margin-bottom:6px;display:block;letter-spacing:.6px}
+    input,select{width:100%;padding:10px;border:1px solid rgba(140,170,230,0.25);border-radius:12px;font-family:inherit;font-size:13px;background:#0f1833;color:#dbe7ff;outline:none;transition:border .2s}
+    input:focus,select:focus{border-color:var(--primary);background:#101c3d;box-shadow:0 0 0 3px rgba(58,161,255,0.15)}
 
-    .badge{padding:4px 8px;border-radius:20px;font-size:11px;font-weight:700;display:inline-block}
-    .badge-income{background:#dcfce7;color:#166534}
-    .badge-expense{background:#fee2e2;color:#991b1b}
-    .badge-inv{background:#e0f2fe;color:#075985}
-    .badge-ins{background:#f3e8ff;color:#6b21a8}
-    .badge-opening{background:#efe6ff;color:#6b21a8}
-    .badge-cc{background:#fef3c7;color:#b45309}
+    /* Badges */
+    .badge{padding:4px 8px;border-radius:12px;font-size:11px;font-weight:900;display:inline-block}
+    .badge-income{background:#052d22;color:#46e6b1;border:1px solid #1f5c49}
+    .badge-expense{background:#351116;color:#ff9a9a;border:1px solid #7a2d2d}
+    .badge-inv{background:#0a2238;color:#7fc3ff;border:1px solid #274b7a}
+    .badge-ins{background:#26113a;color:#d2a4ff;border:1px solid #5a368a}
+    .badge-opening{background:#1b1440;color:#cdbfff;border:1px solid #524a8f}
+    .badge-cc{background:#332308;color:#ffd08a;border:1px solid #8a5a2a}
 
-    .account-list{font-size:12px;margin-top:12px;border-top:1px solid var(--border);padding-top:10px;display:flex;flex-direction:column;gap:6px;color:#475569}
+    /* Account list */
+    .account-list{font-size:12px;margin-top:12px;border-top:1px dashed rgba(140,170,230,0.25);padding-top:10px;display:flex;flex-direction:column;gap:6px;color:#9fb1d1}
     .account-list div{display:flex;justify-content:space-between}
-    .account-list span:last-child{font-weight:800;color:#0f172a}
+    .account-list span:last-child{font-weight:900;color:#e8eefc}
 
-    /* KPI breakdown charts layout */
+    /* Breakdown layout */
     .kpi-breakdown-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;align-items:stretch}
 
     /* Wallet layout */
     .wallet-layout{display:flex;flex-direction:row;align-items:center;gap:20px}
-    .wallet-chart{height:300px;width:50%;max-width:360px;position:relative}
+    .wallet-chart{height:320px;width:50%;max-width:420px;position:relative}
+
+    /* Table – polished */
+    table{width:100%;border-collapse:separate;border-spacing:0 8px}
+    th{text-align:left;font-size:11px;color:#9fb1d1;padding:10px 12px;font-weight:900;text-transform:uppercase;letter-spacing:.5px;background:#0f1833;border-bottom:2px solid #1e2a52;position:sticky;top:0;z-index:1}
+    td{padding:12px;background:#0f1833;border:1px solid #1e2a52;border-left:4px solid transparent}
+    tr{transition:.15s}
+    tr:hover td{border-left-color:#3aa1ff; background:#0e1a3a}
+    .row-odd td{background:#101c3a}
+
+    .table-actions button{background:transparent;border:none;color:#9bd0ff;cursor:pointer;padding:4px;font-weight:900}
+    .table-actions button:hover{color:#ffffff}
 
     /* Modals */
     .modal{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;display:none;justify-content:center;align-items:center;backdrop-filter:blur(2px)}
     .modal.open{display:flex;animation:fadeIn .2s ease-out}
-    .modal-content{background:white;width:95%;max-width:1200px;border-radius:16px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);max-height:90vh;overflow-y:auto}
+    .modal-content{background:#0f1833;width:95%;max-width:1200px;border-radius:16px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.35);max-height:90vh;overflow-y:auto;border:1px solid #26345e}
     .modal-pad{padding:24px} .modal-small{width:420px}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
-    /* Mobile fixes: prevent truncation/squeeze */
-    @media(max-width: 1024px){ .dashboard-grid{grid-template-columns:repeat(2,1fr)} .col-span-2,.col-span-3,.col-span-4{grid-column:span 2}}
+    /* Quick subs */
+    .quick-sub-card{border:1px solid #24335f;border-radius:14px;padding:12px;background:#0f1833}
+    .quick-sub-header{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .quick-sub-title{font-weight:900;color:#dbe7ff}
+    .total-badge{background:#0c1634;border:1px solid #24335f;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:900;color:#9fb1d1}
+    .dropdown{position:relative}
+    .dropdown-menu{position:absolute;top:40px;left:0;background:#0f1833;border:1px solid #24335f;border-radius:12px;padding:10px;width:300px;box-shadow:0 12px 24px rgba(0,0,0,0.35);z-index:10}
+    .dropdown-item{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:8px;font-size:12px;color:#cfe1ff}
+    .dropdown-item:hover{background:#0e1a3a}
+
+    /* Mobile layout fixes (clean, non-jumbled) */
+    .mobile-topbar{display:none}
+    @media(max-width: 1024px){ .dashboard-grid{grid-template-columns:repeat(2,1fr)} .col-span-2,.col-span-3,.col-span-4{grid-column:span 2} }
     @media(max-width: 768px){
-      body{flex-direction:column;height:auto;overflow:auto}
-      aside{width:100%;padding:15px;flex-direction:row;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:500}
+      /* Convert sidebar to topbar and keep content below, not jumbled */
+      aside{display:none}
+      .mobile-topbar{display:flex;position:sticky;top:0;z-index:1000;background:#0b1226;border-bottom:1px solid #1e2a52;padding:10px 14px;align-items:center;justify-content:space-between}
+      .mobile-title{font-weight:900;color:#cfe1ff}
+      .mobile-actions{display:flex;gap:8px}
       .dashboard-grid{grid-template-columns:1fr;gap:16px}
       .kpi-breakdown-grid{grid-template-columns:1fr}
       .wallet-layout{flex-direction:column}
-      .wallet-chart{width:100%;max-width:100%;height:300px}
+      .wallet-chart{width:100%;max-width:100%;height:320px}
     }
-
-    /* Quick subs (ordered groups) */
-    .quick-sub-card{border:1px solid var(--border);border-radius:12px;padding:12px;background:white}
-    .quick-sub-header{display:flex;justify-content:space-between;align-items:center}
-    .quick-sub-title{font-weight:800}
-    .total-badge{background:#f1f5f9;border:1px solid #e2e8f0;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#0f172a}
-    .dropdown{position:relative}
-    .dropdown-menu{position:absolute;top:34px;left:0;background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px;width:280px;box-shadow:0 12px 24px rgba(0,0,0,0.15);z-index:10}
-    .dropdown-item{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-radius:8px;font-size:12px}
-    .dropdown-item:hover{background:#f8fafc}
   </style>
 </head>
 <body>
 
-<div id="authGate">
-  <p class="line line-1">Welcome to</p>
-  <p class="line line-2">MoneyMirror — Personal Finance</p>
-  <p class="line line-3">by Rehan Hamdulay</p>
-  <button id="loginBtn" class="btn-primary" style="padding:12px 24px;font-size:16px;">Sign in with Google</button>
+<!-- Auth gate -->
+<div id="authGate" style="position:fixed;inset:0;background:linear-gradient(135deg,#0b1226,#3aa1ff);z-index:9999;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;color:white;text-align:center;padding:0 24px">
+  <p class="line-1" style="font-size:22px;font-weight:900;margin:0">Welcome to</p>
+  <p class="line-2" style="font-size:20px;font-weight:900;margin:0">MoneyMirror — Personal Finance</p>
+  <p class="line-3" style="font-family:'Merriweather',serif;font-style:italic;font-size:18px;margin:6px 0 14px">by Rehan Hamdulay</p>
+  <button id="loginBtn" class="btn-primary" style="padding:12px 24px;font-size:16px;border-radius:14px;border:none">Sign in with Google</button>
 </div>
 
+<!-- Sidebar (hidden on mobile; replaced by topbar) -->
 <aside id="mainSidebar">
   <div>
     <div class="brand">
@@ -200,20 +230,29 @@
     </nav>
   </div>
   <div class="sidebar-footer">
-    <div class="flex-row" style="justify-content:space-between;font-size:11px;color:var(--sidebar-text)">
-      <span>Current profile</span><span id="profileNameDisplay" style="color:white;font-weight:800">--</span>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:#9fb1d1">
+      <span>Current profile</span><span id="profileNameDisplay" style="color:#cfe1ff;font-weight:900">--</span>
     </div>
-    <div style="font-size:10px;color:var(--sidebar-text);margin-top:6px">v5.0.2 • Visual polish + synced filters + mobile fixes</div>
+    <div style="font-size:10px;color:#7f95c8;margin-top:6px">v5.0.3 • Pro 3D UI + fixed quick subs + polished tables + mobile layout</div>
   </div>
 </aside>
 
-<main>
-  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+<!-- Mobile topbar -->
+<div class="mobile-topbar">
+  <div class="mobile-title">MoneyMirror v5.0.3</div>
+  <div class="mobile-actions">
+    <button id="mobileAnalytics" class="btn-outline" style="padding:6px 10px;border-radius:10px">Analytics</button>
+    <button id="mobileSettings" class="btn-outline" style="padding:6px 10px;border-radius:10px">Settings</button>
+  </div>
+</div>
+
+<main class="blurred">
+  <div class="header-row">
     <div>
-      <h1 style="margin:0;font-size:24px;font-weight:800">Financial overview</h1>
+      <h1>Financial overview</h1>
       <div id="currentDate" style="font-size:13px;color:var(--text-muted);margin-top:4px"></div>
     </div>
-    <div class="flex-row">
+    <div class="header-actions">
       <button class="btn-outline" id="sampleBtn">Load sample</button>
       <button class="btn-primary" id="importDataBtn">Import data (CSV/JSON)</button>
       <button class="btn-outline" id="exportBtn">Export CSV</button>
@@ -233,10 +272,12 @@
       <div class="kpi-value strong-black" id="kpiExpense">₹0</div>
       <div class="kpi-sub" id="momExpense"></div>
     </div>
-    <div class="card kpi-card emphasis col-span-1" id="ccCard" style="border:1px solid #fde68a;background:linear-gradient(180deg,#fff7ed,#fffbeb)">
+    <div class="card kpi-card emphasis col-span-1" id="ccCard" style="border:1px solid rgba(245,158,11,0.4); background:
+      radial-gradient(800px 800px at -200px -200px, rgba(245,158,11,0.12), rgba(245,158,11,0) 45%),
+      linear-gradient(180deg,#151c39,#111936)">
       <div class="kpi-title">Credit card due</div>
       <div class="kpi-value strong-black" id="kpiCCDue">₹0</div>
-      <div class="kpi-sub strong-black" style="margin-top:6px;">
+      <div class="kpi-sub" style="margin-top:6px;">
         <span id="ccPaymentDate">Next Payment: 10th of December</span>
         <span style="margin-left:10px;">Limit: <span id="ccLimitDisplay">₹2,00,000</span></span>
       </div>
@@ -249,65 +290,45 @@
     </div>
 
     <!-- KPI: Total Investment Value with pro charts and synced filters -->
-    <div class="card kpi-card emphasis col-span-4" style="background:linear-gradient(180deg,#eef2ff,#f8fafc);border:1px solid #c7d2fe;">
+    <div class="card kpi-card emphasis col-span-4" style="border:1px solid rgba(140,170,230,0.35);">
       <div class="card-header" style="padding-top:8px;">
         <div class="card-title">Total investment value (historical cost)</div>
-        <div class="flex-row" style="gap:8px;">
-          <button id="toggleInvBreakdown" class="btn-outline" style="padding:6px 10px;font-size:12px;">View breakdown</button>
+        <div style="display:flex;gap:8px;">
+          <button id="toggleInvBreakdown" class="btn-outline" style="padding:6px 10px;font-size:12px;border-radius:10px">View breakdown</button>
         </div>
       </div>
       <div class="card-body" style="padding-top:6px;">
         <div class="kpi-value strong-black" id="kpiInvest">₹0</div>
-        <div class="kpi-sub" id="momInvest" style="color:#1e3a8a"></div>
+        <div class="kpi-sub" id="momInvest" style="color:#a9c7ff"></div>
 
-        <div id="invBreakdownPanel" class="hidden" style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
+        <div id="invBreakdownPanel" class="hidden" style="margin-top:12px;border-top:1px solid #24335f;padding-top:12px;">
           <!-- Filters -->
-          <div class="card" style="border:1px solid #c7d2fe;margin-bottom:12px;border-radius:12px;">
+          <div class="card" style="border:1px solid #24335f;margin-bottom:12px;border-radius:12px;">
             <div class="card-header">
               <div class="card-title">Filters</div>
-              <div class="flex-row" style="gap:10px;flex-wrap:wrap;">
-                <div style="min-width:220px;">
-                  <label>Major bucket</label>
-                  <select id="invBucketFilter"></select>
-                </div>
-                <div style="min-width:220px;">
-                  <label>View mode</label>
-                  <select id="invViewMode">
-                    <option value="top4">Top 4 buckets</option>
-                    <option value="subcats">Subcategories of selected bucket</option>
-                  </select>
-                </div>
-                <div style="min-width:220px;">
-                  <label>Date range</label>
-                  <select id="invDateRange">
-                    <option value="6">Last 6 months</option>
-                    <option value="12">Last 12 months</option>
-                    <option value="all">All time</option>
-                  </select>
-                </div>
+              <div style="display:flex;gap:12px;flex-wrap:wrap">
+                <div style="min-width:220px;"><label>Major bucket</label><select id="invBucketFilter"></select></div>
+                <div style="min-width:220px;"><label>View mode</label><select id="invViewMode"><option value="top4">Top 4 buckets</option><option value="subcats">Subcategories of selected bucket</option></select></div>
+                <div style="min-width:220px;"><label>Date range</label><select id="invDateRange"><option value="6">Last 6 months</option><option value="12">Last 12 months</option><option value="all">All time</option></select></div>
               </div>
             </div>
           </div>
 
           <!-- Charts -->
           <div class="kpi-breakdown-grid">
-            <div class="card" style="border:1px solid #c7d2fe;">
+            <div class="card" style="border:1px solid #24335f;">
               <div class="card-header"><div class="card-title" id="invBarTitle">Investment by major bucket</div></div>
-              <div class="card-body" style="height:340px">
-                <canvas id="invBreakdownBar"></canvas>
-              </div>
+              <div class="card-body" style="height:360px"><canvas id="invBreakdownBar"></canvas></div>
             </div>
-            <div class="card" style="border:1px solid #c7d2fe;">
+            <div class="card" style="border:1px solid #24335f;">
               <div class="card-header"><div class="card-title" id="invPieTitle">Share by bucket</div></div>
-              <div class="card-body" style="height:340px">
-                <canvas id="invBreakdownPie"></canvas>
-              </div>
+              <div class="card-body" style="height:360px"><canvas id="invBreakdownPie"></canvas></div>
             </div>
           </div>
 
           <!-- Ordered bucket subcategories quick view -->
           <div style="margin-top:14px;">
-            <div class="card-title" style="font-size:13px;color:#1e3a8a;">Bucket subcategories quick view</div>
+            <div class="card-title" style="font-size:13px;color:#cfe1ff;">Bucket subcategories quick view</div>
             <div id="invQuickSubs" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;"></div>
           </div>
         </div>
@@ -327,125 +348,73 @@
         </select>
       </div>
       <div class="card-body">
-        <div style="height:340px;width:100%;position:relative">
-          <canvas id="mainChart"></canvas>
-        </div>
+        <div style="height:360px;width:100%;position:relative"><canvas id="mainChart"></canvas></div>
       </div>
     </div>
 
     <div class="card col-span-2">
       <div class="card-header" style="gap:12px;">
         <div class="card-title">Wallet breakdown and expense analysis</div>
-        <div class="flex-row" style="gap:12px;flex-wrap:wrap;">
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
           <select id="walletMode" onchange="renderWalletUnified()">
             <option value="wallet">Wallet breakdown (Liquid & Savings)</option>
             <option value="expenses">Expense distribution (Top 10)</option>
           </select>
           <div id="walletChecklistContainer" class="hidden dropdown">
-            <button class="btn-outline" id="toggleChecklist" style="padding:6px 10px;font-size:12px;">Filter categories</button>
+            <button class="btn-outline" id="toggleChecklist" style="padding:6px 10px;font-size:12px;border-radius:10px">Filter categories</button>
             <div id="walletCategoryChecklist" class="dropdown-menu hidden" onclick="event.stopPropagation()">
               <!-- checkboxes injected by JS -->
               <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
-                <button class="btn-outline" id="applyChecklist" style="padding:6px 10px;font-size:12px;">Apply</button>
-                <button class="btn-outline" id="clearChecklist" style="padding:6px 10px;font-size:12px;">Clear</button>
+                <button class="btn-outline" id="applyChecklist" style="padding:6px 10px;font-size:12px;border-radius:10px">Apply</button>
+                <button class="btn-outline" id="clearChecklist" style="padding:6px 10px;font-size:12px;border-radius:10px">Clear</button>
               </div>
             </div>
           </div>
         </div>
       </div>
       <div class="card-body wallet-layout">
-        <div class="wallet-chart">
-          <canvas id="donutChart"></canvas>
-        </div>
+        <div class="wallet-chart"><canvas id="donutChart"></canvas></div>
         <div style="flex:1;display:flex;flex-direction:column;gap:10px;">
           <div id="walletLegend" style="font-size:12px;color:var(--text-muted);"></div>
           <div id="walletInfo" style="font-size:12px;color:var(--text-muted);"></div>
-          <button id="resetExpenseDrilldown" class="btn-outline hidden" style="padding:6px;font-size:12px" onclick="resetExpenseDrilldown()">Clear filters</button>
+          <button id="resetExpenseDrilldown" class="btn-outline hidden" style="padding:6px;font-size:12px;border-radius:10px" onclick="resetExpenseDrilldown()">Clear filters</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Add entry + recent -->
+  <!-- Add entry + Recent -->
   <div class="dashboard-grid">
-    <div class="card col-span-4" style="border:1px solid #dbeafe">
-      <div class="card-header" style="background:linear-gradient(180deg,#2563eb,#1d4ed8);border-radius:16px 16px 0 0;">
-        <div class="card-title" style="color:white">Add new entry</div>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    <div class="card col-span-4" style="border:1px solid #24335f">
+      <div class="card-header" style="background:linear-gradient(180deg,#121c3f,#0f1833);border-radius:16px 16px 0 0;">
+        <div class="card-title">Add new entry</div>
       </div>
       <div class="card-body" style="padding-top:16px;display:flex;flex-wrap:wrap;gap:20px">
-        <div style="width:15%">
-          <label>Type</label>
-          <select id="type">
-            <option value="expense">Expense</option>
-            <option value="income">Income</option>
-            <option value="opening_balance">Opening Balance</option>
-          </select>
-        </div>
-        <div style="width:15%">
-          <label>Amount (₹)</label>
-          <input id="amount" type="number" placeholder="0.00" style="font-weight:800;font-size:16px" step="any" />
-        </div>
-        <div style="width:15%">
-          <label>Date</label>
-          <input id="date" type="date" />
-        </div>
-        <div style="width:45%">
-          <label>Description</label>
-          <input id="desc" placeholder="What is this for?" />
-        </div>
+        <div style="width:15%"><label>Type</label><select id="type"><option value="expense">Expense</option><option value="income">Income</option><option value="opening_balance">Opening Balance</option></select></div>
+        <div style="width:15%"><label>Amount (₹)</label><input id="amount" type="number" placeholder="0.00" style="font-weight:900;font-size:16px" step="any" /></div>
+        <div style="width:15%"><label>Date</label><input id="date" type="date" /></div>
+        <div style="width:45%"><label>Description</label><input id="desc" placeholder="What is this for?" /></div>
 
-        <div id="dynamicFieldsContainer" class="col-span-4" style="width:100%;border-top:1px solid var(--border);padding-top:15px">
+        <div id="dynamicFieldsContainer" class="col-span-4" style="width:100%;border-top:1px dashed #24335f;padding-top:15px">
           <div id="regularFields" style="display:flex;gap:20px;flex-wrap:wrap">
-            <div id="categoryContainer" style="width:15%">
-              <label>Category</label>
-              <select id="category"></select>
-            </div>
-            <div style="width:15%">
-              <label>Method</label>
-              <select id="method"></select>
-            </div>
-            <div id="incomeSourceRow" class="hidden" style="width:15%">
-              <label>Source</label>
-              <select id="incomeSource"></select>
-            </div>
+            <div id="categoryContainer" style="width:15%"><label>Category</label><select id="category"></select></div>
+            <div style="width:15%"><label>Method</label><select id="method"></select></div>
+            <div id="incomeSourceRow" class="hidden" style="width:15%"><label>Source</label><select id="incomeSource"></select></div>
 
             <div id="investmentRow" class="hidden" style="display:flex;gap:20px;flex-wrap:wrap;width:100%">
-              <div style="width:20%">
-                <label>Investment category</label>
-                <select id="invGroup"></select>
-              </div>
-              <div style="width:20%">
-                <label>Investment sub-type</label>
-                <select id="invSub"></select>
-              </div>
+              <div style="width:20%"><label>Investment category</label><select id="invGroup"></select></div>
+              <div style="width:20%"><label>Investment sub-type</label><select id="invSub"></select></div>
             </div>
 
-            <div id="insuranceRow" class="hidden" style="width:25%">
-              <label>Insurance details</label>
-              <div class="flex-row">
-                <select id="insType"><option value="">Type</option><option value="Health">Health</option><option value="Life">Life</option></select>
-                <select id="insFor"><option value="">Insured</option><option value="Self">Self</option><option value="Family">Family</option></select>
-              </div>
-            </div>
+            <div id="insuranceRow" class="hidden" style="width:25%"><label>Insurance details</label>
+              <div style="display:flex;gap:8px"><select id="insType"><option value="">Type</option><option value="Health">Health</option><option value="Life">Life</option></select>
+                <select id="insFor"><option value="">Insured</option><option value="Self">Self</option><option value="Family">Family</option></select></div></div>
           </div>
 
           <div id="openingBalanceRow" class="hidden" style="display:flex;gap:20px;flex-wrap:wrap;width:100%">
-            <div style="width:20%">
-              <label>Asset type</label>
-              <select id="openingType">
-                <option value="Cash">Cash (Liquid)</option>
-                <option value="Investment">Investment Asset</option>
-              </select>
-            </div>
-            <div class="hidden" id="openingGroupContainer" style="width:20%">
-              <label id="openingGroupLabel">Asset category</label>
-              <select id="openingGroup"></select>
-            </div>
-            <div class="hidden" id="openingSubContainer" style="width:20%">
-              <label id="openingSubLabel">Account / Asset sub-type</label>
-              <select id="openingSub"></select>
-            </div>
+            <div style="width:20%"><label>Asset type</label><select id="openingType"><option value="Cash">Cash (Liquid)</option><option value="Investment">Investment Asset</option></select></div>
+            <div class="hidden" id="openingGroupContainer" style="width:20%"><label id="openingGroupLabel">Asset category</label><select id="openingGroup"></select></div>
+            <div class="hidden" id="openingSubContainer" style="width:20%"><label id="openingSubLabel">Account / Asset sub-type</label><select id="openingSub"></select></div>
           </div>
         </div>
 
@@ -458,24 +427,18 @@
     </div>
 
     <div class="card col-span-4">
-      <div class="card-header">
+      <div class="card-header" style="gap:10px">
         <div class="card-title">Recent transactions</div>
-        <div class="flex-row">
+        <div style="display:flex;gap:10px;align-items:center">
           <select id="entryLimit" onchange="renderRecentEntries()">
-            <option value="10">Last 10</option>
-            <option value="25">Last 25</option>
-            <option value="50">Last 50</option>
-            <option value="all">All</option>
+            <option value="10">Last 10</option><option value="25">Last 25</option><option value="50">Last 50</option><option value="all">All</option>
           </select>
+          <input id="searchTx" placeholder="Search by description/category" style="max-width:240px" />
         </div>
       </div>
       <div class="card-body" style="overflow-x:auto">
-        <table id="recentTable" style="width:100%;border-collapse:collapse">
-          <thead>
-            <tr>
-              <th>Type</th><th>Date</th><th>Amount</th><th>Description</th><th>Category</th><th>Method</th><th style="width:100px;">Actions</th>
-            </tr>
-          </thead>
+        <table id="recentTable">
+          <thead><tr><th>Type</th><th>Date</th><th>Amount</th><th>Description</th><th>Category</th><th>Method</th><th>Actions</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -483,42 +446,31 @@
   </div>
 </main>
 
-<!-- Settings -->
+<!-- Settings modal -->
 <div id="settingsModal" class="modal">
   <div class="modal-content modal-small">
-    <div class="card-header" style="background:linear-gradient(180deg,#2563eb,#1d4ed8);border-radius:16px 16px 0 0">
-      <div class="card-title" style="color:white">Settings & Configuration</div>
-      <button class="btn-outline" id="closeSettings" style="background:transparent;color:white;border-color:white;padding:4px 10px">Close</button>
+    <div class="card-header">
+      <div class="card-title">Settings & Configuration</div>
+      <button class="btn-outline" id="closeSettings" style="padding:6px 10px;border-radius:10px">Close</button>
     </div>
     <div class="modal-pad">
       <div style="margin-bottom:20px">
         <label>Payment methods</label>
-        <div id="methodEditor" style="border:1px solid var(--border);border-radius:12px;padding:10px;"></div>
-        <div class="flex-row" style="margin-top:10px">
-          <input id="newMethod" placeholder="New method (e.g. SBI UPI)" />
-          <button class="btn-primary" id="addMethod">Add</button>
-        </div>
+        <div id="methodEditor" style="border:1px solid #24335f;border-radius:12px;padding:10px;"></div>
+        <div style="display:flex;gap:10px;margin-top:10px"><input id="newMethod" placeholder="New method (e.g. SBI UPI)" /><button class="btn-primary" id="addMethod">Add</button></div>
       </div>
       <div style="margin-bottom:20px">
         <label>Income sources</label>
-        <div class="flex-row">
-          <input id="newIncome" placeholder="New source name" />
-          <button class="btn-primary" id="addIncomeBtn">Add</button>
-        </div>
+        <div style="display:flex;gap:10px"><input id="newIncome" placeholder="New source name" /><button class="btn-primary" id="addIncomeBtn">Add</button></div>
         <div id="incomeList" style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"></div>
       </div>
       <div style="margin-bottom:20px">
         <label>Credit card limit</label>
-        <div class="flex-row">
-          <input id="ccLimitInput" type="number" placeholder="Set limit (e.g. 200000)" />
-          <button class="btn-primary" id="saveCCLimit">Save limit</button>
-        </div>
+        <div style="display:flex;gap:10px"><input id="ccLimitInput" type="number" placeholder="Set limit (e.g. 200000)" /><button class="btn-primary" id="saveCCLimit">Save limit</button></div>
       </div>
-      <div style="border-top:1px solid var(--border);padding-top:15px;margin-top:15px">
-        <label style="color:var(--danger)">Danger zone</label>
-        <div class="flex-row">
-          <button class="btn-danger" id="resetBtn">Factory reset profile</button>
-        </div>
+      <div style="border-top:1px dashed #24335f;padding-top:15px;margin-top:15px">
+        <label style="color:#ffb9b9">Danger zone</label>
+        <div><button class="btn-danger" id="resetBtn">Factory reset profile</button></div>
       </div>
     </div>
   </div>
@@ -527,69 +479,39 @@
 <!-- Analytics modal -->
 <div id="analyticsModal" class="modal">
   <div class="modal-content">
-    <div class="card-header" style="background:linear-gradient(180deg,#2563eb,#1d4ed8);border-radius:16px 16px 0 0">
-      <div class="card-title" style="color:white">Advanced financial analytics</div>
-      <button class="btn-outline" id="closeAnalytics" style="background:transparent;color:white;border-color:white;padding:4px 10px">Close</button>
+    <div class="card-header">
+      <div class="card-title">Advanced financial analytics</div>
+      <button class="btn-outline" id="closeAnalytics" style="padding:6px 10px;border-radius:10px">Close</button>
     </div>
     <div class="modal-pad" id="analyticsContent">
-      <!-- Filters -->
-      <div class="card" style="margin-bottom:16px;border:1px solid #dbeafe;border-radius:12px">
+      <div class="card" style="margin-bottom:16px;border:1px solid #24335f;border-radius:12px">
         <div class="card-header">
           <div class="card-title">Filters</div>
           <div style="display:flex;gap:16px;flex-wrap:wrap">
-            <div style="min-width:180px">
-              <label>Date range</label>
-              <select id="dateFilter" onchange="renderAdvancedCharts()">
-                <option value="6">Last 6 months</option>
-                <option value="12">Last 12 months</option>
-                <option value="all">All time</option>
-              </select>
-            </div>
-            <div style="min-width:180px">
-              <label>Chart type</label>
-              <select id="chartType" onchange="renderAdvancedCharts()">
-                <option value="line">Line chart</option>
-                <option value="bar">Bar chart</option>
-              </select>
-            </div>
-            <div style="min-width:220px">
-              <label>Major bucket</label>
+            <div style="min-width:180px"><label>Date range</label><select id="dateFilter" onchange="renderAdvancedCharts()"><option value="6">Last 6 months</option><option value="12">Last 12 months</option><option value="all">All time</option></select></div>
+            <div style="min-width:180px"><label>Chart type</label><select id="chartType" onchange="renderAdvancedCharts()"><option value="line">Line chart</option><option value="bar">Bar chart</option></select></div>
+            <div style="min-width:220px"><label>Major bucket</label>
               <select id="analyticsBucket" onchange="renderAdvancedCharts()">
-                <option value="">All</option>
-                <option value="Equity">Equity</option>
-                <option value="Debt">Debt</option>
-                <option value="ETFs">ETFs</option>
-                <option value="Mutual Funds">Mutual Funds</option>
-                <option value="Retirement">Retirement</option>
-                <option value="Real Estate">Real Estate</option>
-                <option value="Commodities">Commodities</option>
-                <option value="Crypto">Crypto</option>
-                <option value="Other">Other</option>
+                <option value="">All</option><option value="Equity">Equity</option><option value="Debt">Debt</option><option value="ETFs">ETFs</option><option value="Mutual Funds">Mutual Funds</option><option value="Retirement">Retirement</option><option value="Real Estate">Real Estate</option><option value="Commodities">Commodities</option><option value="Crypto">Crypto</option><option value="Other">Other</option>
               </select>
             </div>
           </div>
         </div>
       </div>
 
-      <h3 style="margin:10px 0 0;font-size:18px;">Cumulative net worth</h3>
+      <h3 style="margin:10px 0 0;font-size:18px;color:#dbe7ff">Cumulative net worth</h3>
       <div class="card" style="margin-bottom:16px">
         <div class="card-body" style="padding-top:14px">
-          <div style="height:360px;width:100%;position:relative">
-            <canvas id="chartNetWorth"></canvas>
-          </div>
+          <div style="height:360px;width:100%;position:relative"><canvas id="chartNetWorth"></canvas></div>
         </div>
       </div>
 
-      <h3 style="margin:10px 0 0;font-size:18px;">Investment analysis</h3>
+      <h3 style="margin:10px 0 0;font-size:18px;color:#dbe7ff">Investment analysis</h3>
       <div class="card">
         <div class="card-body" style="padding-top:14px">
           <div style="display:grid;gap:16px;grid-template-columns:1fr 1fr;">
-            <div style="height:300px;position:relative;">
-              <canvas id="chartInvTypesModal"></canvas>
-            </div>
-            <div style="height:300px;position:relative;">
-              <canvas id="chartInvGrowthModal"></canvas>
-            </div>
+            <div style="height:300px;position:relative;"><canvas id="chartInvTypesModal"></canvas></div>
+            <div style="height:300px;position:relative;"><canvas id="chartInvGrowthModal"></canvas></div>
           </div>
         </div>
       </div>
@@ -601,38 +523,37 @@
 <!-- Import modal -->
 <div id="importModal" class="modal">
   <div class="modal-content modal-small">
-    <div class="card-header" style="background:linear-gradient(180deg,#2563eb,#1d4ed8);border-radius:16px 16px 0 0">
-      <div class="card-title" style="color:white">Import data</div>
-      <button class="btn-outline" id="closeImport" style="background:transparent;color:white;border-color:white;padding:4px 10px">Close</button>
+    <div class="card-header">
+      <div class="card-title">Import data</div>
+      <button class="btn-outline" id="closeImport" style="padding:6px 10px;border-radius:10px">Close</button>
     </div>
     <div class="modal-pad">
-      <h4 style="margin-top:0">Import from CSV/JSON</h4>
+      <h4 style="margin-top:0;color:#cfe1ff">Import from CSV/JSON</h4>
       <p style="font-size:13px;color:var(--text-muted)">CSV columns: type, amount, date, desc, category, method. Optional: income_source, investment_group, investment_sub, insurance_type, insurance_for.</p>
       <input type="file" id="importFile" accept=".csv,.json" style="width:100%;margin:10px 0 20px 0" />
-      <button class="btn-primary" id="processImportBtn" style="width:100%">Process file</button>
+      <button class="btn-primary" id="processImportBtn" style="width:100%;border-radius:12px">Process file</button>
     </div>
   </div>
 </div>
 
 <!-- Calculator -->
-<div id="calculator" class="hidden" style="position:fixed;bottom:20px;right:20px;width:300px;height:480px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.3);background:#f8fafc;border:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;z-index:3000">
-  <div id="calc-header" style="background:var(--sidebar-bg);color:white;padding:10px 15px;cursor:move;display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:13px;height:40px">
-    <span>Calculator</span>
-    <button id="calc-close-btn" style="background:transparent;border:none;color:#ef4444;font-size:18px;font-weight:800;cursor:pointer;padding:0;line-height:1">×</button>
+<div id="calculator" class="hidden" style="position:fixed;bottom:20px;right:20px;width:300px;height:480px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.45);background:#0f1833;border:1px solid #24335f;display:flex;flex-direction:column;overflow:hidden;z-index:3000">
+  <div id="calc-header" style="background:#0b1226;color:#cfe1ff;padding:10px 15px;cursor:move;display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:13px;height:40px">
+    <span>Calculator</span><button id="calc-close-btn" style="background:transparent;border:none;color:#ff9a9a;font-size:18px;font-weight:900;cursor:pointer;padding:0;line-height:1">×</button>
   </div>
-  <div id="calc-display" style="background:#0b1323;color:white;text-align:right;font-size:24px;padding:10px 15px;font-family:monospace;overflow-x:auto;white-space:nowrap;height:60px">0</div>
-  <div id="calc-preview" style="background:#111827;color:#9fb3c8;text-align:right;font-size:14px;padding:6px 15px;font-family:monospace;height:28px;border-top:1px solid rgba(255,255,255,0.06)">Enter an expression…</div>
-  <div id="calc-buttons" style="display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(5,1fr);padding:10px;gap:8px;background:white;flex:1">
+  <div id="calc-display" style="background:#0d1530;color:#e8eefc;text-align:right;font-size:24px;padding:10px 15px;font-family:monospace;overflow-x:auto;white-space:nowrap;height:60px">0</div>
+  <div id="calc-preview" style="background:#0b1226;color:#9fb1d1;text-align:right;font-size:14px;padding:6px 15px;font-family:monospace;height:28px;border-top:1px solid #24335f">Enter an expression…</div>
+  <div id="calc-buttons" style="display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(5,1fr);padding:10px;gap:8px;background:#0f1833;flex:1">
     <button class="calc-clear">AC</button><button class="calc-clear">±</button><button class="calc-clear">%</button><button class="calc-operator">/</button>
     <button>7</button><button>8</button><button>9</button><button class="calc-operator">*</button>
     <button>4</button><button>5</button><button>6</button><button class="calc-operator">-</button>
     <button>1</button><button>2</button><button>3</button><button class="calc-operator">+</button>
-    <button class="calc-zero" style="grid-column:span 2">0</button><button>.</button><button class="calc-equals" style="grid-row:span 2;background:var(--primary);color:white">=</button>
+    <button class="calc-zero" style="grid-column:span 2">0</button><button>.</button><button class="calc-equals" style="grid-row:span 2;background:linear-gradient(180deg,#3aa1ff,#2886d8);color:white">=</button>
   </div>
 </div>
 
 <script>
-  // Constants, structures, storage
+  // Constants
   const DEFAULT_CC_LIMIT = 200000;
   const CANONICAL_METHODS = { cash:'Cash', salary_acct:'Bank Account (Salary)', savings_acct:'Bank Account (Savings)', credit_card:'Credit Card', digital_wallet:'Digital Wallet' };
   const BASE_CATS = ['Food','Rent','Utilities','Shopping','Entertainment','Travel','Health','Investments','Insurance','Credit Card Payment','Misc'];
@@ -659,15 +580,15 @@
     'Other Investments': {'Angel Investing / Startup Equity':'Other Investments','Peer-to-Peer Lending':'Other Investments','Private Funds / AIFs':'Other Investments','Alternative Assets':'Other Investments'}
   };
   const MAJOR_BUCKETS = {
-    'Equity (Stocks)':'Equity','Mutual Funds':'Mutual Funds','ETFs':'ETFs','Bonds & Debt Instruments':'Debt','Fixed Income / Savings Schemes':'Debt','Retirement Funds':'Retirement','Real Estate':'Real Estate','Commodities':'Commodities','Crypto & Digital Assets':'Crypto','Other Investments':'Other'
+    'Equity (Stocks)':'Equity','Mutual Funds':'Mutual Funds','ETFs':'ETFs',
+    'Bonds & Debt Instruments':'Debt','Fixed Income / Savings Schemes':'Debt',
+    'Retirement Funds':'Retirement','Real Estate':'Real Estate','Commodities':'Commodities',
+    'Crypto & Digital Assets':'Crypto','Other Investments':'Other'
   };
 
-  let data = [];
-  let methodNames = {...CANONICAL_METHODS};
-  let incomeSources = ['Salary','Freelance','Interest'];
-  let settings = { ccLimit: DEFAULT_CC_LIMIT };
-  let editId = null;
+  let data = [], methodNames = {...CANONICAL_METHODS}, incomeSources = ['Salary','Freelance','Interest'], settings = { ccLimit: DEFAULT_CC_LIMIT }, editId = null;
 
+  // Charts
   let chartMain=null, donutChart=null, chartNetWorth=null, chartInvTypesModal=null, chartInvGrowthModal=null, invBreakdownBarChart=null, invBreakdownPieChart=null;
 
   // Init UI
@@ -676,6 +597,10 @@
     document.getElementById('currentDate').innerText = d.toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
     const today = new Date().toISOString().slice(0,10);
     const dateEl = document.getElementById('date'); if(dateEl) dateEl.value = today;
+
+    // Mobile buttons to open modals
+    document.getElementById('mobileAnalytics')?.addEventListener('click', ()=> { document.getElementById('analyticsModal').classList.add('open'); renderAdvancedCharts(); });
+    document.getElementById('mobileSettings')?.addEventListener('click', ()=> { document.getElementById('settingsModal').classList.add('open'); });
 
     // Modals
     document.getElementById('navSettings').addEventListener('click', ()=> document.getElementById('settingsModal').classList.add('open'));
@@ -705,11 +630,14 @@
       }
     });
 
-    // Wallet filters UI - no premature closing
+    // Wallet filters UI - stable dropdown
     setupWalletFilters();
 
     // KPI investment filters
     setupInvestmentFilters();
+
+    // Search box for recent transactions
+    document.getElementById('searchTx').addEventListener('input', renderRecentEntries);
   });
 
   // Persistence
@@ -987,7 +915,7 @@
     const creditCardDue = ccOpen + ccExp - ccPay;
     const ccLimit = settings.ccLimit;
     const isHigh = ccLimit ? (creditCardDue/ccLimit>0.8):false;
-    document.getElementById('ccCard').style.borderColor = isHigh?'#fecaca':'#fde68a';
+    document.getElementById('ccCard').style.borderColor = isHigh?'rgba(239,68,68,0.5)':'rgba(245,158,11,0.4)';
 
     document.getElementById('kpiIncome').innerText = fmt(inc);
     document.getElementById('kpiExpense').innerText = fmt(exp);
@@ -1022,8 +950,8 @@
 
   // Chart helpers
   function getColorPalette(n){
-    const baseVals = ['--c1','--c2','--c3','--c4','--c5','--c6','--c7','--c8','--c9','--c10','--c11','--c12'].map(v=> getComputedStyle(document.documentElement).getPropertyValue(v).trim());
-    return Array.from({length:n}, (_,i)=> baseVals[i%baseVals.length]);
+    const base = ['--c1','--c2','--c3','--c4','--c5','--c6','--c7','--c8','--c9','--c10','--c11','--c12'].map(v=> getComputedStyle(document.documentElement).getPropertyValue(v).trim());
+    return Array.from({length:n}, (_,i)=> base[i%base.length]);
   }
   function prepareMonthlyData(range){
     const monthly={}; const dates=data.map(d=> d.date);
@@ -1050,15 +978,15 @@
         datasets:[
           {type:'bar',label:'Income',data:income,backgroundColor:'rgba(16,185,129,0.85)',stack:'flow'},
           {type:'bar',label:'Expense',data:expense.map(e=> -e),backgroundColor:'rgba(239,68,68,0.85)',stack:'flow'},
-          {type:'bar',label:'Investment',data:investment.map(i=> -i),backgroundColor:'rgba(37,99,235,0.85)',stack:'flow'},
-          {type:'line',label:'Net Income',data:net,borderColor:'#0f172a',borderWidth:2,tension:0.35,pointRadius:3,fill:false}
+          {type:'bar',label:'Investment',data:investment.map(i=> -i),backgroundColor:'rgba(58,161,255,0.85)',stack:'flow'},
+          {type:'line',label:'Net Income',data:net,borderColor:'#dbe7ff',borderWidth:2,tension:0.35,pointRadius:3,fill:false}
         ]
       },
       options:{
         maintainAspectRatio:false,responsive:true,interaction:{mode:'index',intersect:false},
-        scales:{ x:{stacked:true}, y:{stacked:true, ticks:{callback:(v)=> fmt(Math.abs(v)).replace('₹','₹ ')} } },
+        scales:{ x:{stacked:true, grid:{color:'#182448'}}, y:{stacked:true, grid:{color:'#182448'}, ticks:{callback:(v)=> fmt(Math.abs(v)).replace('₹','₹ ')} } },
         plugins:{
-          legend:{position:'top'},
+          legend:{position:'top', labels:{color:'#cfe1ff'}},
           tooltip:{callbacks:{ label:(ctx)=> `${ctx.dataset.label}: ${fmt(Math.abs(ctx.parsed.y))}` }}
         }
       }
@@ -1071,7 +999,10 @@
   function setupInvestmentFilters(){
     const bucketSelect = document.getElementById('invBucketFilter');
     const uniqueBuckets = Array.from(new Set(Object.values(MAJOR_BUCKETS)));
-    bucketSelect.innerHTML = '<option value="">Select bucket</option>' + uniqueBuckets.map(b=>`<option value="${b}">${b}</option>`).join('');
+    // Ordered: Equity, Debt, ETFs, then others
+    const order = ['Equity','Debt','ETFs','Mutual Funds','Retirement','Real Estate','Commodities','Crypto','Other'];
+    const orderedBuckets = order.filter(b=> uniqueBuckets.includes(b));
+    bucketSelect.innerHTML = '<option value="">Select bucket</option>' + orderedBuckets.map(b=>`<option value="${b}">${b}</option>`).join('');
     document.getElementById('invViewMode').addEventListener('change', ()=> renderInvestmentKPICharts());
     bucketSelect.addEventListener('change', ()=> renderInvestmentKPICharts());
     document.getElementById('invDateRange').addEventListener('change', ()=> renderInvestmentKPICharts());
@@ -1125,37 +1056,24 @@
       document.getElementById('invPieTitle').innerText = 'Share by bucket (Top 4)';
     }
 
-    // Bar with pro styling
     if(invBreakdownBarChart) invBreakdownBarChart.destroy();
     invBreakdownBarChart = new Chart(document.getElementById('invBreakdownBar').getContext('2d'), {
       type:'bar',
-      data:{ labels, datasets:[{ label:'Historical cost', data:values, backgroundColor: colors.map(c=> c+'cc'), borderColor: colors, borderWidth:1.5, borderRadius:6 }] },
-      options:{
-        maintainAspectRatio:false,responsive:true,
-        plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=> `${c.label}: ${fmt(c.parsed.y)}`}} },
-        scales:{ y:{beginAtZero:true, grid:{color:'#eef2ff'}, ticks:{callback:(v)=> fmt(v).replace('₹','₹ ')} }, x:{grid:{display:false}} }
-      }
+      data:{ labels, datasets:[{ label:'Historical cost', data:values, backgroundColor: colors.map(c=> c+'bb'), borderColor: colors, borderWidth:1.5, borderRadius:8 }] },
+      options:{ maintainAspectRatio:false,responsive:true, plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=> `${c.label}: ${fmt(c.parsed.y)}`}} }, scales:{ y:{beginAtZero:true, grid:{color:'#182448'}, ticks:{callback:(v)=> fmt(v).replace('₹','₹ ')} }, x:{grid:{display:false}} } }
     });
 
-    // Donut with center text
     if(invBreakdownPieChart) invBreakdownPieChart.destroy();
     invBreakdownPieChart = new Chart(document.getElementById('invBreakdownPie').getContext('2d'), {
       type:'doughnut',
-      data:{ labels, datasets:[{ data:values, backgroundColor: colors, hoverOffset:6, borderColor:'#ffffff', borderWidth:2 }] },
-      options:{
-        maintainAspectRatio:false,
-        plugins:{
-          legend:{position:'right',labels:{boxWidth:10}},
-          tooltip:{callbacks:{label:(c)=>{ const total=values.reduce((a,b)=>a+b,0); const share = total? ((c.parsed/total)*100).toFixed(1):'0.0'; return `${c.label}: ${fmt(c.parsed)} (${share}%)`; }}}
-        },
-        cutout:'60%'
-      }
+      data:{ labels, datasets:[{ data:values, backgroundColor: colors, hoverOffset:6, borderColor:'#101a38', borderWidth:2 }] },
+      options:{ maintainAspectRatio:false, plugins:{ legend:{position:'right',labels:{boxWidth:10,color:'#cfe1ff'}}, tooltip:{callbacks:{label:(c)=>{ const total=values.reduce((a,b)=>a+b,0); const share = total? ((c.parsed/total)*100).toFixed(1):'0.0'; return `${c.label}: ${fmt(c.parsed)} (${share}%)`; }}} }, cutout:'60%' }
     });
 
     renderQuickSubDropdowns(all);
   }
 
-  // Ordered quick subs: Equity, Debt, ETFs, then others
+  // Ordered quick subs: Equity, Debt, ETFs, then others — FIX: stable open/close
   function renderQuickSubDropdowns(entries){
     const container = document.getElementById('invQuickSubs'); if(!container) return;
     const order = ['Equity','Debt','ETFs','Mutual Funds','Retirement','Real Estate','Commodities','Crypto','Other'];
@@ -1173,10 +1091,13 @@
           groupsInBucket.includes(d.investmentGroup) && d.investmentSub===sub
         ).reduce((acc,c)=> acc+Number(c.amount),0);
         return {sub, amount: sumAmt};
-      }).filter(x=> x.amount>0).sort((a,b)=> b.amount-a.amount);
+      }).sort((a,b)=> b.amount-a.amount);
 
-      const dropdownHtml = subValues.length? subValues.map(x=> `<div class="dropdown-item"><span>${x.sub}</span><strong>${fmt(x.amount)}</strong></div>`).join('') : `<div class="dropdown-item"><span>No data</span><strong>—</strong></div>`;
+      const dropdownHtml = subValues.length
+        ? subValues.map(x=> `<div class="dropdown-item"><span>${x.sub}</span><strong>${fmt(x.amount)}</strong></div>`).join('')
+        : `<div class="dropdown-item"><span>No data</span><strong>—</strong></div>`;
 
+      const safeId = bucket.replace(/\s+/g,'_').toLowerCase();
       return `
         <div class="quick-sub-card">
           <div class="quick-sub-header">
@@ -1184,8 +1105,8 @@
             <span class="total-badge">${fmt(totals[bucket]||0)}</span>
           </div>
           <div class="dropdown" style="margin-top:8px;">
-            <button class="btn-outline" style="padding:6px 10px;font-size:12px;" onclick="toggleQuickMenu(this)">View subcategories</button>
-            <div class="dropdown-menu hidden" onclick="event.stopPropagation()">
+            <button class="btn-outline" data-menu="menu_${safeId}" style="padding:6px 10px;font-size:12px;border-radius:10px;">View subcategories</button>
+            <div id="menu_${safeId}" class="dropdown-menu hidden">
               ${dropdownHtml}
             </div>
           </div>
@@ -1195,18 +1116,28 @@
 
     container.innerHTML = blocks;
 
-    // Close menus on outside click
-    document.addEventListener('click', ()=> {
-      document.querySelectorAll('#invQuickSubs .dropdown-menu').forEach(m=> m.classList.add('hidden'));
+    // Bind toggles explicitly (fix: ensure opens)
+    container.querySelectorAll('button[data-menu]').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const id = btn.getAttribute('data-menu');
+        const menu = document.getElementById(id);
+        // close others
+        container.querySelectorAll('.dropdown-menu').forEach(m=> { if(m!==menu) m.classList.add('hidden'); });
+        // toggle current
+        menu.classList.toggle('hidden');
+      });
+    });
+
+    // Close on outside click only (keep open if clicking inside)
+    document.addEventListener('click', (e)=>{
+      if(!container.contains(e.target)){
+        container.querySelectorAll('.dropdown-menu').forEach(m=> m.classList.add('hidden'));
+      }
     });
   }
-  function toggleQuickMenu(btn){
-    const menu = btn.parentElement.querySelector('.dropdown-menu');
-    document.querySelectorAll('#invQuickSubs .dropdown-menu').forEach(m=> { if(m!==menu) m.classList.add('hidden'); });
-    menu.classList.toggle('hidden');
-  }
 
-  // Recent table
+  // Recent table polished + search
   function getBadge(entry){
     if(entry.type==='income') return `<span class="badge badge-income">Income</span>`;
     if(entry.type==='opening_balance') return `<span class="badge badge-opening">${entry.investmentGroup && entry.investmentGroup!=='Cash' ? 'Asset (Inv)' : 'O.Balance'}</span>`;
@@ -1221,8 +1152,14 @@
   function renderRecentEntries(){
     const tbody = document.querySelector('#recentTable tbody');
     const limit = document.getElementById('entryLimit').value==='all'? data.length: Number(document.getElementById('entryLimit').value);
-    const rows = data.slice(0,limit).map(e=>{
-      const amountDisplay = (e.type==='income' || e.type==='opening_balance')? `<span style="color:var(--success);font-weight:800">+${fmt(e.amount)}</span>` : `<span style="color:var(--danger);font-weight:800">-${fmt(e.amount)}</span>`;
+    const q = (document.getElementById('searchTx').value || '').toLowerCase().trim();
+    let rowsData = data.slice(0,limit);
+    if(q){
+      rowsData = rowsData.filter(e=> (e.desc||'').toLowerCase().includes(q) || (e.category||'').toLowerCase().includes(q) || (e.investmentSub||'').toLowerCase().includes(q));
+    }
+
+    const rows = rowsData.map((e, idx)=>{
+      const amountDisplay = (e.type==='income' || e.type==='opening_balance')? `<span style="color:#46e6b1;font-weight:900">+${fmt(e.amount)}</span>` : `<span style="color:#ff9a9a;font-weight:900">-${fmt(e.amount)}</span>`;
       let methodDisplay = '';
       if(e.type==='opening_balance' && e.investmentGroup!=='Cash') methodDisplay = e.investmentSub || e.investmentGroup;
       else if(e.type==='expense' && e.category==='Investments') methodDisplay = e.investmentSub || e.investmentGroup;
@@ -1233,13 +1170,13 @@
                             e.category==='Insurance'? `${e.insuranceType} (${e.insuranceFor})` :
                             e.type==='expense'? e.category : '--';
 
-      return `<tr>
-        <td>${getBadge(e)}</td><td>${e.date}</td><td style="font-weight:800;text-align:right">${amountDisplay}</td>
-        <td>${e.desc}</td><td>${categoryDisplay}</td><td>${methodDisplay}</td>
-        <td class="flex-row"><button onclick="loadEdit('${e.id}')" style="background:none;border:none;color:var(--primary);cursor:pointer;padding:4px">✎</button><button onclick="deleteEntry('${e.id}')" style="background:none;border:none;color:var(--danger);cursor:pointer;padding:4px">×</button></td>
+      return `<tr class="${idx%2===0?'row-odd':''}">
+        <td>${getBadge(e)}</td><td>${e.date}</td><td style="font-weight:900;text-align:right">${amountDisplay}</td>
+        <td style="color:#cfe1ff">${e.desc}</td><td>${categoryDisplay}</td><td>${methodDisplay}</td>
+        <td class="table-actions"><button title="Edit" onclick="loadEdit('${e.id}')">✎</button><button title="Delete" onclick="deleteEntry('${e.id}')">×</button></td>
       </tr>`;
     }).join('');
-    tbody.innerHTML = rows;
+    tbody.innerHTML = rows || `<tr><td colspan="7" style="text-align:center;color:#9fb1d1;padding:20px;border:1px solid #24335f;background:#0f1833">No transactions found.</td></tr>`;
   }
 
   // Wallet unified with improved checklist behavior
@@ -1250,12 +1187,11 @@
     const container = document.getElementById('walletChecklistContainer');
 
     const cats = BASE_CATS.filter(c=> !['Investments','Credit Card Payment'].includes(c));
-    const boxesHtml = cats.map(c=> `<label style="display:flex;align-items:center;gap:8px;font-size:12px;margin:4px 0;"><input type="checkbox" class="wallet-cat" value="${c}" /> ${c}</label>`).join('');
+    const boxesHtml = cats.map(c=> `<label style="display:flex;align-items:center;gap:8px;font-size:12px;margin:4px 0;color:#cfe1ff"><input type="checkbox" class="wallet-cat" value="${c}" /> ${c}</label>`).join('');
     menu.insertAdjacentHTML('afterbegin', boxesHtml);
 
-    // Prevent closing when clicking inside until Apply/Clear
     toggle.addEventListener('click', (e)=>{ e.stopPropagation(); menu.classList.toggle('hidden'); });
-    document.addEventListener('click', ()=> menu.classList.add('hidden'));
+    document.addEventListener('click', (e)=> { if(!container.contains(e.target)) menu.classList.add('hidden'); });
 
     document.getElementById('applyChecklist').addEventListener('click', (e)=>{
       e.stopPropagation();
@@ -1300,12 +1236,9 @@
       donutChart = new Chart(document.getElementById('donutChart').getContext('2d'), {
         type:'doughnut',
         data:{ labels: positive.map(b=> b.label), datasets:[{ data: positive.map(b=> b.balance), backgroundColor: getColorPalette(positive.length), hoverOffset:4 }] },
-        options:{
-          maintainAspectRatio:false,
-          plugins:{ legend:{display:false}, tooltip:{callbacks:{ label:(ctx)=>{ const total=ctx.dataset.data.reduce((a,b)=>a+b,0); return `${ctx.label}: ${fmt(ctx.parsed)} (${total? ((ctx.parsed/total)*100).toFixed(1)+'%':'0%'})`; }}} }
-        }
+        options:{ maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{callbacks:{ label:(ctx)=>{ const total=ctx.dataset.data.reduce((a,b)=>a+b,0); return `${ctx.label}: ${fmt(ctx.parsed)} (${total? ((ctx.parsed/total)*100).toFixed(1)+'%':'0%'})`; }}} } }
       });
-      legendEl.innerHTML = positive.map((b,i)=> `<div style="display:flex;justify-content:space-between;"><div style="display:flex;align-items:center;"><span style="width:10px;height:10px;border-radius:50%;background:${colors[i]};margin-right:10px;"></span>${b.label}</div><span style="font-weight:800;color:#0f172a">${fmt(b.balance)}</span></div>`).join('') || '<div style="text-align:center;padding-top:20px;">No liquid cash accounts with a positive balance.</div>';
+      legendEl.innerHTML = positive.map((b,i)=> `<div style="display:flex;justify-content:space-between;"><div style="display:flex;align-items:center;"><span style="width:10px;height:10px;border-radius:50%;background:${colors[i]};margin-right:10px;"></span>${b.label}</div><span style="font-weight:900;color:#e8eefc">${fmt(b.balance)}</span></div>`).join('') || '<div style="text-align:center;padding-top:20px;color:#9fb1d1">No liquid cash accounts with a positive balance.</div>';
       infoEl.innerText = 'Liquid balances by account (positive only).';
     } else {
       let filtered = data.filter(d=> d.type==='expense' && d.category!=='Investments' && d.category!=='Credit Card Payment');
@@ -1320,13 +1253,10 @@
       donutChart = new Chart(document.getElementById('donutChart').getContext('2d'), {
         type:'doughnut',
         data:{ labels, datasets:[{ data: amounts, backgroundColor: getColorPalette(labels.length), hoverOffset:4 }] },
-        options:{
-          maintainAspectRatio:false,
-          plugins:{ legend:{position:'right',labels:{boxWidth:10}}, tooltip:{callbacks:{ label:(ctx)=>{ const total=amounts.reduce((a,b)=>a+b,0); return `${ctx.label}: ${fmt(ctx.parsed)} (${total? ((ctx.parsed/total)*100).toFixed(1)+'%':'0%'})`; }}} }
-        }
+        options:{ maintainAspectRatio:false, plugins:{ legend:{position:'right',labels:{boxWidth:10,color:'#cfe1ff'}}, tooltip:{callbacks:{ label:(ctx)=>{ const total=amounts.reduce((a,b)=>a+b,0); return `${ctx.label}: ${fmt(ctx.parsed)} (${total? ((ctx.parsed/total)*100).toFixed(1)+'%':'0%'})`; }}} } }
       });
 
-      legendEl.innerHTML = labels.map((l,i)=> `<div style="display:flex;justify-content:space-between;"><div style="display:flex;align-items:center;"><span style="width:10px;height:10px;border-radius:50%;background:${colors[i]};margin-right:10px;"></span>${l}</div><span style="font-weight:800;color:#0f172a">${fmt(amounts[i])}</span></div>`).join('') || '<div style="text-align:center;padding-top:20px;">No expenses found.</div>';
+      legendEl.innerHTML = labels.map((l,i)=> `<div style="display:flex;justify-content:space-between;"><div style="display:flex;align-items:center;"><span style="width:10px;height:10px;border-radius:50%;background:${colors[i]};margin-right:10px;"></span>${l}</div><span style="font-weight:900;color:#e8eefc">${fmt(amounts[i])}</span></div>`).join('') || '<div style="text-align:center;padding-top:20px;color:#9fb1d1">No expenses found.</div>';
       infoEl.innerText = expenseChecklistSelection.size>0 ? 'Filtered expenses (Top 10 categories)' : 'All expenses (Top 10 categories)';
     }
   }
@@ -1339,25 +1269,18 @@
     const selectedBucket = document.getElementById('analyticsBucket').value;
 
     const {labels, income, expense} = prepareMonthlyData(range==='all'?'all':Number(range));
-    // Net worth baseline = sum of opening balances
     const sumVals = arr=> arr.reduce((a,b)=> a + Number(b.amount||0),0);
     let baseline = sumVals(data.filter(d=> d.type==='opening_balance'));
     let netSeries = [];
-    for(let i=0;i<labels.length;i++){
-      const netChange = (income[i]||0) - (expense[i]||0);
-      baseline += netChange;
-      netSeries.push(baseline);
-    }
+    for(let i=0;i<labels.length;i++){ baseline += ((income[i]||0) - (expense[i]||0)); netSeries.push(baseline); }
 
     if(chartNetWorth) chartNetWorth.destroy();
     chartNetWorth = new Chart(document.getElementById('chartNetWorth').getContext('2d'), {
       type: chartType,
-      data:{ labels, datasets:[{ label:'Cumulative Net Worth', data: netSeries, backgroundColor:'rgba(37,99,235,0.2)', borderColor:'#2563eb', borderWidth:2, tension:0.35, fill: chartType==='line' ? 'start' : false }] },
-      options:{ maintainAspectRatio:false, responsive:true, scales:{ y:{ beginAtZero:false, ticks:{ callback:(v)=> fmt(v).replace('₹','₹ ') }, grid:{color:'#eef2ff'} }, x:{grid:{display:false}} },
-        plugins:{ tooltip:{callbacks:{ label:(c)=> `${c.dataset.label}: ${fmt(c.parsed.y)}` }}, legend:{display:false} } }
+      data:{ labels, datasets:[{ label:'Cumulative Net Worth', data: netSeries, backgroundColor:'rgba(58,161,255,0.18)', borderColor:'#3aa1ff', borderWidth:2, tension:0.35, fill: chartType==='line' ? 'start' : false }] },
+      options:{ maintainAspectRatio:false, responsive:true, scales:{ y:{ beginAtZero:false, ticks:{ callback:(v)=> fmt(v).replace('₹','₹ ') }, grid:{color:'#182448'} }, x:{grid:{color:'#182448'}} }, plugins:{ tooltip:{callbacks:{ label:(c)=> `${c.dataset.label}: ${fmt(c.parsed.y)}` }}, legend:{display:false} } }
     });
 
-    // Investment analysis — filtered by major bucket if selected
     const investEntriesAll = data.filter(d=> (d.type==='opening_balance' && d.investmentGroup && d.investmentGroup!=='Cash') || (d.type==='expense' && d.category==='Investments'));
     const investEntriesRange = applyDateRangeToInvestments(investEntriesAll, range);
     const filteredInvest = selectedBucket ? investEntriesRange.filter(e=> MAJOR_BUCKETS[e.investmentGroup||'']===selectedBucket ) : investEntriesRange;
@@ -1370,8 +1293,8 @@
     if(chartInvTypesModal) chartInvTypesModal.destroy();
     chartInvTypesModal = new Chart(document.getElementById('chartInvTypesModal').getContext('2d'), {
       type:'bar',
-      data:{ labels:typeLabels, datasets:[{ label:'Investment by type (historical cost)', data:typeValues, backgroundColor: colors.map(c=> c+'cc'), borderColor: colors, borderWidth:1.5, borderRadius:6 }] },
-      options:{ maintainAspectRatio:false, responsive:true, plugins:{ legend:{display:false}, tooltip:{callbacks:{ label:(c)=> `${c.label}: ${fmt(c.parsed.y)}` }} }, scales:{ y:{ beginAtZero:true, ticks:{ callback:(v)=> fmt(v).replace('₹','₹ ') }, grid:{color:'#eef2ff'} }, x:{grid:{display:false}} } }
+      data:{ labels:typeLabels, datasets:[{ label:'Investment by type (historical cost)', data:typeValues, backgroundColor: colors.map(c=> c+'bb'), borderColor: colors, borderWidth:1.5, borderRadius:8 }] },
+      options:{ maintainAspectRatio:false, responsive:true, plugins:{ legend:{display:false}, tooltip:{callbacks:{ label:(c)=> `${c.label}: ${fmt(c.parsed.y)}` }} }, scales:{ y:{ beginAtZero:true, ticks:{ callback:(v)=> fmt(v).replace('₹','₹ ') }, grid:{color:'#182448'} }, x:{grid:{display:false}} } }
     });
 
     const pts = filteredInvest.map(i=> ({date:new Date(i.date), amount:Number(i.amount)})).sort((a,b)=> a.date-b.date);
@@ -1379,8 +1302,8 @@
     if(chartInvGrowthModal) chartInvGrowthModal.destroy();
     chartInvGrowthModal = new Chart(document.getElementById('chartInvGrowthModal').getContext('2d'), {
       type:'line',
-      data:{ labels:growthLabels, datasets:[{ label:'Cumulative invested (historical cost)', data:growthValues, borderColor:'#1d4ed8', borderWidth:2, tension:0.35, pointRadius:0 }] },
-      options:{ maintainAspectRatio:false, responsive:true, plugins:{ legend:{position:'top'}, tooltip:{callbacks:{ label:(c)=> `${c.dataset.label}: ${fmt(c.parsed.y)}` }} }, scales:{ y:{ beginAtZero:false, ticks:{ callback:(v)=> fmt(v).replace('₹','₹ ') }, grid:{color:'#eef2ff'} }, x:{grid:{display:false}} } }
+      data:{ labels:growthLabels, datasets:[{ label:'Cumulative invested (historical cost)', data:growthValues, borderColor:'#2886d8', borderWidth:2, tension:0.35, pointRadius:0 }] },
+      options:{ maintainAspectRatio:false, responsive:true, plugins:{ legend:{position:'top', labels:{color:'#cfe1ff'}}, tooltip:{callbacks:{ label:(c)=> `${c.dataset.label}: ${fmt(c.parsed.y)}` }} }, scales:{ y:{ beginAtZero:false, ticks:{ callback:(v)=> fmt(v).replace('₹','₹ ') }, grid:{color:'#182448'} }, x:{grid:{color:'#182448'}} } }
     });
   }
 
@@ -1389,12 +1312,12 @@
     const m = document.getElementById('methodEditor');
     m.innerHTML = Object.entries(methodNames).map(([key,name])=> `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <input type="text" value="${name}" data-key="${key}" onchange="updateMethodName(this)" style="flex:1;margin-right:10px;padding:8px;border-radius:8px;border:1px solid #e5e7eb" />
-        <button class="btn-danger" style="padding:6px 10px;font-size:11px" onclick="deleteMethod('${key}')">Remove</button>
+        <input type="text" value="${name}" data-key="${key}" onchange="updateMethodName(this)" style="flex:1;margin-right:10px;padding:8px;border-radius:10px;border:1px solid #24335f;background:#0f1833;color:#cfe1ff" />
+        <button class="btn-outline" style="padding:6px 10px;border-radius:10px" onclick="deleteMethod('${key}')">Remove</button>
       </div>
     `).join('');
     const i = document.getElementById('incomeList');
-    i.innerHTML = incomeSources.map(source=> `<span style="border:1px solid var(--border);padding:4px 8px;border-radius:8px;font-size:12px;display:inline-flex;align-items:center;background:#f8fafc">${source}<button style="background:none;border:none;color:var(--danger);margin-left:6px;padding:0;line-height:1;cursor:pointer;" onclick="deleteIncome('${source}')">×</button></span>`).join('');
+    i.innerHTML = incomeSources.map(source=> `<span style="border:1px solid #24335f;padding:6px 10px;border-radius:10px;font-size:12px;display:inline-flex;align-items:center;background:#0f1833;color:#cfe1ff">${source}<button style="background:none;border:none;color:#ff9a9a;margin-left:6px;padding:0;line-height:1;cursor:pointer;font-weight:900" onclick="deleteIncome('${source}')">×</button></span>`).join('');
     document.getElementById('ccLimitInput').value = settings.ccLimit;
   }
   document.getElementById('addMethod').addEventListener('click', addMethod);
