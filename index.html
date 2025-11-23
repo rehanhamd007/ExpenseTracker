@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MoneyMirror — v5.0.3 (Fixed & Offline Ready)</title>
+  <title>MoneyMirror — v5.0.4 (Updates)</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@1,400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -28,7 +28,6 @@
       --border: #cbd5e1;
       --warning: #f97316;
       --opening-balance: #6b21a8;
-      /* Charts Palette */
       --c1:#2563eb; --c2:#10b981; --c3:#f59e0b; --c4:#ef4444; --c5:#7c3aed; --c6:#0ea5e9; --c7:#14b8a6;
       --c8:#22c55e; --c9:#eab308; --c10:#f97316; --c11:#374151; --c12:#8b5cf6;
     }
@@ -79,7 +78,7 @@
     .col-span-3 { grid-column: span 3; }
     .col-span-4 { grid-column: span 4; }
 
-    .card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); display: flex; flex-direction: column; overflow: hidden; }
+    .card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); display: flex; flex-direction: column; overflow: hidden; position: relative; }
     .card-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 10px 20px; }
     .card-body { padding: 0 20px 20px 20px; flex: 1; }
     .card-title { font-size: 15px; font-weight: 600; color: var(--text-main); }
@@ -153,21 +152,62 @@
 
     /* Investment KPI breakdown grid and quick subcategories */
     .kpi-breakdown-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 16px; align-items: stretch; }
-    .quick-sub-card { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: white; }
-    .quick-sub-header { display: flex; justify-content: space-between; align-items: center; }
+    .quick-sub-card { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: white; display:flex; flex-direction:column; justify-content:space-between; }
+    .quick-sub-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .quick-sub-title { font-weight: 700; }
     .total-badge { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; color: var(--text-main); }
-    .dropdown { position: relative; }
-    .dropdown-menu { position: absolute; top: 34px; left: 0; background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 10px; width: 280px; box-shadow: 0 12px 24px rgba(0,0,0,0.15); z-index: 10; }
-    .dropdown-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; border-radius: 8px; font-size: 12px; }
-    .dropdown-item:hover { background: #f8fafc; }
+    
+    /* REFACTORED DROPDOWN FOR SUBCATEGORIES */
+    .sub-dropdown-container { position: relative; }
+    .sub-dropdown-menu { 
+        position: absolute; 
+        top: 36px; left: 0; 
+        background: #fff; 
+        border: 1px solid var(--border); 
+        border-radius: 8px; 
+        padding: 8px 0; 
+        width: 100%; min-width: 240px;
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); 
+        z-index: 50; 
+        display: none; /* hidden by default */
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    .sub-dropdown-menu.show { display: block; }
+    .sub-dropdown-item { 
+        display: flex; justify-content: space-between; align-items: center; 
+        padding: 8px 12px; 
+        font-size: 12px; 
+        color: var(--text-main);
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .sub-dropdown-item:last-child { border-bottom: none; }
+    .sub-dropdown-item:hover { background: #f8fafc; }
 
+    /* MULTI-SELECT CHECKBOX STYLES */
+    .multiselect-container { position: relative; }
+    .multiselect-dropdown {
+        position: absolute;
+        top: 100%; right: 0;
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        width: 220px;
+        padding: 10px;
+        z-index: 60;
+        display: none;
+    }
+    .multiselect-dropdown.show { display: block; }
+    .ms-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; cursor: pointer; }
+    .ms-item input { width: auto; margin: 0; }
+    .ms-actions { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+    
     @media(max-width: 1200px) {
       .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
       .col-span-1 { grid-column: span 1; }
       .col-span-2, .col-span-3, .col-span-4 { grid-column: span 2; }
     }
-
     @media(max-width: 768px) {
       body { flex-direction: column; height: auto; overflow: auto; }
       aside { width: 100%; padding: 15px; flex-direction: row; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 500; }
@@ -200,7 +240,7 @@
     <div style="display:flex; justify-content:space-between; align-items:center; width:100%">
       <div class="brand">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
-        MoneyMirror <span>v5.0.3</span>
+        MoneyMirror <span>v5.0.4</span>
       </div>
       <button id="mobileMenuBtn">
         <svg class="icon-menu" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
@@ -227,7 +267,7 @@
       <span>Current profile</span>
       <span class="sys-val" id="profileNameDisplay">--</span>
     </div>
-    <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v5.0.3 • Fixed Build</div>
+    <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v5.0.4 • Multiselect & Quickview Updates</div>
   </div>
 </aside>
 
@@ -367,9 +407,19 @@
             <option value="wallet">Wallet breakdown (Liquid & Savings)</option>
             <option value="expenses">Expense distribution (Top 10)</option>
           </select>
-          <select id="walletCategoryFilter" class="hidden" onchange="renderWalletUnified()">
-            <option value="">All categories</option>
-          </select>
+          
+          <div id="expenseFilterContainer" class="multiselect-container hidden">
+              <button class="btn-outline" style="font-size:12px; padding:6px 10px;" id="expenseFilterBtn">Select Categories ▾</button>
+              <div class="multiselect-dropdown" id="expenseMultiselectDropdown">
+                  <div id="expenseCheckboxes" style="max-height:200px; overflow-y:auto;">
+                      </div>
+                  <div class="ms-actions">
+                      <button class="btn-outline" style="padding:4px 8px; font-size:11px;" id="msClear">Clear</button>
+                      <button class="btn-primary" style="padding:4px 8px; font-size:11px;" id="msApply">Apply</button>
+                  </div>
+              </div>
+          </div>
+
         </div>
       </div>
       <div class="card-body" style="display:flex; flex-direction:row; align-items:center; gap:20px; flex:1">
@@ -465,7 +515,6 @@
               <select id="openingSub"></select>
             </div>
           </div>
-
         </div>
 
         <div style="width:100%; display:flex; gap:10px; margin-top:10px">
@@ -509,7 +558,6 @@
   </div>
 
 </main>
-
 <div id="settingsModal" class="modal">
   <div class="modal-content modal-small">
     <div class="action-header" style="border-radius:12px 12px 0 0">
@@ -654,7 +702,7 @@
   </div>
 </div>
 
-<script>
+  <script>
     // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyCAZvHT6dG61ISR57AJoZh8GSO7nY_mEGc",
@@ -699,7 +747,6 @@
       }
     }
 
-    // NEW FUNCTION: Guest Mode to bypass Auth Gate
     function startGuestMode() {
         currentProfile = 'Guest';
         document.getElementById('profileNameDisplay').textContent = 'Guest (Offline)';
@@ -739,7 +786,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('loginBtn').addEventListener('click', signInWithGoogle);
-      document.getElementById('guestBtn').addEventListener('click', startGuestMode); // Fixed event listener
+      document.getElementById('guestBtn').addEventListener('click', startGuestMode);
       document.getElementById('logoutBtn').addEventListener('click', signOutUser);
       
       if (auth) {
@@ -750,6 +797,9 @@
           }
         });
       }
+      
+      // Setup Expense Multiselect logic
+      setupExpenseMultiSelect();
     });
 
   // --- UTILS AND CONSTANTS ---
@@ -761,9 +811,7 @@
     'credit_card': 'Credit Card',
     'digital_wallet': 'Digital Wallet'
   };
-  // Main categories incl. Investments
   const BASE_CATS = ['Food', 'Rent', 'Utilities', 'Shopping', 'Entertainment', 'Travel', 'Health', 'Investments', 'Insurance', 'Credit Card Payment', 'Misc'];
-  // Investment structure
   const INVESTMENT_STRUCTURE = {
       'Equity (Stocks)': {
           'India - Large Cap/Mid Cap/Small Cap': 'Equity (Stocks)',
@@ -835,7 +883,6 @@
           'Alternative Assets': 'Other Investments',
       }
   };
-  // Major buckets mapping for KPI breakdown (rollup)
   const MAJOR_BUCKETS = {
     'Equity (Stocks)': 'Equity',
     'Mutual Funds': 'Mutual Funds',
@@ -853,6 +900,8 @@
   let incomeSources = ['Salary', 'Freelance', 'Interest'];
   let settings = { ccLimit: DEFAULT_CC_LIMIT };
   let editId = null;
+  let selectedExpenseCategories = []; // For Multiselect
+
   const formEls = {
     type: document.getElementById('type'),
     amount: document.getElementById('amount'),
@@ -953,9 +1002,7 @@
     document.querySelectorAll('#calc-buttons button').forEach(button => {
       button.addEventListener('click', handleCalculatorInput);
     });
-    // Wallet filters
-    setupWalletFilters();
-
+    
     // Investment breakdown filters and setup
     setupInvestmentFilters();
   });
@@ -1454,17 +1501,20 @@
     }
   }
 
+  // --- REWRITTEN QUICKVIEW FUNCTION FOR SIMPLE LIST ---
   function renderQuickSubDropdowns(entries){
     const container = document.getElementById('invQuickSubs');
     if(!container) return;
     const order = ['Equity','Debt','ETFs','Mutual Funds','Retirement','Real Estate','Commodities','Crypto','Other'];
     const items = rollupMajorBuckets(entries);
     const totals = Object.fromEntries(items.map(i => [i.bucket, i.amount]));
+    
     const blocks = order.filter(b => Object.keys(totals).includes(b)).map(bucket => {
       const groupsInBucket = Object.keys(MAJOR_BUCKETS).filter(g => MAJOR_BUCKETS[g] === bucket);
       const subsSet = new Set();
       groupsInBucket.forEach(g => Object.keys(INVESTMENT_STRUCTURE[g] || {}).forEach(s => subsSet.add(s)));
       const subs = Array.from(subsSet);
+      
       const subValues = subs.map(sub => {
         const sumAmt = entries.filter(d =>
           (((d.type === 'opening_balance' && d.investmentGroup && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments'))) &&
@@ -1473,16 +1523,23 @@
         return {sub, amount: sumAmt};
       }).filter(x => x.amount > 0).sort((a,b) => b.amount - a.amount);
 
-      const dropdownHtml = subValues.length ? subValues.map(x => `<div class="dropdown-item"><span>${x.sub}</span><strong>${fmt(x.amount)}</strong></div>`).join('') : `<div class="dropdown-item"><span>No data</span><strong>—</strong></div>`;
+      const dropdownHtml = subValues.length ? subValues.map(x => `
+        <div class="sub-dropdown-item">
+            <span>${x.sub}</span>
+            <strong style="color:var(--primary-dark)">${fmt(x.amount)}</strong>
+        </div>
+      `).join('') : `<div class="sub-dropdown-item" style="color:#aaa;">No data</div>`;
+
       return `
         <div class="quick-sub-card">
           <div class="quick-sub-header">
             <div class="quick-sub-title">${bucket}</div>
             <span class="total-badge">${fmt(totals[bucket] || 0)}</span>
           </div>
-          <div class="dropdown" style="margin-top:8px;">
-            <button class="btn-outline" style="padding:6px 10px; font-size:12px;" onclick="toggleQuickMenu(this)">View subcategories</button>
-            <div class="dropdown-menu hidden" onclick="event.stopPropagation()">
+          <div class="sub-dropdown-container">
+            <button class="btn-outline" style="padding:6px 10px; font-size:12px; width:100%; text-align:left;"
+                    onclick="toggleSubMenu(this)">View subcategories ▾</button>
+            <div class="sub-dropdown-menu">
               ${dropdownHtml}
             </div>
           </div>
@@ -1491,21 +1548,26 @@
     }).join('');
 
     container.innerHTML = blocks;
-
-    // Close menus on outside click
-    document.addEventListener('click', () => {
-      document.querySelectorAll('#invQuickSubs .dropdown-menu').forEach(m => m.classList.add('hidden'));
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.sub-dropdown-container')) {
+            document.querySelectorAll('.sub-dropdown-menu').forEach(m => m.classList.remove('show'));
+        }
     });
   }
 
-  function toggleQuickMenu(btn){
-    const menu = btn.parentElement.querySelector('.dropdown-menu');
-    document.querySelectorAll('#invQuickSubs .dropdown-menu').forEach(m => { if(m!==menu) m.classList.add('hidden'); });
-    menu.classList.toggle('hidden');
+  function toggleSubMenu(btn) {
+      // Close all others
+      const currentMenu = btn.parentElement.querySelector('.sub-dropdown-menu');
+      document.querySelectorAll('.sub-dropdown-menu').forEach(m => {
+          if (m !== currentMenu) m.classList.remove('show');
+      });
+      currentMenu.classList.toggle('show');
   }
 
   function renderInvestmentKPICharts() {
-    if (typeof Chart === 'undefined') return; // Safety check
+    if (typeof Chart === 'undefined') return;
     const rawInvestments = data.filter(d => (d.type === 'opening_balance' && d.investmentGroup && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments'));
     const range = document.getElementById('invDateRange')?.value || 'all';
     const viewMode = document.getElementById('invViewMode')?.value || 'top4';
@@ -1679,12 +1741,11 @@
   }
 
   function renderCharts() {
-    if (typeof Chart === 'undefined') return; // Safety check
+    if (typeof Chart === 'undefined') return;
     const range = document.getElementById('mainChartFilter').value;
     const { labels, income, expense, investment } = prepareMonthlyData(range === 'all' ? 'all' : Number(range));
-    const netIncomeSeries = income.map((v, i) => v - expense[i]); // Net income
+    const netIncomeSeries = income.map((v, i) => v - expense[i]);
 
-    // Mixed Chart: Bars + black line
     if (chartMain) chartMain.destroy();
     const ctxMain = document.getElementById('mainChart').getContext('2d');
     chartMain = new Chart(ctxMain, {
@@ -1703,12 +1764,7 @@
         interaction: { mode: 'index', intersect: false },
         scales: {
           x: { stacked: true },
-          y: {
-            stacked: true,
-            ticks: {
-              callback: function(value) { return fmt(Math.abs(value)).replace('₹', '₹ '); }
-            }
-          }
+          y: { stacked: true, ticks: { callback: function(value) { return fmt(Math.abs(value)).replace('₹', '₹ '); } } }
         },
         plugins: {
           tooltip: {
@@ -1728,25 +1784,74 @@
     renderWalletUnified();
   }
 
-  // --- Wallet unified (wallet + expenses) ---
-  function setupWalletFilters() {
-    const catSelect = document.getElementById('walletCategoryFilter');
-    catSelect.innerHTML = '<option value="">All categories</option>' + BASE_CATS
-      .filter(c => !['Investments','Credit Card Payment'].includes(c))
-      .map(c => `<option value="${c}">${c}</option>`).join('');
+  // --- WALLET / EXPENSE FILTER LOGIC ---
+  function setupExpenseMultiSelect() {
+      const container = document.getElementById('expenseFilterContainer');
+      const btn = document.getElementById('expenseFilterBtn');
+      const dropdown = document.getElementById('expenseMultiselectDropdown');
+      const list = document.getElementById('expenseCheckboxes');
+      const clearBtn = document.getElementById('msClear');
+      const applyBtn = document.getElementById('msApply');
+
+      // Populate Checkboxes
+      const categories = BASE_CATS.filter(c => !['Investments','Credit Card Payment'].includes(c));
+      list.innerHTML = categories.map(cat => `
+          <div class="ms-item">
+              <input type="checkbox" id="chk_${cat}" value="${cat}" class="expense-chk">
+              <label for="chk_${cat}" style="cursor:pointer; margin:0; font-weight:400; text-transform:none; color:#333;">${cat}</label>
+          </div>
+      `).join('');
+
+      // Button listeners
+      btn.onclick = (e) => {
+          e.stopPropagation();
+          dropdown.classList.toggle('show');
+      };
+
+      dropdown.onclick = (e) => e.stopPropagation();
+
+      // Click outside to close
+      document.addEventListener('click', (e) => {
+          if (!container.contains(e.target)) {
+              dropdown.classList.remove('show');
+          }
+      });
+
+      applyBtn.onclick = () => {
+          const checkboxes = document.querySelectorAll('.expense-chk');
+          selectedExpenseCategories = [];
+          checkboxes.forEach(chk => {
+              if (chk.checked) selectedExpenseCategories.push(chk.value);
+          });
+          dropdown.classList.remove('show');
+          btn.textContent = selectedExpenseCategories.length > 0 ? `${selectedExpenseCategories.length} selected ▾` : 'Select Categories ▾';
+          renderWalletUnified();
+          document.getElementById('resetExpenseDrilldown').classList.remove('hidden');
+      };
+
+      clearBtn.onclick = () => {
+          const checkboxes = document.querySelectorAll('.expense-chk');
+          checkboxes.forEach(chk => chk.checked = false);
+          selectedExpenseCategories = [];
+          dropdown.classList.remove('show');
+          btn.textContent = 'Select Categories ▾';
+          renderWalletUnified();
+          document.getElementById('resetExpenseDrilldown').classList.add('hidden');
+      };
   }
 
   function renderWalletUnified() {
-    if (typeof Chart === 'undefined') return; // Safety check
+    if (typeof Chart === 'undefined') return;
     const mode = document.getElementById('walletMode').value;
-    const cat = document.getElementById('walletCategoryFilter').value;
     const legendEl = document.getElementById('walletLegend');
     const infoEl = document.getElementById('walletInfo');
     const colors = getColorPalette(12);
 
+    // Hide/Show correct controls
     if (mode === 'wallet') {
-      document.getElementById('walletCategoryFilter').classList.add('hidden');
+      document.getElementById('expenseFilterContainer').classList.add('hidden');
       document.getElementById('resetExpenseDrilldown').classList.add('hidden');
+      
       const liquidMethods = data.filter(d => (d.type === 'opening_balance' && d.investmentGroup === 'Cash') || (d.type === 'income') || (d.type === 'expense' && d.category !== 'Investments'));
       const methodBalances = liquidMethods.reduce((acc, curr) => {
         const key = curr.method || 'cash';
@@ -1771,22 +1876,7 @@
         },
         options: {
           maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  let label = context.label || '';
-                  if (label) label += ': ';
-                  const total = context.dataset.data.reduce((a,b)=>a+b,0);
-                  if (context.parsed !== null) {
-                    label += fmt(context.parsed) + ` (${total ? ((context.parsed/total)*100).toFixed(1)+'%' : '0%'})`;
-                  }
-                  return label;
-                }
-              }
-            }
-          }
+          plugins: { legend: { display: false } }
         }
       });
       legendEl.innerHTML = positiveBalances.map((b, i) => `
@@ -1800,11 +1890,19 @@
       `).join('') || '<div style="text-align:center; padding-top:20px;">No liquid cash accounts with a positive balance.</div>';
       infoEl.innerText = 'Liquid balances by account (positive only).';
     } else {
-      document.getElementById('walletCategoryFilter').classList.remove('hidden');
-      const filteredData = data.filter(d => d.type === 'expense' && d.category !== 'Investments' && d.category !== 'Credit Card Payment' && (cat ? d.category === cat : true));
-      const title = cat ? `${cat} breakdown (Top 10 by description)` : 'All expenses (Top 10 categories)';
+      // EXPENSE MODE
+      document.getElementById('expenseFilterContainer').classList.remove('hidden');
+      
+      // Filter data by selected categories if any
+      const filteredData = data.filter(d => {
+          if (d.type !== 'expense' || d.category === 'Investments' || d.category === 'Credit Card Payment') return false;
+          if (selectedExpenseCategories.length > 0 && !selectedExpenseCategories.includes(d.category)) return false;
+          return true;
+      });
+
+      const title = selectedExpenseCategories.length > 0 ? `Selected Categories Breakdown` : 'All expenses (Top 10 categories)';
       const expenseMap = filteredData.reduce((acc, curr) => {
-        const key = cat ? curr.desc.substring(0, 30) : curr.category;
+        const key = selectedExpenseCategories.length === 1 ? curr.desc.substring(0, 30) : curr.category;
         acc[key] = (acc[key] || 0) + Number(curr.amount);
         return acc;
       }, {});
@@ -1822,27 +1920,7 @@
         options: {
           maintainAspectRatio: false,
           plugins: {
-            legend: { position: 'right', labels: { boxWidth: 10 } },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  let label = context.label || '';
-                  if (label) label += ': ';
-                  const total = amounts.reduce((a,b)=>a+b,0);
-                  if (context.parsed !== null) label += fmt(context.parsed) + ` (${total ? ((context.parsed/total)*100).toFixed(1)+'%' : '0%'})`;
-                  return label;
-                }
-              }
-            }
-          },
-          onClick: (e, elements) => {
-            if (elements.length > 0 && !cat) {
-              const index = elements[0].index;
-              const clickedCat = donutChart.data.labels[index];
-              document.getElementById('walletCategoryFilter').value = clickedCat;
-              renderWalletUnified();
-              document.getElementById('resetExpenseDrilldown').classList.remove('hidden');
-            }
+            legend: { position: 'right', labels: { boxWidth: 10 } }
           }
         }
       });
@@ -1854,20 +1932,22 @@
           </div>
           <span style="font-weight:600; color:var(--text-main);">${fmt(amounts[i])}</span>
         </div>
-      `).join('') || '<div style="text-align:center; padding-top:20px;">No expenses found in range.</div>';
+      `).join('') || '<div style="text-align:center; padding-top:20px;">No expenses found.</div>';
       infoEl.innerText = title;
     }
   }
 
   function resetExpenseDrilldown() {
-    document.getElementById('walletCategoryFilter').value = '';
+    selectedExpenseCategories = [];
+    document.querySelectorAll('.expense-chk').forEach(c => c.checked = false);
+    document.getElementById('expenseFilterBtn').textContent = 'Select Categories ▾';
     document.getElementById('resetExpenseDrilldown').classList.add('hidden');
     renderWalletUnified();
   }
 
   // --- Advanced Analytics (Modal only) ---
   function renderAdvancedCharts() {
-      if (typeof Chart === 'undefined') return; // Safety check
+      if (typeof Chart === 'undefined') return;
       const range = document.getElementById('dateFilter').value;
       const chartType = document.getElementById('chartType').value;
       const { labels, income, expense } = prepareMonthlyData(range === 'all' ? 'all' : Number(range));
@@ -1902,20 +1982,7 @@
           maintainAspectRatio: false,
           responsive: true,
           scales: {
-            y: {
-              beginAtZero: false,
-              ticks: { callback: function(value) { return fmt(value).replace('₹', '₹ '); } }
-            }
-          },
-          plugins: {
-            tooltip: {
-              callbacks: { label: function(context) {
-                let label = context.dataset.label || '';
-                if (label) label += ': ';
-                if (context.parsed.y !== null) label += fmt(context.parsed.y);
-                return label;
-              }}
-            }
+            y: { beginAtZero: false, ticks: { callback: function(value) { return fmt(value).replace('₹', '₹ '); } } }
           }
         }
       });
@@ -1923,8 +1990,7 @@
   }
 
   function renderInvestmentAnalytics(scope = 'modal') {
-    if (typeof Chart === 'undefined') return; // Safety check
-    // Breakdown by investment group
+    if (typeof Chart === 'undefined') return;
     const invs = data.filter(d => (d.type === 'opening_balance' && d.investmentGroup && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments' ));
     const byType = invs.reduce((acc,curr) => {
       const key = curr.investmentGroup || 'Uncategorized';
@@ -1933,14 +1999,12 @@
     }, {});
     const labels = Object.keys(byType).sort((a,b) => byType[b]-byType[a]);
     const values = labels.map(l => byType[l]);
-    // Growth (cumulative invested over time)
     const points = invs.map(i => ({ date: new Date(i.date), amount: Number(i.amount) })).sort((a,b)=>a.date-b.date);
     let cumulative = 0;
     const growthLabels = points.map(p => p.date.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' }));
     const growthValues = points.map(p => { cumulative += p.amount; return cumulative; });
 
     const colors = getColorPalette(labels.length);
-    // Render only in modal
     const ctxTypes = document.getElementById('chartInvTypesModal')?.getContext('2d');
     if (ctxTypes) {
       if (chartInvTypesModal) chartInvTypesModal.destroy();
@@ -1950,7 +2014,7 @@
         options: {
           maintainAspectRatio: false,
           responsive: true,
-          plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c)=>`${c.label}: ${fmt(c.parsed.y)}` } } },
+          plugins: { legend: { display: false } },
           scales: { y: { beginAtZero: true, ticks: { callback: (v)=>fmt(v).replace('₹','₹ ') }, grid:{color:'#eef2ff'} }, x:{grid:{display:false}} }
         }
       });
@@ -1965,14 +2029,14 @@
         options: {
           maintainAspectRatio: false,
           responsive: true,
-          plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: (c)=>`${c.dataset.label}: ${fmt(c.parsed.y)}` } } },
+          plugins: { legend: { position: 'top' } },
           scales: { y: { beginAtZero: false, ticks: { callback: (v)=>fmt(v).replace('₹','₹ ') }, grid:{color:'#eef2ff'} }, x:{grid:{display:false}} }
         }
       });
     }
   }
 
-  // --- SETTINGS ---
+  // --- SETTINGS, IMPORT/EXPORT, SAMPLE DATA ---
   function renderSettings() {
     const methodContainer = document.getElementById('methodEditor');
     methodContainer.innerHTML = Object.entries(methodNames).map(([key, name]) => `
@@ -2016,7 +2080,7 @@
   }
 
   function deleteMethod(key) {
-      if (confirm(`Are you sure you want to remove the method "${methodNames[key]}"? Transactions using this method will be labeled with the key.`)) {
+      if (confirm(`Are you sure you want to remove the method "${methodNames[key]}"?`)) {
           delete methodNames[key];
           saveAll();
           renderAll();
@@ -2060,7 +2124,6 @@
       }
   }
 
-  // --- IMPORT/EXPORT ---
   function convertToCSV(data) {
       const headers = ['id', 'type', 'amount', 'date', 'desc', 'category', 'method', 'incomeSource', 'investmentGroup', 'investmentSub', 'insuranceType', 'insuranceFor'];
       const rows = data.map(obj => headers.map(header => {
@@ -2070,12 +2133,7 @@
           }
           return value;
       }).join(','));
-
-      const csvContent = [
-          headers.join(','),
-          ...rows
-      ].join('\n');
-
+      const csvContent = [headers.join(','), ...rows].join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       if (link.download !== undefined) {
@@ -2093,25 +2151,17 @@
       const fileInput = document.getElementById('importFile');
       const file = fileInput.files[0];
       if (!file) return alert('Please select a file.');
-
       const reader = new FileReader();
       reader.onload = function(e) {
           const content = e.target.result;
           let importedData = [];
-
           if (file.name.endsWith('.json')) {
-              try {
-                  importedData = JSON.parse(content);
-              } catch (err) {
-                  return alert('Error parsing JSON file: ' + err.message);
-              }
+              try { importedData = JSON.parse(content); } catch (err) { return alert('Error parsing JSON file: ' + err.message); }
           } else if (file.name.endsWith('.csv')) {
               importedData = parseCSV(content);
-          } else {
-              return alert('Unsupported file type. Please use CSV or JSON.');
-          }
+          } else { return alert('Unsupported file type. Please use CSV or JSON.'); }
 
-          if (!importedData || importedData.length === 0) return alert('No valid data found in the file.');
+          if (!importedData || importedData.length === 0) return alert('No valid data found.');
           let newEntries = 0;
           importedData.forEach(item => {
               const entry = {
@@ -2133,7 +2183,6 @@
                   newEntries++;
               }
           });
-
           saveAll();
           renderAll();
           document.getElementById('importModal').classList.remove('open');
@@ -2145,14 +2194,12 @@
   function parseCSV(csvText) {
       const lines = csvText.split('\n').filter(line => line.trim() !== '');
       if (lines.length < 2) return [];
-
       const headerLine = lines[0];
       const headers = headerLine.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g).map(h => h.replace(/"/g, '').toLowerCase().trim());
       const dataRows = [];
       for (let i = 1; i < lines.length; i++) {
           const values = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
           if (!values || values.length !== headers.length) continue;
-
           const entry = {};
           for (let j = 0; j < headers.length; j++) {
               let value = values[j] ? values[j].replace(/^"|"$/g, '').replace(/""/g, '"') : '';
@@ -2163,7 +2210,6 @@
       return dataRows;
   }
 
-  // --- SAMPLE DATA ---
   function loadSampleData() {
       if (!confirm("This will overwrite all existing data for your current profile. Continue?")) return;
       function randBetween(min, max) { return Math.floor(Math.random() * (max - min + 1) + min); }
@@ -2172,7 +2218,6 @@
           const today = new Date();
           const startMonth = months[0];
           const endMonth = months.length > 1 ? months[1] : startMonth;
-
           const monthDiff = randBetween(startMonth, endMonth);
           const targetDate = new Date(today);
           targetDate.setMonth(today.getMonth() - monthDiff);
@@ -2180,22 +2225,19 @@
           targetDate.setDate(randBetween(1, maxDays));
           return targetDate.toISOString().slice(0,10);
       }
-
       data = [];
       methodNames = {...CANONICAL_METHODS};
       incomeSources = ['Salary (Primary)', 'Freelance Income', 'Investment Income'];
       settings.ccLimit = 200000;
-      // Opening balances (Cash)
       data.push({id:uid(), type:'opening_balance', amount: 50000, date: dateInLastMonths([6,6]), desc:'Initial Salary Account Balance', investmentGroup:'Cash', investmentSub:'Bank Account (Salary)', method:'salary_acct', category:'N/A'});
       data.push({id:uid(), type:'opening_balance', amount: 20000, date: dateInLastMonths([5,6]), desc:'Initial Savings Account Balance', investmentGroup:'Cash', investmentSub:'Bank Account (Savings)', method:'savings_acct', category:'N/A'});
       data.push({id:uid(), type:'opening_balance', amount: 5000, date: dateInLastMonths([5,6]), desc:'Initial Physical Cash', investmentGroup:'Cash', investmentSub:'Cash', method:'cash', category:'N/A'});
-      // Opening balances (Investments — historical cost)
       data.push({id:uid(), type:'opening_balance', amount: 35000, date: dateInLastMonths([6,6]), desc:'Opening — Equity MF (Large Cap)', investmentGroup:'Mutual Funds', investmentSub:'Equity MF - Large Cap/Mid Cap/Small Cap', method:'', category:'N/A'});
       data.push({id:uid(), type:'opening_balance', amount: 18000, date: dateInLastMonths([6,6]), desc:'Opening — NPS Tier 1', investmentGroup:'Retirement Funds', investmentSub:'NPS Tier 1/Tier 2', method:'', category:'N/A'});
       data.push({id:uid(), type:'opening_balance', amount: 12000, date: dateInLastMonths([6,6]), desc:'Opening — Gold ETF', investmentGroup:'ETFs', investmentSub:'Gold ETF', method:'', category:'N/A'});
       data.push({id:uid(), type:'opening_balance', amount: 25000, date: dateInLastMonths([6,6]), desc:'Opening — Corporate Bonds', investmentGroup:'Bonds & Debt Instruments', investmentSub:'Corporate Bonds', method:'', category:'N/A'});
       data.push({id:uid(), type:'opening_balance', amount: 8000, date: dateInLastMonths([6,6]), desc:'Opening — Bitcoin (BTC)', investmentGroup:'Crypto & Digital Assets', investmentSub:'Bitcoin (BTC)', method:'', category:'N/A'});
-      // Monthly incomes over last 6 months
+      
       for (let m = 6; m >= 0; m--) {
         const salaryDate = dateInLastMonths([m,m]);
         data.push({id:uid(), type:'income', amount: 120000, date: salaryDate, desc:`Salary credit (${salaryDate})`, category:'N/A', method:'salary_acct', incomeSource:'Salary (Primary)'});
@@ -2204,113 +2246,44 @@
           data.push({id:uid(), type:'income', amount: randBetween(8000, 18000), date: freeDate, desc:`Freelance project (${freeDate})`, category:'N/A', method:'salary_acct', incomeSource:'Freelance Income'});
         }
       }
-
-      // Typical expenses and investments across months
       const expenseCategories = ['Food','Rent','Utilities','Shopping','Entertainment','Travel','Health','Misc'];
       const methodsPool = ['salary_acct','savings_acct','cash','digital_wallet','credit_card'];
-
       for (let i = 0; i < 90; i++) {
         const dt = dateInLastMonths([randBetween(0, 6), randBetween(0, 6)]);
         const cat = pick(expenseCategories);
         const amt = randBetween(300, 9000);
         const method = pick(methodsPool);
-        // Regular expenses
-        data.push({
-          id: uid(),
-          type: 'expense',
-          amount: amt,
-          date: dt,
-          desc: `${cat} expense`,
-          category: cat,
-          method
-        });
-        // Investment (SIP/Buy)
+        data.push({ id: uid(), type: 'expense', amount: amt, date: dt, desc: `${cat} expense`, category: cat, method });
         if (Math.random() > 0.75) {
           const invGroup = pick(Object.keys(INVESTMENT_STRUCTURE));
           const invSub = pick(Object.keys(INVESTMENT_STRUCTURE[invGroup]));
-          data.push({
-            id: uid(),
-            type: 'expense',
-            amount: randBetween(2000, 15000),
-            date: dt,
-            desc: `Investment — ${invSub}`,
-            category: 'Investments',
-            method: pick(['salary_acct','savings_acct']),
-            investmentGroup: invGroup,
-            investmentSub: invSub
-          });
+          data.push({ id: uid(), type: 'expense', amount: randBetween(2000, 15000), date: dt, desc: `Investment — ${invSub}`, category: 'Investments', method: pick(['salary_acct','savings_acct']), investmentGroup: invGroup, investmentSub: invSub });
         }
-
-        // Insurance
         if (Math.random() > 0.85) {
-          data.push({
-            id: uid(),
-            type: 'expense',
-            amount: randBetween(1500, 6000),
-            date: dt,
-            desc: 'Insurance premium',
-            category: 'Insurance',
-            method: pick(['salary_acct','savings_acct']),
-            insuranceType: pick(['Health','Life']),
-            insuranceFor: pick(['Self','Family'])
-          });
+          data.push({ id: uid(), type: 'expense', amount: randBetween(1500, 6000), date: dt, desc: 'Insurance premium', category: 'Insurance', method: pick(['salary_acct','savings_acct']), insuranceType: pick(['Health','Life']), insuranceFor: pick(['Self','Family']) });
         }
       }
-
-      // Credit card usage and payment flows
       for (let i = 0; i < 20; i++) {
         const dt = dateInLastMonths([randBetween(0, 6), randBetween(0, 6)]);
-        // Spend on CC
-        data.push({
-          id: uid(),
-          type: 'expense',
-          amount: randBetween(500, 12000),
-          date: dt,
-          desc: 'Credit card spend',
-          category: 'Shopping',
-          method: 'credit_card'
-        });
-        // Pay CC in lump sums irregularly
+        data.push({ id: uid(), type: 'expense', amount: randBetween(500, 12000), date: dt, desc: 'Credit card spend', category: 'Shopping', method: 'credit_card' });
         if (Math.random() > 0.7) {
-          data.push({
-            id: uid(),
-            type: 'expense',
-            amount: randBetween(3000, 20000),
-            date: dt,
-            desc: 'Credit card payment',
-            category: 'Credit Card Payment',
-            method: 'credit_card_payment'
-          });
+          data.push({ id: uid(), type: 'expense', amount: randBetween(3000, 20000), date: dt, desc: 'Credit card payment', category: 'Credit Card Payment', method: 'credit_card_payment' });
         }
       }
-
-      // A few larger one-off investments
       [
         { group: 'Real Estate', sub: 'REITs (Real Estate Investment Trusts)', amount: 40000 },
         { group: 'Mutual Funds', sub: 'Equity MF - ELSS (Tax Saving)', amount: 25000 },
         { group: 'Fixed Income / Savings Schemes', sub: 'FD (Fixed Deposit)', amount: 60000 },
       ].forEach(item => {
         const dt = dateInLastMonths([randBetween(1,5), randBetween(1,5)]);
-        data.push({
-          id: uid(),
-          type: 'expense',
-          amount: item.amount,
-          date: dt,
-          desc: `One-off Investment — ${item.sub}`,
-          category: 'Investments',
-          method: pick(['salary_acct','savings_acct']),
-          investmentGroup: item.group,
-          investmentSub: item.sub
-        });
+        data.push({ id: uid(), type: 'expense', amount: item.amount, date: dt, desc: `One-off Investment — ${item.sub}`, category: 'Investments', method: pick(['salary_acct','savings_acct']), investmentGroup: item.group, investmentSub: item.sub });
       });
-      // Finalize: save and render
       saveAll();
       renderAll();
       document.getElementById('importModal').classList.remove('open');
-      alert('Sample data loaded with opening balances, incomes, expenses, and investments.');
+      alert('Sample data loaded.');
   }
 
-  // --- CALCULATOR ---
   function handleCalculatorInput(e) {
     const key = e.target.innerText;
     const display = document.getElementById('calc-display');
@@ -2318,16 +2291,13 @@
     if (!display) return;
     if (key === 'AC') { display.textContent = '0'; preview.textContent = 'Enter an expression…'; return; }
     if (key === '±' || key === '%') return;
-    // simplified
     if (key === '=') {
       try {
         const expr = display.textContent.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-');
         const result = Function('"use strict";return ('+expr+')')();
         display.textContent = String(result);
         preview.textContent = fmt(Number(result));
-      } catch (err) {
-        preview.textContent = 'Invalid expression';
-      }
+      } catch (err) { preview.textContent = 'Invalid expression'; }
       return;
     }
     const mapped = key === '×' ? '*' : key === '÷' ? '/' : key === '−' ? '-' : key;
@@ -2336,12 +2306,9 @@
       const expr = display.textContent.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-');
       const result = Function('"use strict";return ('+expr+')')();
       preview.textContent = fmt(Number(result));
-    } catch (err) {
-      preview.textContent = '';
-    }
+    } catch (err) { preview.textContent = ''; }
   }
 
-  // Drag calc
   function dragElement(elmnt) {
     if (!elmnt) return;
     const header = document.getElementById(elmnt.id + "header") || document.getElementById('calc-header');
@@ -2371,15 +2338,14 @@
     }
   }
 
-  // --- MISC ---
   document.addEventListener('DOMContentLoaded', () => {
     const d = new Date();
     document.getElementById('currentDate').innerText = d.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   });
-  // Expose functions for inline onclicks
   window.loadEdit = loadEdit;
   window.deleteEntry = deleteEntry;
-  window.toggleQuickMenu = toggleQuickMenu;
+  window.toggleSubMenu = toggleSubMenu;
+  window.resetExpenseDrilldown = resetExpenseDrilldown;
 </script>
 </body>
 </html>
