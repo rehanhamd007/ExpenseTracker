@@ -170,11 +170,20 @@
         .brand { margin-bottom: 0; }
         .dashboard-grid { grid-template-columns: 1fr; }
         .col-span-1, .col-span-2, .col-span-3, .col-span-4 { grid-column: span 1; }
+
+        /* mobile-friendly calculator width/centering when visible */
+        #calculator {
+          width: 90%;
+          left: 50%;
+          transform: translateX(-50%);
+          max-width: 420px;
+        }
     }
 
     /* Calculator Styles (updated layout & positioning) */
     #calculator {
-        position: fixed; /* dynamically positioned next to Add Entry card via JS */
+        display: none; /* hidden until icon is clicked */
+        position: fixed; /* used with JS for positioning and dragging */
         z-index: 150;
         width: 300px;
         border-radius: 12px;
@@ -190,6 +199,7 @@
         background:var(--sidebar-bg);
         color:white;
         padding:8px 12px;
+        cursor: move; /* visual hint: header can drag */
     }
     #calc-close {
         cursor:pointer;
@@ -248,7 +258,6 @@
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
             MoneyMirror <span>v4.6</span>
         </div>
-
         <nav>
             <div class="nav-group">
                 <div class="nav-label">Main Menu</div>
@@ -437,7 +446,6 @@
                 </div>
             </div>
         </div>
-
         <div class="card col-span-2">
             <div class="card-header">
                 <div class="card-title">Wallet Breakdown (Liquid Cash & Savings)</div>
@@ -493,7 +501,7 @@
   </main>
   
   <!-- Calculator (updated layout & close button) -->
-  <div id="calculator" class="hidden">
+  <div id="calculator">
       <div id="calc-header">
         <span>Calculator</span>
         <span id="calc-close">✖</span>
@@ -516,7 +524,6 @@
         </div>
       </div>
   </div>
-
 
   <div id="profileModal" class="modal open">
     <div class="modal-content modal-small">
@@ -638,7 +645,7 @@
     </div>
   </div>
 
-<script>
+  <script>
 /* ----------------------------------------------------------- LOGIC LAYER ----------------------------------------------------------- */
 const BASE_STORAGE_KEY = 'mm_v4_data';
 const BASE_METHOD_KEY = 'mm_v4_methods';
@@ -697,7 +704,6 @@ function saveToLocalStorage() {
 
 function saveAll(){
     if (!currentProfile) return;
-
     if (USE_FIRESTORE && db) {
         const docRef = db.collection(FIRESTORE_COLLECTION_NAME).doc(toKey(currentProfile));
         docRef.set({
@@ -898,7 +904,6 @@ function addEntry(e){
         entry.category = formEls.category.value || e.category;
         if(!entry.category && !isImportOrEdit) return alert('Please select a Category.');
         if(!entry.method && !isImportOrEdit) return alert('Please select a Payment Method.');
-
         if(entry.category === 'Investments') {
             entry.investmentGroup = formEls.invGroup.value || e.investmentGroup || 'Unspecified';
             entry.investmentSub = formEls.invSub.value || e.investmentSub || 'Unspecified';
@@ -1740,14 +1745,14 @@ function parseCSV(csvText) {
 
     const headerLine = lines[0].toLowerCase().trim().replace(/"/g, '').split(',');
     const headers = headerLine.map(h => h.replace(/[^a-z0-9_]/g, '').replace(/_/g, ''));
-    
+
     const csvData = [];
     for (let i = 1; i < lines.length; i++) {
-        let rowValues = lines[i].match(/(?:"[^"]*"|[^,])+/g);
+        let rowValues = lines[i].match(/(?:\"[^\"]*\"|[^,])+/g);
         if (!rowValues) continue;
         
         const row = rowValues.reduce((obj, val, index) => {
-            obj[headers[index]] = val.trim().replace(/^"|"$/g, '');
+            obj[headers[index]] = val.trim().replace(/^\"|\"$/g, '');
             return obj;
         }, {});
 
@@ -1779,7 +1784,6 @@ function processImportedData(importedData){
     if(importedData.length === 0) return alert('No valid transactions found in the file.');
 
     const prompt = `Do you want to REPLACE the current data for '${currentProfile}' with ${importedData.length} imported entries?\n\n- OR -\n\nClick Cancel, then click OK to APPEND the imported entries to your existing data.`;
-
     if(confirm(prompt)) {
         data = importedData;
         saveAll();
@@ -1981,7 +1985,7 @@ function resetExpenseDrilldown() {
     }
 }
 
-/* --- Calculator Logic & Positioning (numbers left, operators right; align near Add Entry card) --- */
+/* --- Calculator Logic & Positioning (numbers left, operators right; align near Add Entry card; draggable) --- */
 let calcExpression = '';
 
 function calcUpdateDisplay() {
@@ -2026,44 +2030,142 @@ document.getElementById('calc-pad').addEventListener('click', e=>{
   calcAppend(t);
 });
 
-/* Position calculator next to Add Entry card (right side), updating on toggle/scroll/resize */
 const calculator = document.getElementById('calculator');
 const addEntryCard = document.getElementById('addEntryCard');
 
 function positionCalculator() {
-  if (calculator.classList.contains('hidden')) return;
+  // Only position if visible
+  if (calculator.style.display === 'none') return;
+  const isMobile = window.innerWidth < 768;
+
+  if (isMobile) {
+    calculator.style.position = 'fixed';
+    calculator.style.top = '80px';
+    calculator.style.left = '50%';
+    calculator.style.transform = 'translateX(-50%)';
+    calculator.style.width = '90%';
+    return;
+  }
+
+  if (!addEntryCard) return;
+
   const cardRect = addEntryCard.getBoundingClientRect();
   const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
   const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
-  const top = cardRect.top + scrollTop + 10; // slightly below header
-  const left = cardRect.right + scrollLeft + 16; // to the right side of the card
+  const top = cardRect.top + scrollTop + 10;
+  let left = cardRect.right + scrollLeft + 16;
 
+  calculator.style.position = 'fixed';
   calculator.style.top = `${top}px`;
   calculator.style.left = `${left}px`;
+  calculator.style.transform = 'none';
 
-  // If overflow on the right, snap to left side of the card
   const calcRect = calculator.getBoundingClientRect();
   const viewportWidth = window.innerWidth;
-  if (calcRect.right > viewportWidth - 10) {
-    calculator.style.left = `${cardRect.left + scrollLeft - calcRect.width - 16}px`;
+
+  if (calcRect.right > viewportWidth) {
+    left = cardRect.left + scrollLeft - calcRect.width - 16;
+    calculator.style.left = `${Math.max(left, 10)}px`;
   }
 }
 
-document.getElementById('calc-toggle').onclick=()=>{
-  calculator.classList.toggle('hidden');
-  calcClear();
-  positionCalculator();
+// Toggle: show on icon click, hide on X
+document.getElementById('calc-toggle').onclick = () => {
+  if (calculator.style.display === 'none' || calculator.style.display === '') {
+    calculator.style.display = 'block';
+    calcClear();
+    positionCalculator();
+  } else {
+    calculator.style.display = 'none';
+  }
 };
 
-document.getElementById('calc-close').onclick=()=>{
-  calculator.classList.add('hidden');
+document.getElementById('calc-close').onclick = () => {
+  calculator.style.display = 'none';
 };
 
 window.addEventListener('scroll', positionCalculator);
 window.addEventListener('resize', positionCalculator);
 
-</script>
+// Make calculator draggable (desktop + mobile)
+function makeCalculatorDraggable() {
+  let isDragging = false;
+  let startX = 0;
+  let startY = 0;
+  let initialLeft = 0;
+  let initialTop = 0;
+
+  function getClientPos(e) {
+    if (e.touches && e.touches.length) {
+      return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  function onPointerDown(e) {
+    // Restrict drag to header area for better UX
+    if (!e.target.closest('#calc-header')) return;
+
+    const pos = getClientPos(e);
+    isDragging = true;
+
+    const rect = calculator.getBoundingClientRect();
+    initialLeft = rect.left;
+    initialTop = rect.top;
+
+    startX = pos.x;
+    startY = pos.y;
+
+    calculator.style.transition = 'none';
+    e.preventDefault();
+  }
+
+  function onPointerMove(e) {
+    if (!isDragging) return;
+
+    const pos = getClientPos(e);
+    const dx = pos.x - startX;
+    const dy = pos.y - startY;
+
+    let newLeft = initialLeft + dx;
+    let newTop = initialTop + dy;
+
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const rect = calculator.getBoundingClientRect();
+
+    const minLeft = 0;
+    const maxLeft = viewportWidth - rect.width;
+    const minTop = 0;
+    const maxTop = viewportHeight - rect.height;
+
+    newLeft = Math.min(Math.max(newLeft, minLeft), Math.max(maxLeft, 0));
+    newTop = Math.min(Math.max(newTop, minTop), Math.max(maxTop, 0));
+
+    calculator.style.left = newLeft + 'px';
+    calculator.style.top = newTop + 'px';
+    calculator.style.transform = 'none';
+  }
+
+  function onPointerUp() {
+    isDragging = false;
+  }
+
+  calculator.addEventListener('mousedown', onPointerDown);
+  calculator.addEventListener('touchstart', onPointerDown, { passive: false });
+
+  window.addEventListener('mousemove', onPointerMove);
+  window.addEventListener('touchmove', onPointerMove, { passive: false });
+
+  window.addEventListener('mouseup', onPointerUp);
+  window.addEventListener('touchend', onPointerUp);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  makeCalculatorDraggable();
+});
+  </script>
 
 </body>
 </html>
