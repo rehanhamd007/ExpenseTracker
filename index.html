@@ -1649,8 +1649,7 @@
     }
     renderQuickSubDropdowns(entries);
   }
-
-  // --- CHART FUNCTIONS ---
+// --- CHART FUNCTIONS ---
   function prepareMonthlyData(range, filteredData = data) {
     const monthlyData = {};
     const dates = filteredData.map(d => d.date);
@@ -2173,6 +2172,16 @@
       }
       return dataRows;
   }
+  
+  // --- ADDED MISSING HELPER FUNCTION ---
+  function getBadge(entry) {
+    if (entry.type === 'income') return '<span class="badge badge-income">Income</span>';
+    if (entry.type === 'opening_balance') return '<span class="badge badge-opening">Opening</span>';
+    if (entry.category === 'Investments') return '<span class="badge badge-inv">Invest</span>';
+    if (entry.category === 'Insurance') return '<span class="badge badge-ins">Insure</span>';
+    if (entry.category === 'Credit Card Payment') return '<span class="badge badge-cc">CC Pay</span>';
+    return '<span class="badge badge-expense">Expense</span>';
+  }
 
   // --- FIXED RECENT ENTRIES RENDER ---
   function renderRecentEntries() {
@@ -2419,4 +2428,3 @@
 </script>
 </body>
 </html>
-</div>
