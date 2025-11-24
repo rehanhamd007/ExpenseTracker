@@ -30,6 +30,11 @@
       --opening-balance: #6b21a8;
       --c1:#2563eb; --c2:#10b981; --c3:#f59e0b; --c4:#ef4444; --c5:#7c3aed; --c6:#0ea5e9; --c7:#14b8a6;
       --c8:#22c55e; --c9:#eab308; --c10:#f97316; --c11:#374151; --c12:#8b5cf6;
+
+      /* 3D KPI theme accents */
+      --kpi-elev-shadow: 0 12px 24px rgba(2, 6, 23, 0.16), 0 6px 12px rgba(2, 6, 23, 0.08);
+      --kpi-inner-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
+      --kpi-border: rgba(148, 163, 184, 0.45);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -88,6 +93,7 @@
     .col-span-3 { grid-column: span 3; }
     .col-span-4 { grid-column: span 4; }
 
+    /* Base card */
     .card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); display: flex; flex-direction: column; overflow: hidden; position: relative; }
     .card-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 10px 20px; flex-wrap: wrap; gap: 10px; }
     .card-body { padding: 0 20px 20px 20px; flex: 1; }
@@ -102,7 +108,30 @@
     .input-group-med { width: 25%; min-width: 180px; flex-grow: 1; }
     .input-group-large { width: 45%; min-width: 250px; flex-grow: 1; }
 
-    .kpi-card { padding: 20px; }
+    /* KPI cards — 3D styling */
+    .kpi-card {
+      padding: 20px;
+      border: 1px solid var(--kpi-border);
+      box-shadow: var(--kpi-elev-shadow);
+      background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+      position: relative;
+      isolation: isolate;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      box-shadow: var(--kpi-inner-shadow);
+      pointer-events: none;
+    }
+    /* Accent borders by semantic type */
+    .kpi-income { border-left: 6px solid var(--success); }
+    .kpi-expense { border-left: 6px solid var(--danger); }
+    .kpi-cc { border-left: 6px solid var(--warning); }
+    .kpi-net { border-left: 6px solid var(--primary); }
+    .kpi-invest { border-left: 6px solid #075985; }
+
     .kpi-value { font-size: 28px; font-weight: 700; margin-top: 4px; letter-spacing: -0.5px; }
     .kpi-sub { font-size: 12px; color: var(--text-muted); margin-top: 6px; display: flex; align-items: center; gap: 4px; }
     .trend-up { color: var(--success); font-weight: 600; }
@@ -164,7 +193,7 @@
     .quick-sub-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .quick-sub-title { font-weight: 700; }
     .total-badge { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; color: var(--text-main); }
-    
+
     /* Dropdowns */
     .sub-dropdown-container { position: relative; }
     .sub-dropdown-menu { position: absolute; top: 36px; left: 0; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 8px 0; width: 100%; min-width: 240px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 50; display: none; max-height: 300px; overflow-y: auto; }
@@ -177,9 +206,41 @@
     .multiselect-dropdown.show { display: block; }
     .ms-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; cursor: pointer; }
     .ms-actions { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
-    
+
     /* Analytics Filters */
     .analytics-filter-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+
+    /* Market ticker strip (NEW) */
+    .market-ticker-strip {
+      background-color: #1e293b;
+      color: #f1f5f9;
+      padding: 8px 0;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+    }
+    .ticker-wrap {
+      display: flex;
+      width: max-content;
+      animation: marquee 30s linear infinite;
+      padding-left: 100%;
+    }
+    .ticker-item {
+      display: inline-block;
+      padding: 0 20px;
+      white-space: nowrap;
+      font-size: 0.9em;
+      font-weight: 500;
+    }
+    .ticker-item .symbol { font-weight: 700; margin-right: 5px; }
+    .ticker-item .change-up { color: #10b981; }
+    .ticker-item .change-down { color: #ef4444; }
+    @keyframes marquee {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(-100%, 0); }
+    }
 
     /* MEDIA QUERIES */
     @media(max-width: 1200px) {
@@ -212,7 +273,7 @@
     }
   </style>
 </head>
-<body>
+  <body>
 
 <div id="authGate">
   <p class="line line-1">Welcome to</p>
@@ -240,6 +301,11 @@
         <div class="nav-label">Main menu</div>
         <div class="nav-item active">Dashboard</div>
         <div class="nav-item" id="navAnalytics">Advanced analytics</div>
+        <!-- NEW: Market ticker modal trigger -->
+        <a href="#marketSettingsModal" class="nav-item openModal" data-modal-id="marketSettingsModal" style="text-decoration:none;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"></path><path d="M19 9l-5 5-4-4-3 3"></path></svg>
+          <span>Market ticker</span>
+        </a>
       </div>
       <div class="nav-group">
         <div class="nav-label">Configuration</div>
@@ -259,6 +325,10 @@
 </aside>
 
 <main>
+  <!-- NEW: Market ticker strip -->
+  <div id="stockTickerContainer" class="market-ticker-strip">
+    <div id="tickerWrap" class="ticker-wrap"></div>
+  </div>
 
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
     <div>
@@ -276,17 +346,17 @@
   </div>
 
   <div class="dashboard-grid">
-    <div class="card kpi-card col-span-1">
+    <div class="card kpi-card kpi-income col-span-1">
       <div class="card-title" style="color:var(--success)">Monthly income</div>
       <div class="kpi-value" id="kpiIncome">₹0</div>
       <div class="kpi-sub" id="momIncome"></div>
     </div>
-    <div class="card kpi-card col-span-1">
+    <div class="card kpi-card kpi-expense col-span-1">
       <div class="card-title" style="color:var(--danger)">Monthly expenses</div>
       <div class="kpi-value" id="kpiExpense">₹0</div>
       <div class="kpi-sub" id="momExpense"></div>
     </div>
-    <div class="card kpi-card col-span-1" id="ccCard" style="border-color:var(--warning); background:#fffbeb">
+    <div class="card kpi-card kpi-cc col-span-1" id="ccCard" style="background:linear-gradient(180deg,#fff7ed 0%,#fffbeb 100%);">
       <div class="card-title" id="ccTitle" style="color:var(--warning)">Credit card due</div>
       <div class="kpi-value" id="kpiCCDue">₹0</div>
       <div class="kpi-sub" style="color:#000; font-weight:700; margin-top: 6px; position:relative;">
@@ -298,14 +368,14 @@
       </div>
     </div>
 
-    <div class="card kpi-card col-span-1">
+    <div class="card kpi-card kpi-net col-span-1">
       <div class="card-title" style="color:var(--primary)">Net liquidity</div>
       <div class="kpi-value" id="kpiNet">₹0</div>
       <div class="kpi-sub">Total available cash</div>
       <div class="account-list" id="netLiquidityBreakdown"></div>
     </div>
 
-    <div class="card kpi-card col-span-4" style="background:#e0f2fe; border-color:#075985;">
+    <div class="card kpi-card kpi-invest col-span-4" style="background:#e0f2fe; border-color:#075985;">
       <div class="card-header" style="padding:16px 20px 0 20px;">
         <div class="card-title" style="color:#075985">Total investment value</div>
         <div style="display:flex;gap:8px;align-items:center; flex-wrap:wrap;">
@@ -394,7 +464,7 @@
             <option value="wallet">Wallet breakdown</option>
             <option value="expenses">Expense distribution</option>
           </select>
-          
+
           <div id="expenseFilterContainer" class="multiselect-container hidden" style="flex:1;">
               <button class="btn-outline" style="font-size:12px; padding:10px; width:100%;" id="expenseFilterBtn">Select Categories ▾</button>
               <div class="multiselect-dropdown" id="expenseMultiselectDropdown">
@@ -685,6 +755,42 @@
   </div>
 </div>
 
+<!-- NEW: Market ticker settings modal -->
+<div id="marketSettingsModal" class="modal">
+  <div class="modal-content">
+    <div class="action-header" style="border-radius:12px 12px 0 0">
+      <div class="card-title" style="color:white">Market Ticker Configuration</div>
+      <button class="btn-outline closeModal" data-modal-id="marketSettingsModal" style="background:transparent; color:white; border-color:white; padding:4px 10px">Close</button>
+    </div>
+    <div class="modal-pad">
+      <p style="font-size:13px; color:var(--text-muted);">
+        Customize the stocks and commodities shown in the live ticker. Note: For real-time data, integrate a free API key
+        into <code>fetchMarketData</code> (e.g., Alpha Vantage or FMP).
+      </p>
+
+      <div style="margin-bottom:16px">
+        <label>Currently Tracked Markets</label>
+        <ul id="marketList" class="list-unstyled" style="list-style:none; padding-left:0; display:flex; flex-direction:column; gap:8px;"></ul>
+      </div>
+
+      <h3 style="margin:8px 0;">Add New Market</h3>
+      <form id="addMarketForm" class="full-width" style="display:flex; flex-direction:column; gap:10px;">
+        <div class="form-row" style="display:flex; gap:10px; flex-wrap:wrap;">
+          <div class="form-group" style="flex:1; min-width:220px;">
+            <label for="newMarketSymbol">Symbol (e.g., SENSEX, NASDAQ, XAUUSD):</label>
+            <input type="text" id="newMarketSymbol" required>
+          </div>
+          <div class="form-group" style="flex:1; min-width:220px;">
+            <label for="newMarketName">Name (e.g., Sensex, Nasdaq, Gold/USD):</label>
+            <input type="text" id="newMarketName" required>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary">Add Market</button>
+      </form>
+    </div>
+  </div>
+</div>
+
 <div id="calculator" style="display:none;">
   <div id="calc-header">
     <span>Calculator</span>
@@ -695,7 +801,7 @@
   <div id="calc-buttons">
     <button class="calc-clear">AC</button>
     <button class="calc-clear">±</button>
-    <button class="calc-clear">%</button>
+    <button class="calc-clear">% </button>
     <button class="calc-operator">/</button>
     <button>7</button>
     <button>8</button>
@@ -713,106 +819,195 @@
     <button>.</button>
     <button class="calc-equals">=</button>
   </div>
+</div>
+<script>
+  // Firebase Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyCAZvHT6dG61ISR57AJoZh8GSO7nY_mEGc",
+    authDomain: "moneymirror-22543.firebaseapp.com",
+    projectId: "moneymirror-22543",
+    storageBucket: "moneymirror-22543.firebasestorage.app",
+    messagingSenderId: "61775081584",
+    appId: "1:61775081584:web:3ec184985e324cf6f1c4b5",
+    measurementId: "G-8RPXH1VEFG"
+  };
 
-  <script>
-    // Firebase Config
-    const firebaseConfig = {
-      apiKey: "AIzaSyCAZvHT6dG61ISR57AJoZh8GSO7nY_mEGc",
-      authDomain: "moneymirror-22543.firebaseapp.com",
-      projectId: "moneymirror-22543",
-      storageBucket: "moneymirror-22543.firebasestorage.app",
-      messagingSenderId: "61775081584",
-      appId: "1:61775081584:web:3ec184985e324cf6f1c4b5",
-      measurementId: "G-8RPXH1VEFG"
-    };
+  let db = null;
+  let auth = null;
+  let USE_FIRESTORE = false;
+  const FIRESTORE_COLLECTION_NAME = 'moneymirror_v4_transactions';
+  let currentProfile = null;
 
-    let db = null;
-    let auth = null;
-    let USE_FIRESTORE = false;
-    const FIRESTORE_COLLECTION_NAME = 'moneymirror_v4_transactions';
-    let currentProfile = null;
+  try {
+    if (typeof firebase !== 'undefined') {
+      const app = firebase.initializeApp(firebaseConfig);
+      db = app.firestore();
+      auth = app.auth();
+      USE_FIRESTORE = true;
+      console.log("Firebase initialized.");
+    } else {
+      console.warn("Firebase SDK not loaded.");
+    }
+  } catch (e) {
+    console.warn("Firebase init failed, falling back to LocalStorage:", e);
+  }
 
+  async function signInWithGoogle() {
+    if (!auth) return alert('Auth not initialized. Check internet or use Guest Mode.');
+    const provider = new firebase.auth.GoogleAuthProvider();
     try {
-      if (typeof firebase !== 'undefined') {
-        const app = firebase.initializeApp(firebaseConfig);
-        db = app.firestore();
-        auth = app.auth();
-        USE_FIRESTORE = true;
-        console.log("Firebase initialized.");
-      } else {
-        console.warn("Firebase SDK not loaded.");
-      }
-    } catch (e) {
-      console.warn("Firebase init failed, falling back to LocalStorage:", e);
+      const result = await auth.signInWithPopup(provider);
+      const user = result.user;
+      onUserSignedIn(user);
+    } catch (err) {
+      console.error("Login failed:", err);
+      alert('Sign-in failed. If using a local file, try Guest Mode.');
     }
+  }
 
-    async function signInWithGoogle() {
-      if (!auth) return alert('Auth not initialized. Check internet or use Guest Mode.');
-      const provider = new firebase.auth.GoogleAuthProvider();
-      try {
-        const result = await auth.signInWithPopup(provider);
-        const user = result.user;
-        onUserSignedIn(user);
-      } catch (err) {
-        console.error("Login failed:", err);
-        alert('Sign-in failed. If using a local file, try Guest Mode.');
-      }
-    }
-
-    function startGuestMode() {
-        currentProfile = 'Guest';
-        document.getElementById('profileNameDisplay').textContent = 'Guest (Offline)';
-        document.getElementById('authGate').style.display = 'none';
-        document.querySelector('main').style.filter = 'none';
-        document.getElementById('logoutBtn').style.display = 'block';
-        loadProfileData();
-    }
-
-    function onUserSignedIn(user) {
-      currentProfile = user.displayName || user.email || 'User';
-      localStorage.setItem('mm_last_profile', currentProfile);
-      document.getElementById('profileNameDisplay').textContent = currentProfile;
+  function startGuestMode() {
+      currentProfile = 'Guest';
+      document.getElementById('profileNameDisplay').textContent = 'Guest (Offline)';
       document.getElementById('authGate').style.display = 'none';
       document.querySelector('main').style.filter = 'none';
       document.getElementById('logoutBtn').style.display = 'block';
       loadProfileData();
-    }
+  }
 
-    function signOutUser() {
-      if (auth) {
-        auth.signOut().then(() => {
-            resetToAuthGate();
-        });
-      } else {
+  function onUserSignedIn(user) {
+    currentProfile = user.displayName || user.email || 'User';
+    localStorage.setItem('mm_last_profile', currentProfile);
+    document.getElementById('profileNameDisplay').textContent = currentProfile;
+    document.getElementById('authGate').style.display = 'none';
+    document.querySelector('main').style.filter = 'none';
+    document.getElementById('logoutBtn').style.display = 'block';
+    loadProfileData();
+  }
+
+  function signOutUser() {
+    if (auth) {
+      auth.signOut().then(() => {
           resetToAuthGate();
-      }
+      });
+    } else {
+        resetToAuthGate();
+    }
+  }
+
+  function resetToAuthGate() {
+      currentProfile = null;
+      document.getElementById('profileNameDisplay').textContent = '--';
+      document.getElementById('logoutBtn').style.display = 'none';
+      document.getElementById('authGate').style.display = 'flex';
+      document.querySelector('main').style.filter = 'blur(5px)';
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const d = new Date();
+    const currentDateEl = document.getElementById('currentDate');
+    if (currentDateEl) currentDateEl.innerText = d.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const today = new Date().toISOString().slice(0,10);
+    const dateEl = document.getElementById('date');
+    if (dateEl) dateEl.value = today;
+    dragElement(document.getElementById("calculator"));
+
+    const mobileBtn = document.getElementById('mobileMenuBtn');
+    const sidebar = document.getElementById('mainSidebar');
+    if (mobileBtn && sidebar) {
+      mobileBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('mobile-open');
+      });
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => sidebar.classList.remove('mobile-open'));
+      });
     }
 
-    function resetToAuthGate() {
-        currentProfile = null;
-        document.getElementById('profileNameDisplay').textContent = '--';
-        document.getElementById('logoutBtn').style.display = 'none';
-        document.getElementById('authGate').style.display = 'flex';
-        document.querySelector('main').style.filter = 'blur(5px)';
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('loginBtn').addEventListener('click', signInWithGoogle);
-      document.getElementById('guestBtn').addEventListener('click', startGuestMode);
-      document.getElementById('logoutBtn').addEventListener('click', signOutUser);
-      
-      if (auth) {
-        auth.onAuthStateChanged(user => {
-          if (user) onUserSignedIn(user);
-          else {
-            resetToAuthGate();
-          }
-        });
-      }
-      
-      setupExpenseMultiSelect();
-      setupInvestmentFilters(); 
+    document.getElementById('navSettings').addEventListener('click', () => {
+        document.getElementById('settingsModal').classList.add('open');
     });
+    document.getElementById('closeSettings').addEventListener('click', () => {
+        document.getElementById('settingsModal').classList.remove('open');
+    });
+    document.getElementById('navAnalytics').addEventListener('click', () => {
+        document.getElementById('analyticsModal').classList.add('open');
+        populateAnalyticsDropdowns();
+        renderAdvancedCharts();
+    });
+    document.getElementById('closeAnalytics').addEventListener('click', () => {
+        document.getElementById('analyticsModal').classList.remove('open');
+    });
+    document.getElementById('importDataBtn').addEventListener('click', () => {
+        document.getElementById('importModal').classList.add('open');
+    });
+    document.getElementById('closeImport').addEventListener('click', () => {
+        document.getElementById('importModal').classList.remove('open');
+    });
+    document.getElementById('calc-toggle').addEventListener('click', () => {
+        const calc = document.getElementById('calculator');
+        calc.style.display = calc.style.display === 'none' ? 'flex' : 'none';
+    });
+    document.getElementById('calc-close-btn').addEventListener('click', (e) => {
+        document.getElementById('calculator').style.display = 'none';
+        e.stopPropagation();
+    });
+    document.getElementById('sampleBtn').addEventListener('click', loadSampleData);
+    document.getElementById('exportBtn').addEventListener('click', () => convertToCSV(data));
+    document.getElementById('processImportBtn').addEventListener('click', processImportedData);
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        if (confirm('WARNING: This will erase ALL your data (local and Firestore). Are you absolutely sure?')) {
+            localStorage.clear();
+            data = [];
+            methodNames = {...CANONICAL_METHODS};
+            incomeSources = ['Salary', 'Freelance', 'Interest'];
+            settings = { ccLimit: DEFAULT_CC_LIMIT, trackedMarkets: settings.trackedMarkets || [] };
+            saveAll();
+            window.location.reload();
+        }
+    });
+
+    // Calculator buttons
+    document.querySelectorAll('#calc-buttons button').forEach(button => {
+      button.addEventListener('click', handleCalculatorInput);
+    });
+
+    // Open any generic modal by data-modal-id (includes marketSettingsModal)
+    document.querySelectorAll('.openModal').forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        const modalId = e.currentTarget.dataset.modalId;
+        const modal = document.getElementById(modalId);
+        if (modal) {
+          modal.classList.add('open');
+          if (modalId === 'marketSettingsModal') renderMarketList();
+        }
+      });
+    });
+    document.querySelectorAll('.closeModal').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const modalId = e.currentTarget.dataset.modalId;
+        const modal = document.getElementById(modalId);
+        if (modal) modal.classList.remove('open');
+      });
+    });
+
+    if (auth) {
+      auth.onAuthStateChanged(user => {
+        if (user) onUserSignedIn(user);
+        else {
+          resetToAuthGate();
+        }
+      });
+    }
+    
+    setupExpenseMultiSelect();
+    setupInvestmentFilters();
+
+    // Attach listener for the Add Market form
+    const addMarketForm = document.getElementById('addMarketForm');
+    if (addMarketForm) addMarketForm.addEventListener('submit', addMarket);
+
+    renderAll();
+  });
 
   // --- UTILS AND CONSTANTS ---
   const DEFAULT_CC_LIMIT = 200000;
@@ -910,7 +1105,15 @@
   let data = [];
   let methodNames = {...CANONICAL_METHODS};
   let incomeSources = ['Salary', 'Freelance', 'Interest'];
-  let settings = { ccLimit: DEFAULT_CC_LIMIT };
+
+  // Load settings with market ticker defaults if missing
+  let settings = { ccLimit: DEFAULT_CC_LIMIT, trackedMarkets: [
+    { symbol: 'SENSEX', name: 'Sensex', price: 72000.00, change: 0.85 },
+    { symbol: 'NASDAQ', name: 'Nasdaq', price: 16000.00, change: -1.23 },
+    { symbol: 'XAUUSD', name: 'Gold/USD', price: 2350.00, change: 0.15 },
+    { symbol: 'XAGUSD', name: 'Silver/USD', price: 28.50, change: -0.55 },
+    { symbol: 'BTCUSD', name: 'Bitcoin', price: 68000.00, change: 2.10 }
+  ]};
   let editId = null;
   let selectedExpenseCategories = [];
 
@@ -950,72 +1153,6 @@
   let invBreakdownBarChart = null;
   let invBreakdownPieChart = null;
 
-  // Header date, calculator draggable, Mobile Menu logic
-  document.addEventListener('DOMContentLoaded', () => {
-    const d = new Date();
-    document.getElementById('currentDate').innerText = d.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    const today = new Date().toISOString().slice(0,10);
-    const dateEl = document.getElementById('date');
-    if (dateEl) dateEl.value = today;
-    dragElement(document.getElementById("calculator"));
-
-    const mobileBtn = document.getElementById('mobileMenuBtn');
-    const sidebar = document.getElementById('mainSidebar');
-    mobileBtn.addEventListener('click', () => {
-      sidebar.classList.toggle('mobile-open');
-    });
-    document.querySelectorAll('.nav-item').forEach(item => {
-      item.addEventListener('click', () => sidebar.classList.remove('mobile-open'));
-    });
-
-    document.getElementById('navSettings').addEventListener('click', () => {
-        document.getElementById('settingsModal').classList.add('open');
-    });
-    document.getElementById('closeSettings').addEventListener('click', () => {
-        document.getElementById('settingsModal').classList.remove('open');
-    });
-    document.getElementById('navAnalytics').addEventListener('click', () => {
-        document.getElementById('analyticsModal').classList.add('open');
-        populateAnalyticsDropdowns();
-        renderAdvancedCharts();
-    });
-    document.getElementById('closeAnalytics').addEventListener('click', () => {
-        document.getElementById('analyticsModal').classList.remove('open');
-    });
-    document.getElementById('importDataBtn').addEventListener('click', () => {
-        document.getElementById('importModal').classList.add('open');
-    });
-    document.getElementById('closeImport').addEventListener('click', () => {
-        document.getElementById('importModal').classList.remove('open');
-    });
-    document.getElementById('calc-toggle').addEventListener('click', () => {
-        const calc = document.getElementById('calculator');
-        calc.style.display = calc.style.display === 'none' ? 'flex' : 'none';
-    });
-    document.getElementById('calc-close-btn').addEventListener('click', (e) => {
-        document.getElementById('calculator').style.display = 'none';
-        e.stopPropagation();
-    });
-    document.getElementById('sampleBtn').addEventListener('click', loadSampleData);
-    document.getElementById('exportBtn').addEventListener('click', () => convertToCSV(data));
-    document.getElementById('processImportBtn').addEventListener('click', processImportedData);
-    document.getElementById('resetBtn').addEventListener('click', () => {
-        if (confirm('WARNING: This will erase ALL your data (local and Firestore). Are you absolutely sure?')) {
-            localStorage.clear();
-            data = [];
-            methodNames = {...CANONICAL_METHODS};
-            incomeSources = ['Salary', 'Freelance', 'Interest'];
-            settings = { ccLimit: DEFAULT_CC_LIMIT };
-            saveAll();
-            window.location.reload();
-        }
-    });
-    // Calculator buttons
-    document.querySelectorAll('#calc-buttons button').forEach(button => {
-      button.addEventListener('click', handleCalculatorInput);
-    });
-  });
-
   // Persistence
   function getTxKey() { return currentProfile ? `mm_data_${currentProfile}` : 'mm_data_default'; }
   function getMethodKey() { return currentProfile ? `mm_methods_${currentProfile}` : 'mm_methods_default'; }
@@ -1049,7 +1186,18 @@
     methodNames = JSON.parse(localStorage.getItem(getMethodKey())) || {...CANONICAL_METHODS};
     incomeSources = JSON.parse(localStorage.getItem(getIncomeKey())) || ['Salary', 'Freelance', 'Interest'];
     data = JSON.parse(localStorage.getItem(getTxKey())) || [];
-    settings = JSON.parse(localStorage.getItem(getSettingsKey())) || { ccLimit: DEFAULT_CC_LIMIT };
+    const storedSettings = JSON.parse(localStorage.getItem(getSettingsKey()));
+    if (storedSettings) {
+      settings = storedSettings;
+      if (!settings.trackedMarkets) settings.trackedMarkets = [
+        { symbol: 'SENSEX', name: 'Sensex', price: 72000.00, change: 0.85 },
+        { symbol: 'NASDAQ', name: 'Nasdaq', price: 16000.00, change: -1.23 },
+        { symbol: 'XAUUSD', name: 'Gold/USD', price: 2350.00, change: 0.15 },
+        { symbol: 'XAGUSD', name: 'Silver/USD', price: 28.50, change: -0.55 },
+        { symbol: 'BTCUSD', name: 'Bitcoin', price: 68000.00, change: 2.10 }
+      ];
+    }
+
     data = data.map(d => ({
       id: d.id,
       type: d.type || 'expense',
@@ -1077,6 +1225,13 @@
           methodNames = serverData.methodNames || methodNames;
           incomeSources = serverData.incomeSources || incomeSources;
           settings = serverData.settings || settings;
+          if (!settings.trackedMarkets) settings.trackedMarkets = [
+            { symbol: 'SENSEX', name: 'Sensex', price: 72000.00, change: 0.85 },
+            { symbol: 'NASDAQ', name: 'Nasdaq', price: 16000.00, change: -1.23 },
+            { symbol: 'XAUUSD', name: 'Gold/USD', price: 2350.00, change: 0.15 },
+            { symbol: 'XAGUSD', name: 'Silver/USD', price: 28.50, change: -0.55 },
+            { symbol: 'BTCUSD', name: 'Bitcoin', price: 68000.00, change: 2.10 }
+          ];
         }
       } catch (e) {
         console.error("Firestore read error, using local data:", e);
@@ -1093,6 +1248,7 @@
     renderCharts();
     renderRecentEntries();
     renderSettings();
+    renderMarketTicker(); // NEW
   }
 
   function setupDropdowns() {
@@ -1649,7 +1805,8 @@
     }
     renderQuickSubDropdowns(entries);
   }
-// --- CHART FUNCTIONS ---
+
+  // --- CHART FUNCTIONS ---
   function prepareMonthlyData(range, filteredData = data) {
     const monthlyData = {};
     const dates = filteredData.map(d => d.date);
@@ -1908,8 +2065,8 @@
 
       const { labels, income, expense, investment } = prepareMonthlyData(range === 'all' ? 'all' : Number(range), relevantData);
       
-      const sum = (arr) => arr.reduce((a,b)=>a+Number(b.amount||0),0);
-      let initialValue = sum(relevantData.filter(d => d.type === 'opening_balance' && (invGroup ? d.investmentGroup === invGroup : true)));
+      const sumAmt = (arr) => arr.reduce((a,b)=>a+Number(b.amount||0),0);
+      let initialValue = sumAmt(relevantData.filter(d => d.type === 'opening_balance' && (invGroup ? d.investmentGroup === invGroup : true)));
       
       let currentValue = initialValue;
       const valueData = labels.map((label, idx) => {
@@ -2124,34 +2281,34 @@
               importedData = parseCSV(content);
           } else { return alert('Unsupported file type. Please use CSV or JSON.'); }
 
-          if (!importedData || importedData.length === 0) return alert('No valid data found.');
-          let newEntries = 0;
-          importedData.forEach(item => {
-              const entry = {
-                  id: uid(),
-                  type: item.type ? item.type.toLowerCase().trim() : 'expense',
-                  amount: Number(item.amount),
-                  date: item.date || new Date().toISOString().slice(0, 10),
-                  desc: item.desc || item.description || '',
-                  category: item.category || 'Misc',
-                  method: item.method ? toKey(item.method) : 'cash',
-                  incomeSource: item.income_source || item.incomeSource || '',
-                  investmentGroup: item.investment_group || item.investmentGroup || '',
-                  investmentSub: item.investment_sub || item.investmentSub || '',
-                  insuranceType: item.insurance_type || item.insuranceType || '',
-                  insuranceFor: item.insurance_for || item.insuranceFor || '',
-              };
-              if (entry.amount > 0 && entry.desc) {
-                  data.push(entry);
-                  newEntries++;
-              }
-          });
-          saveAll();
-          renderAll();
-          document.getElementById('importModal').classList.remove('open');
-          alert(`Successfully imported ${newEntries} new entries.`);
-      };
-      reader.readAsText(file);
+                       if (!importedData || importedData.length === 0) return alert('No valid data found.');
+              let newEntries = 0;
+              importedData.forEach(item => {
+                  const entry = {
+                      id: uid(),
+                      type: item.type ? item.type.toLowerCase().trim() : 'expense',
+                      amount: Number(item.amount),
+                      date: item.date || new Date().toISOString().slice(0, 10),
+                      desc: item.desc || item.description || '',
+                      category: item.category || 'Misc',
+                      method: item.method ? toKey(item.method) : 'cash',
+                      incomeSource: item.income_source || item.incomeSource || '',
+                      investmentGroup: item.investment_group || item.investmentGroup || '',
+                      investmentSub: item.investment_sub || item.investmentSub || '',
+                      insuranceType: item.insurance_type || item.insuranceType || '',
+                      insuranceFor: item.insurance_for || item.insuranceFor || '',
+                  };
+                  if (entry.amount > 0 && entry.desc) {
+                      data.push(entry);
+                      newEntries++;
+                  }
+              });
+              saveAll();
+              renderAll();
+              document.getElementById('importModal').classList.remove('open');
+              alert(`Successfully imported ${newEntries} new entries.`);
+          };
+          reader.readAsText(file);
   }
 
   function parseCSV(csvText) {
@@ -2173,7 +2330,7 @@
       return dataRows;
   }
   
-  // --- ADDED MISSING HELPER FUNCTION ---
+  // --- Helper badges ---
   function getBadge(entry) {
     if (entry.type === 'income') return '<span class="badge badge-income">Income</span>';
     if (entry.type === 'opening_balance') return '<span class="badge badge-opening">Opening</span>';
@@ -2183,7 +2340,7 @@
     return '<span class="badge badge-expense">Expense</span>';
   }
 
-  // --- FIXED RECENT ENTRIES RENDER ---
+  // --- Recent entries render ---
   function renderRecentEntries() {
     try {
         const tbody = document.querySelector('#recentTable tbody');
@@ -2229,7 +2386,9 @@
         }
 
         tbody.innerHTML = slice.map(e => {
-          const amountDisplay = e.type === 'income' || e.type === 'opening_balance' ? `<span style="color:var(--success)">+${fmt(e.amount)}</span>` : `<span style="color:var(--danger)">-${fmt(e.amount)}</span>`;
+          const amountDisplay = e.type === 'income' || e.type === 'opening_balance'
+            ? `<span style="color:var(--success)">+${fmt(e.amount)}</span>`
+            : `<span style="color:var(--danger)">-${fmt(e.amount)}</span>`;
 
           let methodDisplay = '';
           if (e.type === 'opening_balance' && e.investmentGroup !== 'Cash') {
@@ -2265,7 +2424,7 @@
     }
   }
 
-  // Sample Data
+  // --- Sample Data ---
   function loadSampleData() {
       if (!confirm("Overwrite data with sample?")) return;
       function randBetween(min, max) { return Math.floor(Math.random() * (max - min + 1) + min); }
@@ -2285,15 +2444,26 @@
       methodNames = {...CANONICAL_METHODS};
       incomeSources = ['Salary (Primary)', 'Freelance Income', 'Investment Income'];
       settings.ccLimit = 200000;
+      settings.trackedMarkets = settings.trackedMarkets || [
+        { symbol: 'SENSEX', name: 'Sensex', price: 72000.00, change: 0.85 },
+        { symbol: 'NASDAQ', name: 'Nasdaq', price: 16000.00, change: -1.23 },
+        { symbol: 'XAUUSD', name: 'Gold/USD', price: 2350.00, change: 0.15 },
+        { symbol: 'XAGUSD', name: 'Silver/USD', price: 28.50, change: -0.55 },
+        { symbol: 'BTCUSD', name: 'Bitcoin', price: 68000.00, change: 2.10 }
+      ];
+
+      // Opening cash balances
       data.push({id:uid(), type:'opening_balance', amount: 50000, date: dateInLastMonths([6,6]), desc:'Initial Salary Account Balance', investmentGroup:'Cash', investmentSub:'Bank Account (Salary)', method:'salary_acct', category:'N/A'});
       data.push({id:uid(), type:'opening_balance', amount: 20000, date: dateInLastMonths([5,6]), desc:'Initial Savings Account Balance', investmentGroup:'Cash', investmentSub:'Bank Account (Savings)', method:'savings_acct', category:'N/A'});
       data.push({id:uid(), type:'opening_balance', amount: 5000, date: dateInLastMonths([5,6]), desc:'Initial Physical Cash', investmentGroup:'Cash', investmentSub:'Cash', method:'cash', category:'N/A'});
+      // Opening investments
       data.push({id:uid(), type:'opening_balance', amount: 35000, date: dateInLastMonths([6,6]), desc:'Opening — Equity MF (Large Cap)', investmentGroup:'Mutual Funds', investmentSub:'Equity MF - Large Cap/Mid Cap/Small Cap', method:'', category:'N/A'});
       data.push({id:uid(), type:'opening_balance', amount: 18000, date: dateInLastMonths([6,6]), desc:'Opening — NPS Tier 1', investmentGroup:'Retirement Funds', investmentSub:'NPS Tier 1/Tier 2', method:'', category:'N/A'});
       data.push({id:uid(), type:'opening_balance', amount: 12000, date: dateInLastMonths([6,6]), desc:'Opening — Gold ETF', investmentGroup:'ETFs', investmentSub:'Gold ETF', method:'', category:'N/A'});
       data.push({id:uid(), type:'opening_balance', amount: 25000, date: dateInLastMonths([6,6]), desc:'Opening — Corporate Bonds', investmentGroup:'Bonds & Debt Instruments', investmentSub:'Corporate Bonds', method:'', category:'N/A'});
       data.push({id:uid(), type:'opening_balance', amount: 8000, date: dateInLastMonths([6,6]), desc:'Opening — Bitcoin (BTC)', investmentGroup:'Crypto & Digital Assets', investmentSub:'Bitcoin (BTC)', method:'', category:'N/A'});
       
+      // Monthly incomes
       for (let m = 6; m >= 0; m--) {
         const salaryDate = dateInLastMonths([m,m]);
         data.push({id:uid(), type:'income', amount: 120000, date: salaryDate, desc:`Salary credit (${salaryDate})`, category:'N/A', method:'salary_acct', incomeSource:'Salary (Primary)'});
@@ -2340,6 +2510,7 @@
       alert('Sample data loaded.');
   }
 
+  // --- Calculator ---
   function handleCalculatorInput(e) {
     const key = e.target.innerText;
     const display = document.getElementById('calc-display');
@@ -2365,6 +2536,7 @@
     } catch (err) { preview.textContent = ''; }
   }
 
+  // --- Draggable helper ---
   function dragElement(elmnt) {
     if (!elmnt) return;
     const header = document.getElementById(elmnt.id + "header") || document.getElementById('calc-header');
@@ -2417,14 +2589,10 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const d = new Date();
-    document.getElementById('currentDate').innerText = d.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  });
+  // --- Market ticker (already integrated above) is invoked via renderAll ---
+  // Expose functions
   window.loadEdit = loadEdit;
   window.deleteEntry = deleteEntry;
   window.toggleSubMenu = toggleSubMenu;
   window.resetExpenseDrilldown = resetExpenseDrilldown;
 </script>
-</body>
-</html>
