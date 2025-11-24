@@ -12,26 +12,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 
-  <script>
-    // ----------------------------------------------------------------------
-    // NOTE: If you are using Firebase/Google Sign-in, you MUST update the
-    // firebaseConfig object with your project details here.
-    // If you are only using Guest Mode (Offline), this can be skipped.
-    // ----------------------------------------------------------------------
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
-
-    // Initialize Firebase app only if it hasn't been initialized
-    if (firebase.apps.length === 0) {
-      firebase.initializeApp(firebaseConfig);
-    }
-  </script>
   <style>
     :root {
       --sidebar-bg: #0f172a;
@@ -48,8 +28,12 @@
       --border: #cbd5e1;
       --warning: #f97316;
       --opening-balance: #6b21a8;
-      --c1:#2563eb; --c2:#10b981; --c3:#f59e0b; --c4:#ef4444; --c5:#7c3aed; --c6:#0ea5e9; --c7:#14b8a6;
-      --c8:#22c55e; --c9:#eab308; --c10:#f97316; --c11:#374151; --c12:#8b5cf6;
+      --ticker-bg: #0b1220;
+      --ticker-text: #e6eef8;
+      --ticker-accent: #60a5fa;
+      --kpi-elev-shadow: 0 12px 24px rgba(2, 6, 23, 0.16), 0 6px 12px rgba(2, 6, 23, 0.08);
+      --kpi-inner-shadow: inset 0 1px 0 rgba(255,255,255,0.85);
+      --kpi-border: rgba(148, 163, 184, 0.45);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -108,26 +92,39 @@
     .col-span-3 { grid-column: span 3; }
     .col-span-4 { grid-column: span 4; }
 
+    /* Base card */
     .card { background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); display: flex; flex-direction: column; overflow: hidden; position: relative; }
     .card-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 10px 20px; flex-wrap: wrap; gap: 10px; }
     .card-body { padding: 0 20px 20px 20px; flex: 1; }
     .card-title { font-size: 15px; font-weight: 600; color: var(--text-main); white-space: nowrap; }
 
-    .action-card { border-color: var(--primary); box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.15); }
-    .action-header { background: var(--primary); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-    .action-header .card-title { color: white; }
-    .action-body { padding: 20px; display: flex; flex-wrap: wrap; gap: 20px; }
+    /* KPI cards — 3D styling */
+    .kpi-card {
+      padding: 20px;
+      border: 1px solid var(--kpi-border);
+      box-shadow: var(--kpi-elev-shadow);
+      background: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+      position: relative;
+      isolation: isolate;
+    }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      box-shadow: var(--kpi-inner-shadow);
+      pointer-events: none;
+    }
+    .kpi-income { border-left: 6px solid var(--success); }
+    .kpi-expense { border-left: 6px solid var(--danger); }
+    .kpi-cc { border-left: 6px solid var(--warning); }
+    .kpi-net { border-left: 6px solid var(--primary); }
+    .kpi-invest { border-left: 6px solid #075985; }
 
-    .input-group-small { width: 15%; min-width: 120px; flex-grow: 1; }
-    .input-group-med { width: 25%; min-width: 180px; flex-grow: 1; }
-    .input-group-large { width: 45%; min-width: 250px; flex-grow: 1; }
-
-    .kpi-card { padding: 20px; }
     .kpi-value { font-size: 28px; font-weight: 700; margin-top: 4px; letter-spacing: -0.5px; }
     .kpi-sub { font-size: 12px; color: var(--text-muted); margin-top: 6px; display: flex; align-items: center; gap: 4px; }
     .trend-up { color: var(--success); font-weight: 600; }
     .trend-down { color: var(--danger); font-weight: 600; }
-    .cc-alert-high { background: #fee2e2 !important; border-color: var(--danger) !important; }
 
     label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; display: block; letter-spacing: 0.5px; }
     input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 13px; background: #f8fafc; outline: none; transition: border 0.2s; }
@@ -147,59 +144,104 @@
     .badge-opening { background: #efe6ff; color: var(--opening-balance); }
     .badge-cc { background: #fef3c7; color: #b45309; }
 
-    .account-list { font-size: 11px; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; display: flex; flex-direction: column; gap: 5px; color: var(--text-muted); }
-    .account-list div { display: flex; justify-content: space-between; }
-    .account-list span:last-child { font-weight: 600; color: var(--text-main); }
-
     .flex-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .full-width { width: 100%; }
     .hidden { display: none !important; }
 
-    /* Modal */
-    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
-    .modal.open { display: flex; animation: fadeIn 0.2s ease-out; }
-    .modal-content { background: white; width: 95%; max-width: 1400px; padding: 0; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 95vh; display:flex; flex-direction:column; overflow: hidden; }
-    .modal-pad { padding: 24px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
-    .modal-small { width: 90%; max-width: 400px; height: auto; max-height: 90vh; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    /* Market controls and ticker */
+    .market-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      width: 100%;
+      flex-wrap: wrap;
+    }
+    .market-selects {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .market-selects select {
+      min-width: 160px;
+      max-width: 260px;
+      background: white;
+      border-radius: 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      font-weight: 600;
+    }
+    .ticker-panel {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+    }
+    .market-ticker-strip {
+      background: linear-gradient(90deg, var(--ticker-bg), #071022);
+      color: var(--ticker-text);
+      padding: 8px 12px;
+      margin-bottom: 0;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.18);
+      position: relative;
+      overflow: hidden;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .ticker-clock {
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      min-width:120px;
+      color:var(--ticker-text);
+      font-size:12px;
+      line-height:1;
+      gap:4px;
+    }
+    .ticker-clock .time {
+      font-weight:700;
+      font-size:14px;
+      color:#ffffff;
+    }
+    .ticker-clock .tz {
+      color:var(--ticker-accent);
+      font-weight:600;
+      font-size:11px;
+    }
+    .ticker-wrap {
+      display: flex;
+      width: max-content;
+      animation: marquee 28s linear infinite;
+      padding-left: 8px;
+      gap: 8px;
+      align-items:center;
+    }
+    .ticker-item {
+      display: inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 12px;
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+    .ticker-item .symbol { font-weight:800; color:var(--ticker-accent); }
+    .ticker-item .price { color:#e6eef8; font-weight:700; }
+    .ticker-item .change-up { color: #10b981; font-weight:700; }
+    .ticker-item .change-down { color: #ef4444; font-weight:700; }
 
-    /* Calculator */
-    #calculator { position: fixed; bottom: 20px; right: 20px; width: 280px; height: 480px; max-height: 80vh; z-index: 3000; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); background: #f8fafc; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-    #calc-header { background: var(--sidebar-bg); color: white; padding: 10px 15px; cursor: move; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 13px; height: 40px; }
-    #calc-close-btn { background: transparent; border: none; color: #ef4444; font-size: 18px; font-weight: 700; cursor: pointer; padding: 0; line-height: 1; }
-    #calc-display { background: var(--sidebar-bg); color: white; text-align: right; font-size: 24px; padding: 10px 15px; border-top: 1px solid rgba(255,255,255,0.1); font-family: monospace; overflow-x: auto; white-space: nowrap; height: 60px; }
-    #calc-preview { background: #0b1323; color: #9fb3c8; text-align: right; font-size: 14px; padding: 6px 15px; font-family: monospace; height: 28px; border-top: 1px solid rgba(255,255,255,0.06); }
-    #calc-buttons { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(5, 1fr); padding: 10px; gap: 8px; background: white; flex: 1; }
-    #calc-buttons button { width: 100%; height: 100%; font-size: 18px; font-weight: 500; border-radius: 8px; background: white; border: 1px solid #e2e8f0; transition: background 0.1s; cursor: pointer; display: flex; align-items: center; justify-content: center; touch-action: manipulation; }
-    #calc-buttons button:hover { background: #f1f5f9; }
-    .calc-operator { background: #e0f7fa !important; color: var(--primary) !important; }
-    .calc-clear { background: #fef2f2 !important; color: var(--danger) !important; }
-    .calc-zero { grid-column: span 2; }
-    .calc-equals { grid-row: span 2; background: var(--primary) !important; color: white !important; }
-    #calc-toggle { margin-left: 10px; padding: 8px 12px; background: var(--primary); color: white; border-radius: 8px; cursor: pointer; display: flex; align-items: center; }
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); } /* duplicated content will create seamless loop */
+    }
 
-    /* Breakdown Grid */
-    .kpi-breakdown-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 16px; align-items: stretch; }
-    .quick-sub-card { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: white; display:flex; flex-direction:column; justify-content:space-between; }
-    .quick-sub-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .quick-sub-title { font-weight: 700; }
-    .total-badge { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 4px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; color: var(--text-main); }
-
-    /* Dropdowns */
-    .sub-dropdown-container { position: relative; }
-    .sub-dropdown-menu { position: absolute; top: 36px; left: 0; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 8px 0; width: 100%; min-width: 240px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 50; display: none; max-height: 300px; overflow-y: auto; }
-    .sub-dropdown-menu.show { display: block; }
-    .sub-dropdown-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; font-size: 12px; color: var(--text-main); border-bottom: 1px solid #f1f5f9; }
-    .sub-dropdown-item:last-child { border-bottom: none; }
-
-    .multiselect-container { position: relative; }
-    .multiselect-dropdown { position: absolute; top: 100%; right: 0; background: white; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); width: 220px; padding: 10px; z-index: 60; display: none; }
-    .multiselect-dropdown.show { display: block; }
-    .ms-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; cursor: pointer; }
-    .ms-actions { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
-
-    /* Analytics Filters */
-    .analytics-filter-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+    /* small helper for mobile compact selects */
+    .market-controls .compact { min-width: 120px; }
 
     /* MEDIA QUERIES */
     @media(max-width: 1200px) {
@@ -229,9 +271,12 @@
       .flex-row input, .flex-row select, .flex-row button { flex-grow: 1; width: 100%; max-width: none !important; }
       .modal-content { width: 100%; height: 100%; border-radius: 0; max-width: none; }
       .modal-small { height: auto; min-height: 50vh; border-radius: 12px; }
+      .market-selects select { min-width: 120px; }
+      .ticker-clock { min-width: 100px; align-items:flex-start; }
     }
   </style>
 </head>
+
 <body>
 
 <div id="authGate">
@@ -260,7 +305,14 @@
         <div class="nav-label">Main menu</div>
         <div class="nav-item active">Dashboard</div>
         <div class="nav-item" id="navAnalytics">Advanced analytics</div>
+
+        <!-- Market Ticker trigger -->
+        <a href="#marketSettingsModal" class="nav-item openModal" data-modal-id="marketSettingsModal" style="text-decoration:none;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"></path><path d="M19 9l-5 5-4-4-3 3"></path></svg>
+          <span>Market ticker</span>
+        </a>
       </div>
+
       <div class="nav-group">
         <div class="nav-label">Configuration</div>
         <div class="nav-item" id="navSettings">Settings & Backup</div>
@@ -279,34 +331,90 @@
 </aside>
 
 <main>
-
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
     <div>
       <h1 style="margin:0; font-size:24px; font-weight:700">Financial overview</h1>
       <div style="font-size:13px; color:var(--text-muted); margin-top:4px" id="currentDate"></div>
     </div>
-    <div class="flex-row">
-      <button class="btn-outline" id="sampleBtn">Load sample</button>
-      <button class="btn-primary" id="importDataBtn">Import data</button>
-      <button class="btn-outline" id="exportBtn">Export CSV</button>
-      <div id="calc-toggle" title="Toggle calculator">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line><line x1="12" y1="14" x2="12.01" y2="14"></line><line x1="8" y1="10" x2="8.01" y2="10"></line><line x1="16" y1="10" x2="16.01" y2="10"></line></svg>
+
+    <!-- Market controls (major markets, metal selector, country selector) -->
+    <div class="market-controls" style="align-items:center;">
+      <div class="market-selects" role="group" aria-label="Market selectors">
+        <!-- Major world markets dropdown -->
+        <div>
+          <label for="marketSelectMajor" style="display:block; font-size:11px; color:var(--text-muted); margin-bottom:6px; font-weight:700;">Major markets</label>
+          <select id="marketSelectMajor" title="Select major market">
+            <option value="NSEI">Nifty 50 (NSEI)</option>
+            <option value="SENSEX">Sensex (BSE)</option>
+            <option value="NASDAQ">NASDAQ Composite</option>
+            <option value="DOWJ">Dow Jones</option>
+            <option value="SPX">S&P 500</option>
+            <option value="FTSE">FTSE 100</option>
+            <option value="DAX">DAX</option>
+            <option value="NIKKEI">Nikkei 225</option>
+            <option value="HANGSENG">Hang Seng</option>
+          </select>
+        </div>
+
+        <!-- Metal selector (Gold / Silver) -->
+        <div>
+          <label for="metalSelect" style="display:block; font-size:11px; color:var(--text-muted); margin-bottom:6px; font-weight:700;">Metal</label>
+          <select id="metalSelect" title="Select metal to track">
+            <option value="XAU">Gold (XAU)</option>
+            <option value="XAG">Silver (XAG)</option>
+          </select>
+        </div>
+
+        <!-- Country / currency selector for metal pricing -->
+        <div>
+          <label for="metalCountrySelect" style="display:block; font-size:11px; color:var(--text-muted); margin-bottom:6px; font-weight:700;">Country / Currency</label>
+          <select id="metalCountrySelect" title="Select country/currency for metal price">
+            <option value="INR">India (INR)</option>
+            <option value="USD">United States (USD)</option>
+            <option value="EUR">Eurozone (EUR)</option>
+            <option value="GBP">United Kingdom (GBP)</option>
+            <option value="AED">UAE (AED)</option>
+            <option value="SGD">Singapore (SGD)</option>
+            <option value="AUD">Australia (AUD)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button id="applyMarketFilters" class="btn-primary" style="padding:8px 12px; font-size:13px;">Apply</button>
+        <button id="openMarketSettings" class="btn-outline openModal" data-modal-id="marketSettingsModal" style="padding:8px 12px; font-size:13px;">Configure</button>
       </div>
     </div>
   </div>
 
+  <!-- Ticker panel: clock + revolving ticker -->
+  <div class="market-ticker-strip" style="margin-top:8px;">
+    <!-- Clock / snapshot timestamp -->
+    <div class="ticker-clock" aria-live="polite" style="margin-right:12px;">
+      <div class="time" id="tickerClockTime">--:--:--</div>
+      <div class="tz" id="tickerClockTZ">Snapshot: --</div>
+    </div>
+
+    <!-- Scrolling ticker content -->
+    <div id="tickerWrap" class="ticker-wrap" aria-hidden="false" role="list">
+      <!-- JS will populate .ticker-item elements here; duplicated by script for seamless loop -->
+    </div>
+  </div>
+
+  <!-- KPI cards and rest of dashboard follow (unchanged structure, integrated with ticker) -->
   <div class="dashboard-grid">
-    <div class="card kpi-card col-span-1">
+    <div class="card kpi-card kpi-income col-span-1">
       <div class="card-title" style="color:var(--success)">Monthly income</div>
       <div class="kpi-value" id="kpiIncome">₹0</div>
       <div class="kpi-sub" id="momIncome"></div>
     </div>
-    <div class="card kpi-card col-span-1">
+    <div class="card kpi-card kpi-expense col-span-1">
       <div class="card-title" style="color:var(--danger)">Monthly expenses</div>
       <div class="kpi-value" id="kpiExpense">₹0</div>
       <div class="kpi-sub" id="momExpense"></div>
     </div>
-    <div class="card kpi-card col-span-1" id="ccCard" style="border-color:var(--warning); background:#fffbeb">
+    <div class="card kpi-card kpi-cc col-span-1" id="ccCard" style="background:linear-gradient(180deg,#fff7ed 0%,#fffbeb 100%);">
       <div class="card-title" id="ccTitle" style="color:var(--warning)">Credit card due</div>
       <div class="kpi-value" id="kpiCCDue">₹0</div>
       <div class="kpi-sub" style="color:#000; font-weight:700; margin-top: 6px; position:relative;">
@@ -318,14 +426,14 @@
       </div>
     </div>
 
-    <div class="card kpi-card col-span-1">
+    <div class="card kpi-card kpi-net col-span-1">
       <div class="card-title" style="color:var(--primary)">Net liquidity</div>
       <div class="kpi-value" id="kpiNet">₹0</div>
       <div class="kpi-sub">Total available cash</div>
       <div class="account-list" id="netLiquidityBreakdown"></div>
     </div>
 
-    <div class="card kpi-card col-span-4" style="background:#e0f2fe; border-color:#075985;">
+    <div class="card kpi-card kpi-invest col-span-4" style="background:#e0f2fe; border-color:#075985;">
       <div class="card-header" style="padding:16px 20px 0 20px;">
         <div class="card-title" style="color:#075985">Total investment value</div>
         <div style="display:flex;gap:8px;align-items:center; flex-wrap:wrap;">
@@ -389,2208 +497,1568 @@
     </div>
   </div>
 
-  <div class="dashboard-grid">
-    <div class="card col-span-2">
-      <div class="card-header">
-        <div class="card-title">Cash flow & investments</div>
-        <select id="mainChartFilter" onchange="renderCharts()" style="max-width:120px;">
-          <option value="6">Last 6m</option>
-          <option value="12">Last 12m</option>
-          <option value="all">All time</option>
-        </select>
-      </div>
-      <div class="card-body">
-        <div style="height:320px; width:100%; position:relative">
-          <canvas id="mainChart"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <div class="card col-span-2">
-      <div class="card-header" style="gap:12px;">
-        <div class="card-title">Wallet & Expenses</div>
-        <div class="flex-row" style="gap:8px; width:100%;">
-          <select id="walletMode" onchange="renderWalletUnified()" style="flex:1;">
-            <option value="wallet">Wallet breakdown</option>
-            <option value="expenses">Expense distribution</option>
-          </select>
-
-          <div id="expenseFilterContainer" class="multiselect-container hidden" style="flex:1;">
-              <button class="btn-outline" style="font-size:12px; padding:10px; width:100%;" id="expenseFilterBtn">Select Categories ▾</button>
-              <div class="multiselect-dropdown" id="expenseMultiselectDropdown">
-                  <div id="expenseCheckboxes" style="max-height:200px; overflow-y:auto;"></div>
-                  <div class="ms-actions">
-                      <button class="btn-outline" style="padding:4px 8px; font-size:11px;" id="msClear">Clear</button>
-                      <button class="btn-primary" style="padding:4px 8px; font-size:11px;" id="msApply">Apply</button>
-                  </div>
-              </div>
-          </div>
-          <button class="btn-danger hidden" style="padding:6px 10px; font-size:12px; height:38px;" id="resetExpenseDrilldown">Reset</button>
-        </div>
-      </div>
-      <div class="card-body" style="padding-top:10px;">
-        <div style="height:320px; width:100%; position:relative">
-          <canvas id="walletChart"></canvas>
-        </div>
-        <div id="walletInfo" style="font-size:12px; color:var(--text-muted); text-align:center; padding-top:20px;"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="action-card">
-    <div class="action-header">
-      <div class="card-title" id="actionTitle">Add new entry</div>
-      <div style="font-size:12px; color:white;">Transaction ID: <span id="editIdDisplay">--</span></div>
-    </div>
-    <div class="action-body">
-      <div class="input-group-small">
-        <label>Type</label>
-        <select id="type">
-          <option value="expense">Expense</option>
-          <option value="income">Income</option>
-          <option value="opening_balance">Opening Balance</option>
-        </select>
-      </div>
-      <div class="input-group-small">
-        <label>Amount (₹)</label>
-        <input type="number" id="amount" placeholder="e.g. 5000" />
-      </div>
-      <div class="input-group-small">
-        <label>Date</label>
-        <input type="date" id="date" />
-      </div>
-      <div class="input-group-large">
-        <label>Description</label>
-        <input type="text" id="desc" placeholder="e.g. Salary credited, Grocery store" />
-      </div>
-
-      <div class="full-width" style="display:flex; gap:20px; flex-wrap:wrap">
-        <div id="categoryContainer" class="input-group-med">
-          <label>Category</label>
-          <select id="category"></select>
-        </div>
-        <div id="methodRow" class="input-group-small">
-          <label>Method</label>
-          <select id="method"></select>
-        </div>
-        <div id="incomeSourceRow" class="hidden input-group-small">
-          <label>Source</label>
-          <select id="incomeSource"></select>
-        </div>
-        <div id="investmentRow" class="hidden full-width" style="display:flex; gap:20px; flex-wrap:wrap">
-          <div class="input-group-small">
-            <label>Investment category</label>
-            <select id="invGroup"></select>
-          </div>
-          <div class="input-group-small">
-            <label>Investment sub-type</label>
-            <select id="invSub"></select>
-          </div>
-        </div>
-        <div id="insuranceRow" class="hidden input-group-med">
-          <label>Insurance details</label>
-          <div class="flex-row">
-            <select id="insType"><option value="">Type</option><option value="Health">Health</option><option value="Life">Life</option></select>
-            <select id="insFor"><option value="">Insured</option><option value="Self">Self</option><option value="Family">Family</option></select>
-          </div>
-        </div>
-      </div>
-
-      <div id="openingBalanceRow" class="hidden full-width" style="display:flex; gap:20px; flex-wrap:wrap">
-        <div class="input-group-small">
-          <label>Asset type</label>
-          <select id="openingType">
-            <option value="Cash">Cash (Liquid)</option>
-            <option value="Investment">Investment Asset</option>
-          </select>
-        </div>
-        <div class="input-group-small hidden" id="openingGroupContainer">
-          <label id="openingGroupLabel">Asset category</label>
-          <select id="openingGroup"></select>
-        </div>
-        <div class="input-group-small hidden" id="openingSubContainer">
-          <label id="openingSubLabel">Account / Asset sub-type</label>
-          <select id="openingSub"></select>
-        </div>
-      </div>
-    </div>
-    <div style="width:100%; display:flex; gap:10px; margin-top:10px; padding:0 20px 20px 20px">
-      <button class="btn-primary" id="addBtn" style="flex:1">Add entry</button>
-      <button class="btn-primary hidden" id="saveBtn" style="flex:1">Save changes</button>
-      <button class="btn-outline hidden" id="cancelBtn" style="flex:1">Cancel</button>
-    </div>
-  </div>
-
-  <div class="card col-span-4">
-    <div class="card-header" style="flex-direction:column; align-items:flex-start; gap:15px;">
-      <div class="card-title">Recent transactions</div>
-      <div class="flex-row" style="gap:10px; width:100%;">
-        <select id="recentType" onchange="renderRecentEntries()" style="max-width:120px;">
-          <option value="">All Types</option>
-          <option value="income">Income</option>
-          <option value="expense">Expense</option>
-          <option value="opening_balance">Opening Balance</option>
-        </select>
-        <select id="recentCategory" onchange="renderRecentEntries()" style="max-width:160px;">
-          <option value="">All Categories</option>
-        </select>
-        <input type="text" id="recentSearch" oninput="renderRecentEntries()" placeholder="Search description/ID" style="max-width:200px;"/>
-      </div>
-    </div>
-    <div class="card-body" style="padding-top:0; padding-bottom:10px;">
-      <div class="table-container">
-        <table id="recentTable">
-          <thead>
-            <tr>
-              <th style="width:10%">Type</th>
-              <th style="width:10%">Date</th>
-              <th style="width:20%">Description</th>
-              <th style="width:15%">Category</th>
-              <th style="width:15%">Method/Account</th>
-              <th style="width:15%; text-align:right;">Amount</th>
-              <th style="width:15%; text-align:center;">Action</th>
-            </tr>
-          </thead>
-          <tbody id="recentTableBody">
-            </tbody>
-        </table>
-      </div>
-      <div id="recentTableInfo" style="text-align:center; padding:20px; color:var(--text-muted);">Load data to see entries.</div>
-    </div>
-  </div>
-
-  <div id="settingsModal" class="modal">
-    <div class="modal-content modal-small">
-      <div class="action-header">
-        <div class="card-title">Settings & Utility</div>
-        <button class="btn-outline" id="closeSettings" style="background:none; border:none; color:white;">Close</button>
-      </div>
-      <div class="modal-pad">
-        <h3 style="margin-top:0; font-size:16px;">Credit Card Setup</h3>
-        <div class="flex-row">
-          <div style="flex:1;">
-            <label>Credit Limit (₹)</label>
-            <input type="number" id="ccLimitInput" placeholder="e.g. 200000" />
-          </div>
-          <button class="btn-primary" style="height:38px; margin-top:22px;" id="saveCCSettings">Save</button>
-        </div>
-
-        <h3 style="margin-top:20px; font-size:16px;">Payment Methods / Accounts</h3>
-        <div id="methodList"></div>
-        <div class="flex-row" style="margin-top:10px;">
-          <input type="text" id="newMethod" placeholder="Add new account name" />
-          <button class="btn-primary" id="addMethodBtn">Add</button>
-        </div>
-
-        <h3 style="margin-top:20px; font-size:16px;">Income Sources</h3>
-        <div id="incomeList"></div>
-        <div class="flex-row" style="margin-top:10px;">
-          <input type="text" id="newIncome" placeholder="Add new income source" />
-          <button class="btn-primary" id="addIncomeBtn">Add</button>
-        </div>
-
-        <h3 style="margin-top:20px; font-size:16px;">Data Management</h3>
-        <button class="btn-danger full-width" id="resetBtn">Erase ALL data (Local & Firestore)</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="importModal" class="modal">
-    <div class="modal-content modal-small">
-      <div class="action-header">
-        <div class="card-title">Import Data (CSV)</div>
-        <button class="btn-outline" id="closeImport" style="background:none; border:none; color:white;">Close</button>
-      </div>
-      <div class="modal-pad">
-        <p style="font-size:13px; color:var(--text-muted);">Select a CSV file to import. The headers must match the export format (id, type, amount, date, desc, category, method, etc.).</p>
-        <label>Select CSV file</label>
-        <input type="file" id="csvFile" accept=".csv" />
-        <button class="btn-primary full-width" style="margin-top:15px;" id="processImportBtn">Import Data</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="analyticsModal" class="modal">
-    <div class="modal-content">
-      <div class="action-header">
-        <div class="card-title">Advanced Analytics: Investment Deep Dive</div>
-        <button class="btn-outline" id="closeAnalytics" style="background:none; border:none; color:white;">Close</button>
-      </div>
-      <div class="modal-pad" id="analyticsContent">
-        <div id="analyticsFilters">
-          <div class="filter-group">
-            <h3 style="margin-top:0; font-size:16px;">Deep Dive Filters</h3>
-            <div class="analytics-filter-grid">
-              <div>
-                <label>Date range</label>
-                <select id="dateFilter" onchange="renderAdvancedCharts()">
-                  <option value="6">Last 6 months</option>
-                  <option value="12">Last 12 months</option>
-                  <option value="all">All time</option>
-                </select>
-              </div>
-              <div>
-                <label>Investment Group</label>
-                <select id="anlInvGroup" onchange="updateAnlSubDropdown(); renderAdvancedCharts()"></select>
-              </div>
-              <div>
-                <label>Investment Sub-type</label>
-                <select id="anlInvSub" onchange="renderAdvancedCharts()"><option value="">All Types</option></select>
-              </div>
-              <div>
-                <label>Chart type</label>
-                <select id="chartType" onchange="renderAdvancedCharts()">
-                  <option value="line">Line chart</option>
-                  <option value="bar">Bar chart</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style="display:flex; flex-direction:column; gap:20px; height:100%;">
-          <div class="card" style="flex: 0 0 auto;">
-            <div class="card-header"><div class="card-title">Cumulative Growth</div></div>
-            <div class="card-body" style="padding-top:10px;">
-              <div style="height:260px; width:100%; position:relative">
-                <canvas id="chartNetWorth"></canvas>
-              </div>
-            </div>
-          </div>
-          <div class="dashboard-grid" style="flex:1;">
-            <div class="card col-span-2">
-              <div class="card-header"><div class="card-title">Distribution</div></div>
-              <div class="card-body" style="padding-top:10px;">
-                <div style="height:100%; min-height:250px; position:relative;">
-                  <canvas id="chartInvTypesModal"></canvas>
-                </div>
-              </div>
-            </div>
-            <div class="card col-span-2">
-              <div class="card-header"><div class="card-title" id="advancedChartTitle">Cashflow Trend (Investment Entries)</div></div>
-              <div class="card-body" style="padding-top:10px; flex:1;">
-                <div style="height:100%; min-height:250px; position:relative;">
-                  <canvas id="chartAdvanced"></canvas>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
+  <!-- The rest of the dashboard (charts, add-entry form, recent transactions, modals) continues in Part 2 -->
 </main>
 
-<div id="calculator" style="display:none;">
-  <div id="calc-header">
-    <span>Calculator</span>
-    <button id="calc-close-btn">&times;</button>
-  </div>
-  <div id="calc-preview">0</div>
-  <div id="calc-display">0</div>
-  <div id="calc-buttons">
-    <button class="calc-clear">C</button>
-    <button class="calc-operator">(</button>
-    <button class="calc-operator">)</button>
-    <button class="calc-operator">/</button>
+<!-- Market Ticker Configuration Modal (extended) -->
+<div id="marketSettingsModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+  <div class="modal-content">
+    <div class="action-header" style="border-radius:12px 12px 0 0; align-items:center;">
+      <div class="card-title" style="color:white">Market Ticker Configuration</div>
+      <button class="btn-outline closeModal" data-modal-id="marketSettingsModal" style="background:transparent; color:white; border-color:white; padding:6px 10px">Close</button>
+    </div>
 
-    <button>7</button>
-    <button>8</button>
-    <button>9</button>
-    <button class="calc-operator">*</button>
+    <div class="modal-pad">
+      <p style="font-size:13px; color:var(--text-muted); margin-top:0;">
+        Choose which major markets to show, and configure gold/silver pricing by country/currency. For live prices, integrate an API key into <code>fetchMarketData</code>.
+      </p>
 
-    <button>4</button>
-    <button>5</button>
-    <button>6</button>
-    <button class="calc-operator">-</button>
+      <!-- Tracked major markets list -->
+      <div style="margin-bottom:14px;">
+        <label style="font-weight:700; font-size:12px; color:var(--text-muted);">Tracked major markets</label>
+        <ul id="trackedMajorMarkets" style="list-style:none; padding-left:0; margin-top:8px; display:flex; flex-direction:column; gap:8px;"></ul>
+      </div>
 
-    <button>1</button>
-    <button>2</button>
-    <button>3</button>
-    <button class="calc-operator">+</button>
+      <!-- Tracked metals configuration -->
+      <div style="margin-bottom:14px;">
+        <label style="font-weight:700; font-size:12px; color:var(--text-muted);">Tracked metals</label>
+        <div id="trackedMetals" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"></div>
+      </div>
 
-    <button class="calc-zero">0</button>
-    <button>.</button>
-    <button class="calc-equals">=</button>
+      <!-- Add / edit controls -->
+      <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-bottom:12px;">
+        <div style="flex:1; min-width:180px;">
+          <label style="font-size:11px; color:var(--text-muted); font-weight:700;">Add major market (symbol)</label>
+          <input id="newMajorSymbol" placeholder="e.g., NASDAQ, SENSEX" />
+        </div>
+        <div style="flex:1; min-width:180px;">
+          <label style="font-size:11px; color:var(--text-muted); font-weight:700;">Display name</label>
+          <input id="newMajorName" placeholder="e.g., Nasdaq Composite" />
+        </div>
+        <div style="min-width:120px;">
+          <button id="addMajorBtn" class="btn-primary" style="width:100%;">Add</button>
+        </div>
+      </div>
+
+      <hr style="border:none; border-top:1px solid var(--border); margin:12px 0;" />
+
+      <!-- Metal / country quick add -->
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <div style="min-width:140px;">
+          <label style="font-size:11px; color:var(--text-muted); font-weight:700;">Metal</label>
+          <select id="modalMetalSelect">
+            <option value="XAU">Gold (XAU)</option>
+            <option value="XAG">Silver (XAG)</option>
+          </select>
+        </div>
+        <div style="min-width:160px;">
+          <label style="font-size:11px; color:var(--text-muted); font-weight:700;">Country / Currency</label>
+          <select id="modalMetalCountry">
+            <option value="INR">India (INR)</option>
+            <option value="USD">United States (USD)</option>
+            <option value="EUR">Eurozone (EUR)</option>
+            <option value="GBP">United Kingdom (GBP)</option>
+            <option value="AED">UAE (AED)</option>
+            <option value="SGD">Singapore (SGD)</option>
+            <option value="AUD">Australia (AUD)</option>
+          </select>
+        </div>
+        <div style="min-width:120px;">
+          <button id="addMetalBtn" class="btn-primary" style="width:100%;">Add metal</button>
+        </div>
+      </div>
+
+      <div style="margin-top:18px; display:flex; gap:8px; justify-content:flex-end;">
+        <button id="saveTickerConfig" class="btn-primary">Save</button>
+        <button class="btn-outline closeModal" data-modal-id="marketSettingsModal">Close</button>
+      </div>
+    </div>
   </div>
 </div>
 
+<!-- Calculator and other modals will be included in Part 2 along with the full script body -->
+<!-- Begin initial scripts (Part 2 will continue with the rest of the JS and final integration) -->
 <script>
+  // Firebase Config (unchanged)
+  const firebaseConfig = {
+    apiKey: "AIzaSyCAZvHT6dG61ISR57AJoZh8GSO7nY_mEGc",
+    authDomain: "moneymirror-22543.firebaseapp.com",
+    projectId: "moneymirror-22543",
+    storageBucket: "moneymirror-22543.firebasestorage.app",
+    messagingSenderId: "61775081584",
+    appId: "1:61775081584:web:3ec184985e324cf6f1c4b5",
+    measurementId: "G-8RPXH1VEFG"
+  };
 
-// --- FIREBASE AUTH FUNCTIONS ---
-const auth = firebase.auth();
-const firestore = firebase.firestore();
-const provider = new firebase.auth.GoogleAuthProvider();
+  let db = null;
+  let auth = null;
+  let USE_FIRESTORE = false;
+  const FIRESTORE_COLLECTION_NAME = 'moneymirror_v4_transactions';
+  let currentProfile = null;
 
-let currentProfile = null;
-
-async function signInWithGoogle() {
   try {
-    const result = await auth.signInWithPopup(provider);
-    const user = result.user;
-    onUserSignedIn(user);
-  } catch (err) {
-    console.error("Login failed:", err);
-    alert('Sign-in failed. If using a local file, try Guest Mode.');
-  }
-}
-
-function startGuestMode() {
-  currentProfile = 'Guest';
-  document.getElementById('profileNameDisplay').textContent = 'Guest (Offline)';
-  document.getElementById('authGate').style.display = 'none';
-  document.querySelector('main').style.filter = 'none';
-  document.getElementById('logoutBtn').style.display = 'block';
-  loadProfileData();
-}
-
-function onUserSignedIn(user) {
-  currentProfile = user.displayName || user.email || 'User';
-  localStorage.setItem('mm_last_profile', currentProfile);
-  document.getElementById('profileNameDisplay').textContent = currentProfile;
-  document.getElementById('authGate').style.display = 'none';
-  document.querySelector('main').style.filter = 'none';
-  document.getElementById('logoutBtn').style.display = 'block';
-  loadProfileData();
-}
-
-function signOutUser() {
-  if (auth) {
-    auth.signOut().then(() => {
-      resetToAuthGate();
-    });
-  } else {
-    resetToAuthGate();
-  }
-}
-
-function resetToAuthGate() {
-  currentProfile = null;
-  document.getElementById('profileNameDisplay').textContent = '--';
-  document.getElementById('logoutBtn').style.display = 'none';
-  document.getElementById('authGate').style.display = 'flex';
-  document.querySelector('main').style.filter = 'blur(5px)';
-  data = [];
-  renderAll();
-}
-
-// --- UTILS AND CONSTANTS ---
-const DEFAULT_CC_LIMIT = 200000;
-const CANONICAL_METHODS = {
-  'cash': 'Cash',
-  'salary_acct': 'Bank Account (Salary)',
-  'savings_acct': 'Bank Account (Savings)',
-  'investment_acct': 'Investment Account',
-  'credit_card': 'Credit Card (Default)',
-};
-const BASE_CATS = ['Food', 'Transportation', 'Groceries', 'Rent/Mortgage', 'Utilities', 'Entertainment', 'Shopping', 'Health', 'Education', 'Personal Care', 'Gifts/Donations', 'Travel', 'Taxes', 'Investments', 'Insurance', 'Credit Card Payment'];
-
-const INVESTMENT_STRUCTURE = {
-  'Equity (Stocks)': {
-    'Large Cap': 'Equity (Stocks)',
-    'Mid Cap': 'Equity (Stocks)',
-    'Small Cap': 'Equity (Stocks)',
-    'International Equity': 'Equity (Stocks)',
-  },
-  'Mutual Funds': {
-    'Equity Funds': 'Mutual Funds',
-    'Debt Funds': 'Mutual Funds',
-    'Hybrid Funds': 'Mutual Funds',
-    'Index Funds/ETFs': 'Mutual Funds',
-  },
-  'ETFs': {
-    'Index ETFs': 'ETFs',
-    'Gold/Commodity ETFs': 'ETFs',
-    'International ETFs': 'ETFs',
-    'Thematic ETFs': 'ETFs',
-  },
-  'Bonds & Debt Instruments': {
-    'Government Bonds': 'Bonds & Debt Instruments',
-    'Corporate Bonds': 'Bonds & Debt Instruments',
-    'T-Bills/Commercial Paper': 'Bonds & Debt Instruments',
-  },
-  'Commodities': {
-    'Gold': 'Commodities',
-    'Silver': 'Commodities',
-    'Other Precious Metals': 'Commodities',
-    'Industrial Commodities': 'Commodities',
-  },
-  'Crypto & Digital Assets': {
-    'Bitcoin (BTC)': 'Crypto & Digital Assets',
-    'Ethereum (ETH)': 'Crypto & Digital Assets',
-    'Stablecoins': 'Crypto & Digital Assets',
-    'Altcoins': 'Crypto & Digital Assets',
-    'NFTs / Web3 Assets': 'Crypto & Digital Assets',
-  },
-  'Real Estate': {
-    'Residential Property': 'Real Estate',
-    'Commercial Property': 'Real Estate',
-    'Land': 'Real Estate',
-    'REITs (Real Estate Investment Trusts)': 'Real Estate',
-  },
-  'Fixed Income / Savings Schemes': {
-    'FD (Fixed Deposit)': 'Fixed Income / Savings Schemes',
-    'RD (Recurring Deposit)': 'Fixed Income / Savings Schemes',
-    'PPF': 'Fixed Income / Savings Schemes',
-    'NSC/KVP/Postal MIS': 'Fixed Income / Savings Schemes',
-    'High-Interest Savings Account': 'Fixed Income / Savings Schemes',
-  },
-  'Retirement Funds': {
-    'NPS Tier 1/Tier 2': 'Retirement Funds',
-    'EPF (Employees’ Provident Fund)': 'Retirement Funds',
-    'IRA/401k (USA users)': 'Retirement Funds',
-    'Other Pension Schemes': 'Retirement Funds',
-  },
-  'Other Investments': {
-    'Angel Investing / Startup Equity': 'Other Investments',
-    'Peer-to-Peer Lending': 'Other Investments',
-    'Private Funds / AIFs': 'Other Investments',
-    'Alternative Assets': 'Other Investments',
-  }
-};
-const MAJOR_BUCKETS = {
-  'Equity (Stocks)': 'Equity',
-  'Mutual Funds': 'Mutual Funds',
-  'ETFs': 'ETFs',
-  'Bonds & Debt Instruments': 'Debt',
-  'Fixed Income / Savings Schemes': 'Debt',
-  'Retirement Funds': 'Retirement',
-  'Real Estate': 'Real Estate',
-  'Commodities': 'Commodities',
-  'Crypto & Digital Assets': 'Crypto',
-  'Other Investments': 'Other'
-};
-
-let data = [];
-let methodNames = {...CANONICAL_METHODS};
-let incomeSources = ['Salary', 'Freelance', 'Interest'];
-let settings = { ccLimit: DEFAULT_CC_LIMIT };
-let editId = null;
-let selectedExpenseCategories = [];
-
-// Chart instances
-let chartMain = null;
-let chartWallet = null;
-let chartInvBreakdownBar = null;
-let chartInvBreakdownPie = null;
-let chartNetWorth = null;
-let chartInvTypesModal = null;
-let chartInvGrowthModal = null;
-let chartAdvanced = null;
-
-// Form elements map for easy access
-const formEls = {
-  type: document.getElementById('type'),
-  amount: document.getElementById('amount'),
-  date: document.getElementById('date'),
-  desc: document.getElementById('desc'),
-  category: document.getElementById('category'),
-  method: document.getElementById('method'),
-  incomeSource: document.getElementById('incomeSource'),
-  invGroup: document.getElementById('invGroup'),
-  invSub: document.getElementById('invSub'),
-  insType: document.getElementById('insType'),
-  insFor: document.getElementById('insFor'),
-  openingType: document.getElementById('openingType'),
-  openingGroup: document.getElementById('openingGroup'),
-  openingSub: document.getElementById('openingSub'),
-};
-
-// --- PERSISTENCE ---
-
-function toKey(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-}
-
-function getTxKey() { return currentProfile ? `mm_data_${currentProfile}` : 'mm_data_default'; }
-function getMethodKey() { return currentProfile ? `mm_methods_${currentProfile}` : 'mm_methods_default'; }
-function getIncomeKey() { return currentProfile ? `mm_income_${currentProfile}` : 'mm_income_default'; }
-function getSettingsKey() { return currentProfile ? `mm_settings_${currentProfile}` : 'mm_settings_default'; }
-
-function saveLocal() {
-  localStorage.setItem(getTxKey(), JSON.stringify(data));
-  localStorage.setItem(getMethodKey(), JSON.stringify(methodNames));
-  localStorage.setItem(getIncomeKey(), JSON.stringify(incomeSources));
-  localStorage.setItem(getSettingsKey(), JSON.stringify(settings));
-}
-
-async function saveFirestore() {
-  if (!auth.currentUser) return;
-  const db = firestore.collection('users').doc(auth.currentUser.uid);
-  try {
-    await db.set({
-      data: data,
-      methods: methodNames,
-      incomeSources: incomeSources,
-      settings: settings,
-      lastUpdated: new Date()
-    }, { merge: false });
+    if (typeof firebase !== 'undefined') {
+      const app = firebase.initializeApp(firebaseConfig);
+      db = app.firestore();
+      auth = app.auth();
+      USE_FIRESTORE = true;
+      console.log("Firebase initialized.");
+    } else {
+      console.warn("Firebase SDK not loaded.");
+    }
   } catch (e) {
-    console.error("Firestore save error, saving to local storage only:", e);
-    saveLocal();
+    console.warn("Firebase init failed, falling back to LocalStorage:", e);
   }
-}
 
-function saveAll() {
-  saveLocal();
-  if (auth.currentUser) {
-    saveFirestore();
-  }
-}
-
-function loadLocal() {
-  const localData = localStorage.getItem(getTxKey());
-  const localMethods = localStorage.getItem(getMethodKey());
-  const localIncome = localStorage.getItem(getIncomeKey());
-  const localSettings = localStorage.getItem(getSettingsKey());
-
-  if (localData) data = JSON.parse(localData);
-  if (localMethods) methodNames = {...CANONICAL_METHODS, ...JSON.parse(localMethods)};
-  if (localIncome) incomeSources = JSON.parse(localIncome);
-  if (localSettings) settings = {...settings, ...JSON.parse(localSettings)};
-}
-
-async function loadProfileData() {
-  loadLocal();
-  if (auth.currentUser) {
-    const db = firestore.collection('users').doc(auth.currentUser.uid);
+  async function signInWithGoogle() {
+    if (!auth) return alert('Auth not initialized. Check internet or use Guest Mode.');
+    const provider = new firebase.auth.GoogleAuthProvider();
     try {
-      const doc = await db.get();
-      if (doc.exists) {
-        const remoteData = doc.data();
-        // Overwrite local data with remote data
-        data = remoteData.data || [];
-        methodNames = {...CANONICAL_METHODS, ...remoteData.methods};
-        incomeSources = remoteData.incomeSources || [];
-        settings = {...settings, ...remoteData.settings};
-      } else {
-        // If no remote data, save local data to Firestore for first time sync
-        saveFirestore();
-      }
-    } catch (e) {
-      console.error("Firestore read error, using local data:", e);
+      const result = await auth.signInWithPopup(provider);
+      const user = result.user;
+      onUserSignedIn(user);
+    } catch (err) {
+      console.error("Login failed:", err);
+      alert('Sign-in failed. If using a local file, try Guest Mode.');
     }
   }
-  renderAll();
-}
 
-
-// --- RENDER & SETUP ---
-
-function fmt(n) {
-  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
-}
-
-function renderAll() {
-  data.sort((a,b) => new Date(b.date) - new Date(a.date));
-  setupDropdowns();
-  renderKPIs();
-  renderCharts();
-  renderRecentEntries();
-  renderSettings();
-}
-
-function setupDropdowns() {
-  // Methods
-  formEls.method.innerHTML = Object.keys(methodNames)
-    .filter(key => key !== 'credit_card')
-    .map(key => `<option value="${key}">${methodNames[key]}</option>`).join('');
-
-  // Income sources
-  formEls.incomeSource.innerHTML = '<option value="">Select Source</option>' + incomeSources.map(s => `<option value="${s}">${s}</option>`).join('');
-
-  // Categories
-  formEls.category.innerHTML = BASE_CATS.map(c => `<option value="${c}">${c}</option>`).join('');
-
-  // Recent Table Filter
-  const recentCat = document.getElementById('recentCategory');
-  if(recentCat) {
-    const allCats = Array.from(new Set([...BASE_CATS, 'Income', 'Opening Balance']));
-    recentCat.innerHTML = '<option value="">All Cats</option>' + allCats.map(c => `<option value="${c}">${c}</option>`).join('');
+  function startGuestMode() {
+      currentProfile = 'Guest';
+      document.getElementById('profileNameDisplay').textContent = 'Guest (Offline)';
+      document.getElementById('authGate').style.display = 'none';
+      document.querySelector('main').style.filter = 'none';
+      document.getElementById('logoutBtn').style.display = 'block';
+      loadProfileData();
   }
 
-  // Listeners
-  formEls.type.onchange = updateTransactionFormFields;
-  formEls.category.onchange = updateTransactionFormFields;
-  formEls.openingType.onchange = updateTransactionFormFields;
-  formEls.invGroup.onchange = () => updateInvestmentSubDropdown(formEls.invGroup, formEls.invSub);
-  formEls.openingGroup.onchange = () => updateInvestmentSubDropdown(formEls.openingGroup, formEls.openingSub);
-
-  // Populate groups
-  populateInvestmentGroupDropdowns();
-  updateTransactionFormFields();
-}
-
-function populateInvestmentGroupDropdowns() {
-  const options = Object.keys(INVESTMENT_STRUCTURE).map(group => `<option value="${group}">${group}</option>`).join('');
-  formEls.invGroup.innerHTML = '<option value="">Select Category</option>' + options;
-  formEls.openingGroup.innerHTML = '<option value="">Select Category</option>' + options;
-}
-
-function updateInvestmentSubDropdown(groupEl, subEl) {
-  const group = groupEl.value;
-  let options = '<option value="">Select Sub-type</option>';
-  if(group && INVESTMENT_STRUCTURE[group]) {
-    options += Object.keys(INVESTMENT_STRUCTURE[group]).map(sub => `<option value="${sub}">${sub}</option>`).join('');
-  }
-  subEl.innerHTML = options;
-  if(groupEl === formEls.openingGroup) {
-      document.getElementById('openingGroupContainer').classList.remove('hidden');
-      document.getElementById('openingSubContainer').classList.remove('hidden');
-      document.getElementById('openingGroupLabel').textContent = 'Asset category';
-  }
-}
-
-function renderKPIs() {
-  const now = new Date();
-  const curMonth = now.getMonth();
-  const curYear = now.getFullYear();
-  const prevMonth = curMonth === 0 ? 11 : curMonth - 1;
-  const prevYear = curMonth === 0 ? curYear - 1 : curYear;
-
-  const operationalData = data.filter(d => d.type !== 'opening_balance');
-
-  const filterMonth = (d, m, y) => {
-    const dt = new Date(d.date);
-    return dt.getMonth()===m && dt.getFullYear()===y;
-  };
-  const sum = (arr) => arr.reduce((acc,curr) => acc + Number(curr.amount), 0);
-
-  const curData = operationalData.filter(d => filterMonth(d, curMonth, curYear));
-  const prevData = operationalData.filter(d => filterMonth(d, prevMonth, prevYear));
-
-  const inc = sum(curData.filter(d=>d.type==='income'));
-  const exp = sum(curData.filter(d=>d.type==='expense'));
-  const prevInc = sum(prevData.filter(d=>d.type==='income'));
-  const prevExp = sum(prevData.filter(d=>d.type==='expense'));
-
-  // Calculate Investment Cost (All time expense with category 'Investments' + opening balance inv assets)
-  const invCostExpense = sum(data.filter(d => d.type === 'expense' && d.category === 'Investments'));
-  const invCostOpening = sum(data.filter(d => d.type === 'opening_balance' && d.investmentGroup !== 'Cash'));
-  const totalInvCost = invCostExpense + invCostOpening;
-
-  // Calculate Net Liquidity (All Cash balances)
-  const cashAccounts = data.filter(d => d.investmentGroup === 'Cash');
-  const cashBalances = cashAccounts.reduce((acc, curr) => {
-      const methodKey = curr.method || curr.investmentSub || 'Unknown';
-      const amount = Number(curr.amount) * (curr.type === 'income' || curr.type === 'opening_balance' ? 1 : -1);
-      acc[methodKey] = (acc[methodKey] || 0) + amount;
-      return acc;
-  }, {});
-
-  // Calculate cash balance after expenses/income on cash methods
-  operationalData.filter(d => d.method && d.method !== 'credit_card').forEach(d => {
-    const amount = Number(d.amount) * (d.type === 'income' ? 1 : -1);
-    cashBalances[d.method] = (cashBalances[d.method] || 0) + amount;
-  });
-
-  const totalCashBalance = sum(Object.values(cashBalances));
-
-  // Render KPIs
-  document.getElementById('kpiIncome').innerText = fmt(inc);
-  document.getElementById('kpiExpense').innerText = fmt(exp);
-  document.getElementById('kpiNet').innerText = fmt(totalCashBalance);
-  document.getElementById('kpiInvest').innerText = fmt(totalInvCost); // Using historical cost as a proxy
-  document.getElementById('momInvest').innerHTML = `Historical cost: <span style="font-weight:600;">${fmt(totalInvCost)}</span>`;
-
-  // MoM Change Logic
-  const momIncomeChange = prevInc > 0 ? ((inc - prevInc) / prevInc) * 100 : (inc > 0 ? 100 : 0);
-  const momExpenseChange = prevExp > 0 ? ((exp - prevExp) / prevExp) * 100 : (exp > 0 ? 100 : 0);
-
-  document.getElementById('momIncome').innerHTML = `<span class="${momIncomeChange >= 0 ? 'trend-up' : 'trend-down'}">${momIncomeChange.toFixed(1)}%</span> vs. previous month`;
-  document.getElementById('momExpense').innerHTML = `<span class="${momExpenseChange <= 0 ? 'trend-up' : 'trend-down'}">${Math.abs(momExpenseChange).toFixed(1)}%</span> vs. previous month`;
-
-  // Net Liquidity Breakdown
-  const breakdownEl = document.getElementById('netLiquidityBreakdown');
-  breakdownEl.innerHTML = Object.keys(cashBalances).map(key => {
-    return `<div><span>${methodNames[key] || key}</span><span>${fmt(cashBalances[key])}</span></div>`;
-  }).join('');
-
-  // Credit Card KPI
-  calculateCreditCardStatus(now);
-
-  // Investment Breakdown Quick View
-  renderInvestmentBreakdown();
-}
-
-function calculateCreditCardStatus(now) {
-  const ccLimit = settings.ccLimit || DEFAULT_CC_LIMIT;
-  document.getElementById('ccLimitDisplay').innerText = fmt(ccLimit);
-
-  // Calculate current CC balance
-  const ccBalance = data.reduce((acc, curr) => {
-      const amount = Number(curr.amount);
-      if (curr.method === 'credit_card') return acc - amount; // Expense on CC
-      if (curr.category === 'Credit Card Payment') return acc + amount; // CC Payment (Transfer)
-      return acc;
-  }, 0);
-
-  document.getElementById('kpiCCDue').innerText = fmt(Math.abs(ccBalance));
-
-  // Alert and Styling
-  const percentUsed = (Math.abs(ccBalance) / ccLimit) * 100;
-  const ccCardEl = document.getElementById('ccCard');
-  ccCardEl.classList.remove('cc-alert-high');
-  document.getElementById('ccTitle').textContent = 'Credit card due';
-  document.getElementById('ccAlert').classList.add('hidden');
-
-  if (ccBalance < 0) {
-    if (percentUsed >= 80) {
-      ccCardEl.classList.add('cc-alert-high');
-      document.getElementById('ccTitle').textContent = 'CC Utilisation High!';
-      document.getElementById('ccAlert').classList.remove('hidden');
-    }
-  } else if (ccBalance > 0) {
-    document.getElementById('kpiCCDue').innerText = fmt(ccBalance);
-    document.getElementById('ccTitle').textContent = 'CC Overpayment';
-  } else {
-    document.getElementById('kpiCCDue').innerText = fmt(0);
-    document.getElementById('ccTitle').textContent = 'Credit card due';
+  function onUserSignedIn(user) {
+    currentProfile = user.displayName || user.email || 'User';
+    localStorage.setItem('mm_last_profile', currentProfile);
+    document.getElementById('profileNameDisplay').textContent = currentProfile;
+    document.getElementById('authGate').style.display = 'none';
+    document.querySelector('main').style.filter = 'none';
+    document.getElementById('logoutBtn').style.display = 'block';
+    loadProfileData();
   }
 
-
-  // Calculate next payment date (Placeholder: Assuming 10th of next month)
-  let nextPaymentDate = new Date(now.getFullYear(), now.getMonth() + 1, 10);
-  const diffTime = nextPaymentDate - now;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  if (diffDays < 0) {
-    nextPaymentDate = new Date(now.getFullYear(), now.getMonth() + 2, 10);
-  }
-
-  const dateStr = nextPaymentDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-  document.getElementById('ccPaymentDate').textContent = `Next: ${dateStr}`;
-}
-
-// --- CHART RENDERING ---
-
-function prepareMonthlyData(dataToProcess, range) {
-  let endDate = new Date();
-  let startDate = new Date();
-
-  if (range !== 'all') {
-    const months = parseInt(range);
-    startDate.setMonth(endDate.getMonth() - months);
-    startDate.setDate(1);
-  } else {
-    // Find the earliest date in the data
-    if (dataToProcess.length > 0) {
-      const earliestDate = dataToProcess.reduce((minDate, d) => new Date(d.date) < minDate ? new Date(d.date) : minDate, endDate);
-      startDate = new Date(earliestDate.getFullYear(), earliestDate.getMonth(), 1);
+  function signOutUser() {
+    if (auth) {
+      auth.signOut().then(() => {
+          resetToAuthGate();
+      });
     } else {
-        startDate = new Date(endDate.getFullYear(), endDate.getMonth() - 5, 1);
+        resetToAuthGate();
     }
   }
 
-  const monthlyData = {};
-  const monthNames = [];
-  let currentMonth = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
-
-  while (currentMonth <= endDate) {
-    const key = `${currentMonth.getFullYear()}-${currentMonth.getMonth()}`;
-    monthlyData[key] = { income: 0, expense: 0, investment: 0 };
-    monthNames.push(currentMonth.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' }));
-    currentMonth.setMonth(currentMonth.getMonth() + 1);
+  function resetToAuthGate() {
+      currentProfile = null;
+      document.getElementById('profileNameDisplay').textContent = '--';
+      document.getElementById('logoutBtn').style.display = 'none';
+      document.getElementById('authGate').style.display = 'flex';
+      document.querySelector('main').style.filter = 'blur(5px)';
   }
 
-  dataToProcess.forEach(d => {
-    const date = new Date(d.date);
-    const key = `${date.getFullYear()}-${date.getMonth()}`;
-    if (monthlyData[key]) {
-      const amount = Number(d.amount);
-      if (d.type === 'income') {
-        monthlyData[key].income += amount;
-      } else if (d.type === 'expense') {
-        if (d.category === 'Investments') {
-          monthlyData[key].investment += amount;
-        } else {
-          monthlyData[key].expense += amount;
-        }
-      }
+  document.addEventListener('DOMContentLoaded', () => {
+    const d = new Date();
+    const currentDateEl = document.getElementById('currentDate');
+    if (currentDateEl) currentDateEl.innerText = d.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const today = new Date().toISOString().slice(0,10);
+    const dateEl = document.getElementById('date');
+    if (dateEl) dateEl.value = today;
+    // dragElement will be defined in Part 2
+    try { dragElement(document.getElementById("calculator")); } catch(e){}
+
+    const mobileBtn = document.getElementById('mobileMenuBtn');
+    const sidebar = document.getElementById('mainSidebar');
+    if (mobileBtn && sidebar) {
+      mobileBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('mobile-open');
+      });
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => sidebar.classList.remove('mobile-open'));
+      });
     }
-  });
 
-  const income = monthNames.map((_, i) => monthlyData[Object.keys(monthlyData)[i]].income);
-  const expense = monthNames.map((_, i) => monthlyData[Object.keys(monthlyData)[i]].expense);
-  const investment = monthNames.map((_, i) => monthlyData[Object.keys(monthlyData)[i]].investment);
-
-  const netIncomeSeries = monthNames.map((_, i) => income[i] - expense[i] - investment[i]);
-
-  return { labels: monthNames, income, expense, investment, netIncomeSeries };
-}
-
-function renderCharts() {
-  if (typeof Chart === 'undefined') return;
-
-  const range = document.getElementById('mainChartFilter').value;
-  const chartData = prepareMonthlyData(data.filter(d => d.type !== 'opening_balance'), range);
-
-  const { labels, income, expense, investment, netIncomeSeries } = chartData;
-
-  if (chartMain) chartMain.destroy();
-  const ctxMain = document.getElementById('mainChart').getContext('2d');
-  chartMain = new Chart(ctxMain, {
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          type: 'bar',
-          label: 'Income',
-          data: income,
-          backgroundColor: 'rgba(16, 185, 129, 0.8)',
-          stack: 'flow'
-        },
-        {
-          type: 'bar',
-          label: 'Expense',
-          data: expense.map(e => -e),
-          backgroundColor: 'rgba(239, 68, 68, 0.8)',
-          stack: 'flow'
-        },
-        {
-          type: 'bar',
-          label: 'Investment',
-          data: investment.map(i => -i),
-          backgroundColor: 'rgba(59, 130, 246, 0.8)', // Primary color for investment
-          stack: 'flow'
-        },
-        {
-          type: 'line',
-          label: 'Net Cashflow',
-          data: netIncomeSeries,
-          borderColor: '#000000',
-          tension: 0.3,
-          yAxisID: 'y1',
-          fill: false,
-          pointRadius: 4,
-          pointBackgroundColor: '#000000',
-          pointHoverRadius: 6,
-          pointStyle: 'star'
+    document.getElementById('navSettings')?.addEventListener('click', () => {
+        document.getElementById('settingsModal')?.classList.add('open');
+    });
+    document.getElementById('closeSettings')?.addEventListener('click', () => {
+        document.getElementById('settingsModal')?.classList.remove('open');
+    });
+    document.getElementById('navAnalytics')?.addEventListener('click', () => {
+        document.getElementById('analyticsModal')?.classList.add('open');
+        try { populateAnalyticsDropdowns(); renderAdvancedCharts(); } catch(e){}
+    });
+    document.getElementById('closeAnalytics')?.addEventListener('click', () => {
+        document.getElementById('analyticsModal')?.classList.remove('open');
+    });
+    document.getElementById('importDataBtn')?.addEventListener('click', () => {
+        document.getElementById('importModal')?.classList.add('open');
+    });
+    document.getElementById('closeImport')?.addEventListener('click', () => {
+        document.getElementById('importModal')?.classList.remove('open');
+    });
+    document.getElementById('calc-toggle')?.addEventListener('click', () => {
+        const calc = document.getElementById('calculator');
+        if (calc) calc.style.display = calc.style.display === 'none' ? 'flex' : 'none';
+    });
+    document.getElementById('calc-close-btn')?.addEventListener('click', (e) => {
+        const calc = document.getElementById('calculator');
+        if (calc) calc.style.display = 'none';
+        e.stopPropagation();
+    });
+    document.getElementById('sampleBtn')?.addEventListener('click', loadSampleData);
+    document.getElementById('exportBtn')?.addEventListener('click', () => convertToCSV(data));
+    document.getElementById('processImportBtn')?.addEventListener('click', processImportedData);
+    document.getElementById('resetBtn')?.addEventListener('click', () => {
+        if (confirm('WARNING: This will erase ALL your data (local and Firestore). Are you absolutely sure?')) {
+            localStorage.clear();
+            data = [];
+            methodNames = {...CANONICAL_METHODS};
+            incomeSources = ['Salary', 'Freelance', 'Interest'];
+            settings = { ccLimit: DEFAULT_CC_LIMIT, trackedMarkets: settings?.trackedMarkets || [] };
+            saveAll();
+            window.location.reload();
         }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: { stacked: true },
-        y: {
-          stacked: true,
-          position: 'left',
-          title: { display: true, text: 'Cash Flow (Income/Expense/Investment)', color: 'rgba(0,0,0,0.6)' },
-          ticks: { callback: (value) => fmt(Math.abs(value)) }
-        },
-        y1: {
-          position: 'right',
-          grid: { drawOnChartArea: false },
-          title: { display: true, text: 'Net Cashflow', color: '#000000' },
-          ticks: { callback: (value) => fmt(value) }
-        }
-      },
-      plugins: {
-        legend: { position: 'top' },
-        tooltip: { callbacks: { label: (context) => {
-          let label = context.dataset.label || '';
-          if (label) label += ': ';
-          if (context.parsed.y !== null) {
-            label += fmt(Math.abs(context.parsed.y));
+    });
+
+    // Open any generic modal by data-modal-id (includes marketSettingsModal)
+    document.querySelectorAll('.openModal').forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        const modalId = e.currentTarget.dataset.modalId;
+        const modal = document.getElementById(modalId);
+        if (modal) {
+          modal.classList.add('open');
+          if (modalId === 'marketSettingsModal') {
+            try { renderTrackedLists(); } catch(e){}
           }
-          return label;
-        }}}
-      }
+        }
+      });
+    });
+    document.querySelectorAll('.closeModal').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const modalId = e.currentTarget.dataset.modalId;
+        const modal = document.getElementById(modalId);
+        if (modal) modal.classList.remove('open');
+      });
+    });
+
+    if (auth) {
+      auth.onAuthStateChanged(user => {
+        if (user) onUserSignedIn(user);
+        else {
+          resetToAuthGate();
+        }
+      });
     }
+
+    // Attach listener for the Add Market form (modal)
+    const addMarketForm = document.getElementById('addMarketForm');
+    if (addMarketForm) addMarketForm.addEventListener('submit', addMarket);
+
+    // Header apply button for ticker
+    document.getElementById('applyMarketFilters')?.addEventListener('click', () => {
+      try { applyMarketFiltersFromControls(); } catch(e){ console.warn(e); }
+    });
+
+    // Initialize ticker controls population (functions defined in Part 2/3)
+    try { renderTrackedLists(); populateHeaderSelectsFromSettings(); } catch(e){}
+
+    // Initial app render (renderAll defined in Part 2)
+    try { renderAll(); } catch(e) { console.warn('renderAll not ready yet'); }
   });
+</script>
 
-  renderWalletUnified();
-}
+<body>
 
-function renderInvestmentBreakdown() {
-    if (typeof Chart === 'undefined') return;
+  <!-- AUTH GATE -->
+  <div id="authGate">
+    <p class="line line-1">Welcome to</p>
+    <p class="line line-2">MoneyMirror — Personal Finance Dashboard</p>
+    <p class="line line-3">by Rehan Hamdulay</p>
+    <button id="loginBtn" class="btn-primary" style="padding:12px 24px; font-size:16px;">Sign in with Google</button>
+    <button id="guestBtn" class="btn-outline" style="padding:12px 24px; font-size:14px; background:transparent; color:white; border-color:white; margin-top:10px;">Continue as Guest (Offline)</button>
+  </div>
 
-    const range = document.getElementById('invDateRange').value;
-    const viewMode = document.getElementById('invViewMode').value;
-    const invBucketFilter = document.getElementById('invBucketFilter').value;
-
-    let relevantData = data.filter(d => (d.type === 'expense' && d.category === 'Investments') || (d.type === 'opening_balance' && d.investmentGroup !== 'Cash'));
-
-    // Date filtering
-    if (range !== 'all') {
-        const months = parseInt(range);
-        const cutoffDate = new Date();
-        cutoffDate.setMonth(cutoffDate.getMonth() - months);
-        relevantData = relevantData.filter(d => new Date(d.date) >= cutoffDate);
-    }
-
-    // Group filtering
-    if (invBucketFilter) {
-        relevantData = relevantData.filter(d => (d.investmentGroup || MAJOR_BUCKETS[d.investmentGroup]) === invBucketFilter);
-    }
-
-    let breakdownData = {};
-    let pieData = {};
-
-    if (viewMode === 'top4') {
-        // Bar Chart: Monthly Investment Amount
-        const monthlyData = prepareMonthlyData(relevantData, range);
-        const { labels, investment } = monthlyData;
-
-        // Pie Chart: Top 4 Major Buckets (Total Value)
-        const bucketTotals = relevantData.reduce((acc, curr) => {
-            const group = curr.investmentGroup || 'Uncategorized';
-            const majorBucket = MAJOR_BUCKETS[group] || 'Other';
-            acc[majorBucket] = (acc[majorBucket] || 0) + Number(curr.amount);
-            return acc;
-        }, {});
-
-        const sortedBuckets = Object.entries(bucketTotals)
-            .sort(([,a], [,b]) => b - a)
-            .slice(0, 4);
-        const otherTotal = Object.entries(bucketTotals)
-            .slice(4)
-            .reduce((sum, [, value]) => sum + value, 0);
-
-        const pieLabels = sortedBuckets.map(([key]) => key);
-        const pieValues = sortedBuckets.map(([, value]) => value);
-        if (otherTotal > 0) {
-            pieLabels.push('Other');
-            pieValues.push(otherTotal);
-        }
-
-        breakdownData = { labels, values: investment };
-        pieData = { labels: pieLabels, values: pieValues, title: 'Top 4 Major Buckets' };
-
-        document.getElementById('invBarTitle').textContent = 'Monthly Investment Flow';
-        document.getElementById('invPieTitle').textContent = 'Top Bucket Share';
-
-    } else if (viewMode === 'subcats') {
-        // Bar Chart: Top 10 Subcategories (Total Value)
-        const subCatTotals = relevantData.reduce((acc, curr) => {
-            const sub = curr.investmentSub || curr.investmentGroup || 'Other/Uncategorized';
-            acc[sub] = (acc[sub] || 0) + Number(curr.amount);
-            return acc;
-        }, {});
-
-        const sortedSubCats = Object.entries(subCatTotals)
-            .sort(([,a], [,b]) => b - a)
-            .slice(0, 10);
-        const barLabels = sortedSubCats.map(([key]) => key);
-        const barValues = sortedSubCats.map(([, value]) => value);
-
-        // Pie Chart: Total Investment by Type (Expense vs Opening Balance)
-        const typeTotals = relevantData.reduce((acc, curr) => {
-            const type = curr.type === 'opening_balance' ? 'Opening Balance' : 'New Investment';
-            acc[type] = (acc[type] || 0) + Number(curr.amount);
-            return acc;
-        }, {});
-        const pieLabels = Object.keys(typeTotals);
-        const pieValues = Object.values(typeTotals);
-
-        breakdownData = { labels: barLabels, values: barValues };
-        pieData = { labels: pieLabels, values: pieValues, title: 'Source of Investment Value' };
-
-        document.getElementById('invBarTitle').textContent = 'Top 10 Sub-Categories (Total)';
-        document.getElementById('invPieTitle').textContent = 'Investment Value Source';
-    }
-
-    // Render Bar Chart
-    if (chartInvBreakdownBar) chartInvBreakdownBar.destroy();
-    const ctxBar = document.getElementById('invBreakdownBar').getContext('2d');
-    chartInvBreakdownBar = new Chart(ctxBar, {
-        type: viewMode === 'top4' ? 'line' : 'bar',
-        data: {
-            labels: breakdownData.labels,
-            datasets: [{
-                label: viewMode === 'top4' ? 'Investment Flow' : 'Total Investment',
-                data: breakdownData.values,
-                backgroundColor: viewMode === 'top4' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(59, 130, 246, 0.8)',
-                borderColor: viewMode === 'top4' ? '#3b82f6' : 'transparent',
-                borderWidth: viewMode === 'top4' ? 2 : 1,
-                fill: viewMode === 'top4',
-                tension: viewMode === 'top4' ? 0.4 : 0
-            }]
-        },
-        options: {
-            maintainAspectRatio: false,
-            scales: {
-                y: { beginAtZero: true, ticks: { callback: (value) => fmt(value) } },
-                x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 45 } }
-            },
-            plugins: { legend: { display: false } }
-        }
-    });
-
-    // Render Pie Chart
-    if (chartInvBreakdownPie) chartInvBreakdownPie.destroy();
-    const ctxPie = document.getElementById('invBreakdownPie').getContext('2d');
-    chartInvBreakdownPie = new Chart(ctxPie, {
-        type: 'doughnut',
-        data: {
-            labels: pieData.labels,
-            datasets: [{
-                data: pieData.values,
-                backgroundColor: getColorPalette(pieData.values.length),
-                borderWidth: 1
-            }]
-        },
-        options: {
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'right', labels: { boxWidth: 10 } },
-                title: { display: true, text: pieData.title, font: { size: 14, weight: 'bold' } },
-                tooltip: { callbacks: { label: (context) => {
-                    const label = context.label || '';
-                    const value = context.parsed || 0;
-                    return `${label}: ${fmt(value)}`;
-                }}}
-            },
-            cutout: '60%'
-        }
-    });
-
-    // Investment Quick Subcategories (Top 4 of all time)
-    const subCatAllTimeTotals = data.filter(d => (d.type === 'expense' && d.category === 'Investments') || (d.type === 'opening_balance' && d.investmentGroup !== 'Cash')).reduce((acc, curr) => {
-        const sub = curr.investmentSub || curr.investmentGroup || 'Other/Uncategorized';
-        acc[sub] = (acc[sub] || 0) + Number(curr.amount);
-        return acc;
-    }, {});
-
-    const sortedSubCatsAllTime = Object.entries(subCatAllTimeTotals)
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 4);
-
-    const quickSubsContainer = document.getElementById('invQuickSubs');
-    quickSubsContainer.innerHTML = sortedSubCatsAllTime.map(([name, value]) => `
-        <div class="quick-sub-card">
-            <div class="quick-sub-header">
-                <span class="quick-sub-title">${name}</span>
-                <span class="total-badge">${fmt(value)}</span>
-            </div>
-            <div style="font-size:11px; color:var(--text-muted);">Historical cost basis.</div>
+  <!-- SIDEBAR -->
+  <aside id="mainSidebar">
+    <div style="width:100%">
+      <div style="display:flex; justify-content:space-between; align-items:center; width:100%">
+        <div class="brand">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /></svg>
+          MoneyMirror <span>v5.0.8</span>
         </div>
-    `).join('');
-}
-
-function getColorPalette(count) {
-    const defaultColors = [
-        '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#7c3aed', '#0ea5e9', '#14b8a6',
-        '#22c55e', '#eab308', '#f97316', '#374151', '#8b5cf6',
-        '#be185d', '#0891b2', '#7e22ce'
-    ];
-    return Array.from({ length: count }, (_, i) => defaultColors[i % defaultColors.length]);
-}
-
-function uid() { return 'id' + Date.now() + Math.random().toString(16).slice(2); }
-
-function requireSignedIn() {
-  if (!currentProfile) {
-    alert('Please sign in to proceed.');
-    return false;
-  }
-  return true;
-}
-
-// --- TRANSACTION LOGIC & FORM MANAGEMENT ---
-
-function clearForm() {
-  document.getElementById('actionTitle').textContent = 'Add new entry';
-  document.getElementById('editIdDisplay').textContent = '--';
-  formEls.amount.value = '';
-  formEls.date.value = new Date().toISOString().slice(0, 10);
-  formEls.desc.value = '';
-  formEls.category.value = 'Food';
-  formEls.type.value = 'expense';
-  formEls.method.value = 'cash';
-  formEls.incomeSource.value = '';
-  formEls.invGroup.value = '';
-  formEls.invSub.value = '';
-  formEls.insType.value = '';
-  formEls.insFor.value = '';
-  formEls.openingType.value = 'Cash';
-  updateTransactionFormFields();
-}
-
-function updateTransactionFormFields() {
-  const type = formEls.type.value;
-  const category = formEls.category.value;
-  const obType = formEls.openingType.value;
-
-  // Reset/hide all specific fields
-  document.getElementById('categoryContainer').classList.remove('hidden');
-  document.getElementById('methodRow').classList.remove('hidden');
-  document.getElementById('incomeSourceRow').classList.add('hidden');
-  document.getElementById('investmentRow').classList.add('hidden');
-  document.getElementById('insuranceRow').classList.add('hidden');
-  document.getElementById('openingBalanceRow').classList.add('hidden');
-
-  if (type === 'income') {
-    document.getElementById('categoryContainer').classList.add('hidden');
-    document.getElementById('methodRow').classList.remove('hidden');
-    document.getElementById('incomeSourceRow').classList.remove('hidden');
-    formEls.category.value = '';
-  } else if (type === 'opening_balance') {
-    document.getElementById('categoryContainer').classList.add('hidden');
-    document.getElementById('methodRow').classList.add('hidden');
-    document.getElementById('openingBalanceRow').classList.remove('hidden');
-    if (obType === 'Cash') {
-      document.getElementById('openingGroupContainer').classList.add('hidden');
-      document.getElementById('openingSubContainer').classList.remove('hidden');
-      document.getElementById('openingSubLabel').textContent = 'Cash Account Name';
-    } else if (obType === 'Investment') {
-      document.getElementById('openingGroupContainer').classList.remove('hidden');
-      document.getElementById('openingSubContainer').classList.remove('hidden');
-      document.getElementById('openingGroupLabel').textContent = 'Asset category';
-      document.getElementById('openingSubLabel').textContent = 'Account / Asset sub-type';
-    }
-  } else if (type === 'expense') {
-    if (category === 'Investments') {
-      document.getElementById('investmentRow').classList.remove('hidden');
-      document.getElementById('methodRow').classList.add('hidden');
-    } else if (category === 'Insurance') {
-      document.getElementById('insuranceRow').classList.remove('hidden');
-      document.getElementById('methodRow').classList.remove('hidden');
-    } else if (category === 'Credit Card Payment') {
-      document.getElementById('methodRow').classList.add('hidden'); // Method is implicitly a transfer
-    }
-  }
-}
-
-function submitForm(e, isImportOrEdit=false){
-  if(!requireSignedIn()) return;
-  const type = formEls.type.value;
-  const amount = Number(formEls.amount.value);
-  const date = formEls.date.value;
-  const desc = formEls.desc.value;
-  const method = formEls.method.value;
-
-  if(amount <= 0 || isNaN(amount)) return alert('Please enter a valid amount.');
-  if(!date) return alert('Please select a date.');
-  if(!desc) return alert('Please enter a description.');
-
-  const entry = {
-    id: e ? e.id : uid(),
-    type,
-    amount,
-    date,
-    desc,
-    category: '',
-    method: method,
-    incomeSource: '',
-    investmentGroup: '',
-    investmentSub: '',
-    insuranceType: '',
-    insuranceFor: ''
-  };
-
-  if(type === 'income') {
-    entry.incomeSource = formEls.incomeSource.value || (e ? e.incomeSource : '');
-    if(!entry.incomeSource && !isImportOrEdit) return alert('Please select an Income Source.');
-    entry.category = 'N/A';
-    entry.method = formEls.method.value || (e ? e.method : 'salary_acct');
-    entry.investmentGroup = entry.investmentSub = '';
-    entry.insuranceType = entry.insuranceFor = '';
-  } else if(type === 'opening_balance') {
-    const obType = formEls.openingType.value;
-    entry.category = 'N/A';
-    entry.incomeSource = '';
-    entry.insuranceType = entry.insuranceFor = '';
-    if (obType === 'Cash') {
-      entry.method = formEls.openingSub.value || (e ? e.method : '');
-      entry.investmentGroup = 'Cash';
-      entry.investmentSub = formEls.openingSub.value || (e ? e.investmentSub : '');
-      if(!entry.method && !isImportOrEdit) return alert('Please select a cash account.');
-    } else if (obType === 'Investment') {
-      entry.method = formEls.openingSub.value || (e ? e.method : ''); // The sub-type acts as the 'method' in this case
-      entry.investmentGroup = formEls.openingGroup.value || (e ? e.investmentGroup : '');
-      entry.investmentSub = formEls.openingSub.value || (e ? e.investmentSub : '');
-      if((!entry.investmentGroup || !entry.investmentSub) && !isImportOrEdit) return alert('Please select an Investment Group and Sub-type.');
-    }
-  } else if(type === 'expense') {
-    entry.category = formEls.category.value || (e ? e.category : '');
-    entry.incomeSource = '';
-    if(!entry.category && !isImportOrEdit) return alert('Please select a Category.');
-    entry.method = formEls.method.value || (e ? e.method : 'cash');
-    entry.insuranceType = entry.insuranceFor = '';
-
-    if(entry.category === 'Investments') {
-      entry.investmentGroup = formEls.invGroup.value || (e ? e.investmentGroup : '');
-      entry.investmentSub = formEls.invSub.value || (e ? e.investmentSub : '');
-      entry.method = entry.investmentSub; // The sub-type acts as the 'method' in this case
-      if((!entry.investmentGroup || !entry.investmentSub) && !isImportOrEdit) return alert('Please select an Investment Group and Sub-type.');
-    } else if (entry.category === 'Insurance') {
-      entry.insuranceType = formEls.insType.value || (e ? e.insuranceType : '');
-      entry.insuranceFor = formEls.insFor.value || (e ? e.insuranceFor : '');
-      entry.investmentGroup = entry.investmentSub = '';
-    } else if (entry.category === 'Credit Card Payment') {
-      entry.method = 'credit_card_payment';
-    } else {
-      entry.investmentGroup = entry.investmentSub = '';
-    }
-  }
-
-  if(editId) {
-    data = data.map(t => t.id === editId ? entry : t);
-    editId = null;
-    document.getElementById('actionTitle').textContent = 'Add new entry';
-    document.getElementById('editIdDisplay').textContent = '--';
-    formEls.addBtn.classList.remove('hidden');
-    formEls.saveBtn.classList.add('hidden');
-    formEls.cancelBtn.classList.add('hidden');
-  } else {
-    data.push(entry);
-  }
-
-  if(!isImportOrEdit) {
-    saveAll();
-    renderAll();
-    clearForm();
-  }
-}
-
-formEls.addBtn.addEventListener('click', () => submitForm());
-formEls.saveBtn.addEventListener('click', () => {
-  const entryToEdit = data.find(t => t.id === editId);
-  if (entryToEdit) submitForm(entryToEdit);
-});
-formEls.cancelBtn.addEventListener('click', () => {
-  editId = null;
-  document.getElementById('actionTitle').textContent = 'Add new entry';
-  document.getElementById('editIdDisplay').textContent = '--';
-  formEls.addBtn.classList.remove('hidden');
-  formEls.saveBtn.classList.add('hidden');
-  formEls.cancelBtn.classList.add('hidden');
-  clearForm();
-});
-
-function loadEdit(id) {
-  if(!requireSignedIn()) return;
-  const e = data.find(t => t.id === id);
-  if (!e) return;
-  editId = id;
-  document.getElementById('actionTitle').textContent = 'Edit entry';
-  document.getElementById('editIdDisplay').textContent = e.id;
-  formEls.addBtn.classList.add('hidden');
-  formEls.saveBtn.classList.remove('hidden');
-  formEls.cancelBtn.classList.remove('hidden');
-
-  formEls.type.value = e.type;
-  formEls.amount.value = e.amount;
-  formEls.date.value = e.date;
-  formEls.desc.value = e.desc;
-  formEls.category.value = e.category || 'Food';
-  formEls.method.value = e.method;
-  formEls.incomeSource.value = e.incomeSource;
-  formEls.insType.value = e.insuranceType;
-  formEls.insFor.value = e.insuranceFor;
-
-  if (e.type === 'opening_balance') {
-    if (e.investmentGroup && e.investmentGroup !== 'Cash') {
-      formEls.openingType.value = 'Investment';
-      formEls.openingGroup.value = e.investmentGroup;
-      formEls.openingSub.value = e.investmentSub;
-      updateInvestmentSubDropdown(formEls.openingGroup, formEls.openingSub);
-    } else {
-      formEls.openingType.value = 'Cash';
-      formEls.openingSub.value = e.method;
-    }
-  } else if (e.type === 'expense' && e.category === 'Investments') {
-    formEls.invGroup.value = e.investmentGroup;
-    formEls.invSub.value = e.investmentSub;
-    updateInvestmentSubDropdown(formEls.invGroup, formEls.invSub);
-  }
-
-  updateTransactionFormFields();
-  document.getElementById('mainSidebar').classList.remove('mobile-open');
-  window.scrollTo(0, 0); // Scroll to form
-}
-
-function deleteEntry(id) {
-  if(!requireSignedIn()) return;
-  if (confirm('Are you sure you want to delete this transaction?')) {
-    data = data.filter(t => t.id !== id);
-    saveAll();
-    renderAll();
-  }
-}
-
-function getBadge(entry) {
-  if (entry.type === 'income') return '<span class="badge badge-income">Income</span>';
-  if (entry.type === 'opening_balance') return '<span class="badge badge-opening">Opening</span>';
-  if (entry.category === 'Investments') return '<span class="badge badge-inv">Invest</span>';
-  if (entry.category === 'Insurance') return '<span class="badge badge-ins">Insure</span>';
-  if (entry.category === 'Credit Card Payment') return '<span class="badge badge-cc">CC Pay</span>';
-  return '<span class="badge badge-expense">Expense</span>';
-}
-
-function renderRecentEntries() {
-  const tbody = document.querySelector('#recentTableBody');
-  const recentType = document.getElementById('recentType').value;
-  const recentCategory = document.getElementById('recentCategory').value;
-  const recentSearch = document.getElementById('recentSearch').value.toLowerCase();
-  const infoEl = document.getElementById('recentTableInfo');
-  let filteredData = data;
-
-  if (recentType) {
-    filteredData = filteredData.filter(e => e.type === recentType);
-  }
-  if (recentCategory) {
-    filteredData = filteredData.filter(e => e.category === recentCategory || (e.type === 'income' && recentCategory === 'Income') || (e.type === 'opening_balance' && recentCategory === 'Opening Balance'));
-  }
-  if (recentSearch) {
-    filteredData = filteredData.filter(e => e.desc.toLowerCase().includes(recentSearch) || e.id.toLowerCase().includes(recentSearch));
-  }
-
-  if (filteredData.length === 0) {
-    tbody.innerHTML = '';
-    infoEl.style.display = 'block';
-    infoEl.textContent = 'No transactions found matching the filter criteria.';
-    return;
-  }
-
-  const html = filteredData.slice(0, 25).map(e => {
-    const amountDisplay = e.type === 'income' || e.type === 'opening_balance' ? `<span style="color:var(--success)">+${fmt(e.amount)}</span>` : `<span style="color:var(--danger)">-${fmt(e.amount)}</span>`;
-    let methodDisplay = '';
-    if (e.type === 'opening_balance' && e.investmentGroup !== 'Cash') {
-      methodDisplay = e.investmentSub || e.investmentGroup;
-    } else if (e.type === 'expense' && e.category === 'Investments') {
-      methodDisplay = e.investmentSub || e.investmentGroup;
-    } else if (e.method === 'credit_card_payment') {
-      methodDisplay = 'N/A (Transfer)';
-    } else {
-      methodDisplay = methodNames[e.method] || e.method || '--';
-    }
-    let categoryDisplay = e.category === 'Investments' ? e.investmentSub : e.category === 'Insurance' ? `${e.insuranceType} (${e.insuranceFor})` : e.type === 'expense' ? e.category : '--';
-
-    return `
-      <tr>
-        <td>${getBadge(e)}</td>
-        <td>${e.date}</td>
-        <td>${e.desc}</td>
-        <td>${categoryDisplay}</td>
-        <td>${methodDisplay}</td>
-        <td style="text-align:right;">${amountDisplay}</td>
-        <td style="text-align:center;">
-          <button class="btn-primary" style="padding:4px 8px; font-size:11px;" onclick="loadEdit('${e.id}')">Edit</button>
-          <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteEntry('${e.id}')">Del</button>
-        </td>
-      </tr>
-    `;
-  }).join('');
-  tbody.innerHTML = html;
-  infoEl.style.display = 'none';
-}
-
-
-// --- WALLET AND EXPENSE BREAKDOWN (Chart 2) ---
-
-function renderWalletUnified() {
-  if (typeof Chart === 'undefined') return;
-
-  const mode = document.getElementById('walletMode').value;
-  const infoEl = document.getElementById('walletInfo');
-  infoEl.style.display = 'none';
-  document.getElementById('expenseFilterContainer').classList.add('hidden');
-  document.getElementById('resetExpenseDrilldown').classList.add('hidden');
-
-  let labels = [];
-  let values = [];
-  let title = '';
-  let chartType = 'doughnut';
-  let chartOptions = { cutout: '60%' };
-
-  if (chartWallet) chartWallet.destroy();
-
-  if (mode === 'wallet') {
-    // Wallet Breakdown (Cash / Bank)
-    title = 'Wallet Balance Distribution';
-    const cashData = data.filter(d => d.investmentGroup === 'Cash' || (d.type !== 'opening_balance' && d.method && d.method !== 'credit_card_payment'));
-    const balances = cashData.reduce((acc, curr) => {
-      const methodKey = curr.method || curr.investmentSub || 'Unknown';
-      const amount = Number(curr.amount) * (curr.type === 'income' || curr.type === 'opening_balance' ? 1 : -1);
-      acc[methodKey] = (acc[methodKey] || 0) + amount;
-      return acc;
-    }, {});
-
-    // Filter out zero/negative balances for the pie chart display
-    const positiveBalances = Object.entries(balances).filter(([, value]) => value > 0);
-
-    labels = positiveBalances.map(([key]) => methodNames[key] || key);
-    values = positiveBalances.map(([, value]) => value);
-
-    if (values.length === 0) {
-      infoEl.style.display = 'block';
-      infoEl.innerText = 'No positive cash balances found to display.';
-    }
-
-  } else if (mode === 'expenses') {
-    // Expense Distribution
-    document.getElementById('expenseFilterContainer').classList.remove('hidden');
-
-    const expenseData = data.filter(d => d.type === 'expense' && d.category !== 'Investments');
-
-    let filteredExpenses = expenseData;
-
-    if (selectedExpenseCategories.length > 0) {
-      filteredExpenses = expenseData.filter(d => selectedExpenseCategories.includes(d.category));
-      document.getElementById('resetExpenseDrilldown').classList.remove('hidden');
-      title = `Distribution of ${selectedExpenseCategories.join(', ')} Expenses`;
-
-      // Drill down to sub-category level
-      const subCategoryTotals = filteredExpenses.reduce((acc, curr) => {
-        const key = curr.desc.split(' - ')[0] || curr.category;
-        acc[key] = (acc[key] || 0) + Number(curr.amount);
-        return acc;
-      }, {});
-      labels = Object.keys(subCategoryTotals);
-      values = Object.values(subCategoryTotals);
-
-    } else {
-      title = 'Overall Expense Distribution by Category (Top 10)';
-      // Top-level categories
-      const categoryTotals = expenseData.reduce((acc, curr) => {
-        acc[curr.category] = (acc[curr.category] || 0) + Number(curr.amount);
-        return acc;
-      }, {});
-
-      const sortedCategories = Object.entries(categoryTotals)
-        .sort(([,a], [,b]) => b - a)
-        .slice(0, 10);
-
-      labels = sortedCategories.map(([key]) => key);
-      values = sortedCategories.map(([, value]) => value);
-    }
-
-    if (values.length === 0) {
-      infoEl.style.display = 'block';
-      infoEl.innerText = 'No expenses found.';
-    }
-  }
-
-
-  if (values.length > 0) {
-    const ctxWallet = document.getElementById('walletChart').getContext('2d');
-    chartWallet = new Chart(ctxWallet, {
-      type: chartType,
-      data: {
-        labels: labels,
-        datasets: [{
-          data: values,
-          backgroundColor: getColorPalette(values.length),
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { position: 'right', labels: { boxWidth: 10 } },
-          title: { display: true, text: title },
-          tooltip: {
-            callbacks: {
-              label: (context) => {
-                const label = context.label || '';
-                const value = context.parsed || 0;
-                return `${label}: ${fmt(value)}`;
-              }
-            }
-          }
-        },
-        ...chartOptions
-      }
-    });
-  }
-}
-
-function setupExpenseMultiSelect() {
-  const checkboxesContainer = document.getElementById('expenseCheckboxes');
-  checkboxesContainer.innerHTML = BASE_CATS
-    .filter(c => !['Investments', 'Insurance', 'Credit Card Payment'].includes(c))
-    .map(cat => `
-      <div class="ms-item">
-        <input type="checkbox" id="chk-${toKey(cat)}" class="expense-chk" value="${cat}" ${selectedExpenseCategories.includes(cat) ? 'checked' : ''}>
-        <label for="chk-${toKey(cat)}">${cat}</label>
+        <button id="mobileMenuBtn">
+          <svg class="icon-menu" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          <svg class="icon-close" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
-    `).join('');
 
-  document.getElementById('expenseFilterBtn').addEventListener('click', () => {
-    document.getElementById('expenseMultiselectDropdown').classList.toggle('show');
-  });
+      <nav>
+        <div class="nav-group">
+          <div class="nav-label">Main menu</div>
+          <div class="nav-item active">Dashboard</div>
+          <div class="nav-item" id="navAnalytics">Advanced analytics</div>
 
-  document.getElementById('msClear').addEventListener('click', () => {
-    document.querySelectorAll('.expense-chk').forEach(c => c.checked = false);
-  });
+          <!-- Market Ticker trigger -->
+          <a href="#marketSettingsModal" class="nav-item openModal" data-modal-id="marketSettingsModal" style="text-decoration:none;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"></path><path d="M19 9l-5 5-4-4-3 3"></path></svg>
+            <span>Market ticker</span>
+          </a>
+        </div>
 
-  document.getElementById('msApply').addEventListener('click', () => {
-    selectedExpenseCategories = Array.from(document.querySelectorAll('.expense-chk:checked')).map(c => c.value);
-    document.getElementById('expenseFilterBtn').textContent = selectedExpenseCategories.length > 0 ? `${selectedExpenseCategories.length} selected ▾` : 'Select Categories ▾';
-    document.getElementById('expenseMultiselectDropdown').classList.remove('show');
-    renderWalletUnified();
-  });
-
-  document.getElementById('resetExpenseDrilldown').addEventListener('click', resetExpenseDrilldown);
-}
-
-function resetExpenseDrilldown() {
-  selectedExpenseCategories = [];
-  document.querySelectorAll('.expense-chk').forEach(c => c.checked = false);
-  document.getElementById('expenseFilterBtn').textContent = 'Select Categories ▾';
-  document.getElementById('resetExpenseDrilldown').classList.add('hidden');
-  renderWalletUnified();
-}
-
-// --- ADVANCED ANALYTICS WITH SYNCED FILTERS ---
-
-function populateAnalyticsDropdowns() {
-  const groupSelect = document.getElementById('anlInvGroup');
-  const options = Object.keys(INVESTMENT_STRUCTURE).map(group => `<option value="${group}">${group}</option>`).join('');
-  groupSelect.innerHTML = '<option value="">All Groups</option>' + options;
-}
-
-function updateAnlSubDropdown() {
-  const group = document.getElementById('anlInvGroup').value;
-  const subSelect = document.getElementById('anlInvSub');
-  let options = '<option value="">All Types</option>';
-  if(group && INVESTMENT_STRUCTURE[group]) {
-    options += Object.keys(INVESTMENT_STRUCTURE[group]).map(sub => `<option value="${sub}">${sub}</option>`).join('');
-  }
-  subSelect.innerHTML = options;
-}
-
-function renderAdvancedCharts() {
-  if (typeof Chart === 'undefined') return;
-
-  const range = document.getElementById('dateFilter').value;
-  const chartType = document.getElementById('chartType').value;
-  const invGroup = document.getElementById('anlInvGroup').value;
-  const invSub = document.getElementById('anlInvSub').value;
-
-  let relevantData = data;
-
-  // Filter the data based on selection
-  if (invGroup || invSub) {
-    relevantData = data.filter(d => {
-      // Only consider relevant entries (opening balance investments or expense investments)
-      const isInv = (d.type === 'opening_balance' && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments');
-      if (!isInv) return false;
-
-      if (invGroup && d.investmentGroup !== invGroup) return false;
-      if (invSub && d.investmentSub !== invSub) return false;
-      return true;
-    });
-  } else {
-    // If no filter, show all cashflow and investments over time
-    relevantData = data.filter(d => d.type !== 'opening_balance');
-  }
-
-  // Monthly Cashflow Chart (Line/Bar)
-  const chartData = prepareMonthlyData(relevantData, range);
-  const { labels, income, expense, investment, netIncomeSeries } = chartData;
-
-  const combinedExpense = expense.map((e, i) => e + investment[i]);
-
-  if (chartAdvanced) chartAdvanced.destroy();
-  const ctxAdvanced = document.getElementById('chartAdvanced').getContext('2d');
-  chartAdvanced = new Chart(ctxAdvanced, {
-    type: chartType,
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: 'Total Outflow (Expense + Investment)',
-          data: combinedExpense.map(e => -e),
-          backgroundColor: 'rgba(239, 68, 68, 0.8)',
-          borderColor: 'rgba(239, 68, 68, 1)',
-          type: 'bar',
-          stack: 'flow'
-        },
-        {
-          label: 'Income',
-          data: income,
-          backgroundColor: 'rgba(16, 185, 129, 0.8)',
-          borderColor: 'rgba(16, 185, 129, 1)',
-          type: 'bar',
-          stack: 'flow'
-        },
-        {
-          label: 'Net Cashflow',
-          data: netIncomeSeries,
-          borderColor: '#000000',
-          tension: 0.3,
-          type: 'line',
-          yAxisID: 'y1',
-          fill: false,
-          pointRadius: 4,
-          pointBackgroundColor: '#000000',
-          pointHoverRadius: 6,
-          pointStyle: 'star'
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: { stacked: true },
-        y: {
-          stacked: true,
-          position: 'left',
-          title: { display: true, text: 'Flow (Income/Outflow)', color: 'rgba(0,0,0,0.6)' },
-          ticks: { callback: (value) => fmt(Math.abs(value)) }
-        },
-        y1: {
-          position: 'right',
-          grid: { drawOnChartArea: false },
-          title: { display: true, text: 'Net Cashflow', color: '#000000' },
-          ticks: { callback: (value) => fmt(value) }
-        }
-      },
-      plugins: {
-        legend: { position: 'top' },
-        tooltip: { callbacks: { label: (context) => {
-          let label = context.dataset.label || '';
-          if (label) label += ': ';
-          if (context.parsed.y !== null) {
-            label += fmt(Math.abs(context.parsed.y));
-          }
-          return label;
-        }}}
-      }
-    }
-  });
-
-  // Distribution Chart (Doughnut) & Cumulative Growth (Line)
-  const invs = data.filter(d => (d.type === 'expense' && d.category === 'Investments') || (d.type === 'opening_balance' && d.investmentGroup !== 'Cash'));
-
-  // Group by investmentSub or investmentGroup (Distribution Chart)
-  const byType = invs.reduce((acc,curr) => {
-      const key = curr.investmentSub || curr.investmentGroup || 'Uncategorized';
-      acc[key] = (acc[key] || 0) + Number(curr.amount);
-      return acc;
-  }, {});
-
-  const distLabels = Object.keys(byType).sort((a,b) => byType[b]-byType[a]);
-  const distValues = distLabels.map(l => byType[l]);
-  const colors = getColorPalette(distLabels.length);
-
-  const ctxTypes = document.getElementById('chartInvTypesModal')?.getContext('2d');
-  if (ctxTypes) {
-    if (chartInvTypesModal) chartInvTypesModal.destroy();
-    chartInvTypesModal = new Chart(ctxTypes, {
-      type: 'doughnut',
-      data: {
-        labels: distLabels,
-        datasets: [{ data: distValues, backgroundColor: colors, borderWidth:1 }]
-      },
-      options: {
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { position:'right', labels:{boxWidth:10} },
-          tooltip: { callbacks: { label: (context) => {
-            const label = context.label || '';
-            const value = context.parsed || 0;
-            return `${label}: ${fmt(value)}`;
-          }}}
-        },
-        cutout: '60%'
-      }
-    });
-  }
-
-  // Cumulative Growth Chart
-  const growthPoints = invs.map(i => ({ date: new Date(i.date), amount: Number(i.amount) })).sort((a,b)=>a.date-b.date);
-  let cumulative = 0;
-  const growthLabels = growthPoints.map(p => p.date.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' }));
-  const growthValues = growthPoints.map(p => { cumulative += p.amount; return cumulative; });
-
-  const ctxGrowth = document.getElementById('chartNetWorth')?.getContext('2d');
-  if (ctxGrowth) {
-    if (chartNetWorth) chartNetWorth.destroy();
-    chartNetWorth = new Chart(ctxGrowth, {
-      type: 'line',
-      data: {
-        labels: growthLabels,
-        datasets: [{
-          label: 'Invested Amount (Historical Cost)',
-          data: growthValues,
-          borderColor: '#10b981',
-          backgroundColor: 'rgba(16, 185, 129, 0.2)',
-          fill: true,
-          tension: 0.3
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: { beginAtZero: true, ticks: { callback: (value) => fmt(value) } },
-          x: { }
-        },
-        plugins: {
-          legend: { position: 'top' },
-          tooltip: { callbacks: { label: (context) => {
-            let label = context.dataset.label || '';
-            if (label) label += ': ';
-            if (context.parsed.y !== null) {
-              label += fmt(context.parsed.y);
-            }
-            return label;
-          }}}
-        }
-      }
-    });
-  }
-}
-
-// --- SETTINGS, BACKUP, AND UTILITY ---
-
-document.getElementById('saveCCSettings').addEventListener('click', () => {
-  const input = document.getElementById('ccLimitInput');
-  const limit = Number(input.value);
-  if (limit > 0 && !isNaN(limit)) {
-    settings.ccLimit = limit;
-    saveAll();
-    renderKPIs();
-    alert('Credit Card limit saved.');
-  } else {
-    alert('Please enter a valid limit.');
-  }
-});
-
-document.getElementById('addMethodBtn').addEventListener('click', addMethod);
-document.getElementById('addIncomeBtn').addEventListener('click', addIncome);
-
-function renderSettings() {
-  document.getElementById('ccLimitInput').value = settings.ccLimit;
-
-  // Render Methods
-  const methodListEl = document.getElementById('methodList');
-  methodListEl.innerHTML = Object.keys(methodNames).map(key => {
-    if (key === 'credit_card_payment') return '';
-    return `
-      <div class="flex-row" style="margin-bottom:5px; justify-content:space-between;">
-        <span>${methodNames[key]}</span>
-        <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteMethod('${key}')">Remove</button>
-      </div>
-    `;
-  }).join('');
-
-  // Render Income Sources
-  const incomeListEl = document.getElementById('incomeList');
-  incomeListEl.innerHTML = incomeSources.map(source => `
-    <div class="flex-row" style="margin-bottom:5px; justify-content:space-between;">
-      <span>${source}</span>
-      <button class="btn-danger" style="padding:4px 8px; font-size:11px;" onclick="deleteIncome('${source}')">Remove</button>
+        <div class="nav-group">
+          <div class="nav-label">Configuration</div>
+          <div class="nav-item" id="navSettings">Settings & Backup</div>
+          <div class="nav-item"><button id="logoutBtn" class="btn-outline" style="width:100%; display:none;">Logout</button></div>
+        </div>
+      </nav>
     </div>
-  `).join('');
-}
 
-function deleteMethod(key) {
-  if (confirm(`Remove payment method "${methodNames[key]}"?`)) {
-    delete methodNames[key];
+    <div class="sidebar-footer">
+      <div class="sys-stat">
+        <span>Current profile</span>
+        <span class="sys-val" id="profileNameDisplay">--</span>
+      </div>
+      <div style="font-size:10px; color:var(--sidebar-text); margin-top:4px">v5.0.8 • Settings & Table Fixed</div>
+    </div>
+  </aside>
+
+  <!-- MAIN: header, market controls, and ticker -->
+  <main>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <div>
+        <h1 style="margin:0; font-size:24px; font-weight:700">Financial overview</h1>
+        <div style="font-size:13px; color:var(--text-muted); margin-top:4px" id="currentDate"></div>
+      </div>
+
+      <!-- Market controls (major markets, metal selector, country selector) -->
+      <div class="market-controls" style="align-items:center;">
+        <div class="market-selects" role="group" aria-label="Market selectors">
+          <!-- Major world markets dropdown -->
+          <div>
+            <label for="marketSelectMajor" style="display:block; font-size:11px; color:var(--text-muted); margin-bottom:6px; font-weight:700;">Major markets</label>
+            <select id="marketSelectMajor" title="Select major market">
+              <option value="NSEI">Nifty 50 (NSEI)</option>
+              <option value="SENSEX">Sensex (BSE)</option>
+              <option value="NASDAQ">NASDAQ Composite</option>
+              <option value="DOWJ">Dow Jones</option>
+              <option value="SPX">S&P 500</option>
+              <option value="FTSE">FTSE 100</option>
+              <option value="DAX">DAX</option>
+              <option value="NIKKEI">Nikkei 225</option>
+              <option value="HANGSENG">Hang Seng</option>
+            </select>
+          </div>
+
+          <!-- Metal selector (Gold / Silver) -->
+          <div>
+            <label for="metalSelect" style="display:block; font-size:11px; color:var(--text-muted); margin-bottom:6px; font-weight:700;">Metal</label>
+            <select id="metalSelect" title="Select metal to track">
+              <option value="XAU">Gold (XAU)</option>
+              <option value="XAG">Silver (XAG)</option>
+            </select>
+          </div>
+
+          <!-- Country / currency selector for metal pricing -->
+          <div>
+            <label for="metalCountrySelect" style="display:block; font-size:11px; color:var(--text-muted); margin-bottom:6px; font-weight:700;">Country / Currency</label>
+            <select id="metalCountrySelect" title="Select country/currency for metal price">
+              <option value="INR">India (INR)</option>
+              <option value="USD">United States (USD)</option>
+              <option value="EUR">Eurozone (EUR)</option>
+              <option value="GBP">United Kingdom (GBP)</option>
+              <option value="AED">UAE (AED)</option>
+              <option value="SGD">Singapore (SGD)</option>
+              <option value="AUD">Australia (AUD)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button id="applyMarketFilters" class="btn-primary" style="padding:8px 12px; font-size:13px;">Apply</button>
+          <button id="openMarketSettings" class="btn-outline openModal" data-modal-id="marketSettingsModal" style="padding:8px 12px; font-size:13px;">Configure</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ticker panel: clock + revolving ticker -->
+    <div class="market-ticker-strip" style="margin-top:8px;">
+      <!-- Clock / snapshot timestamp -->
+      <div class="ticker-clock" aria-live="polite" style="margin-right:12px;">
+        <div class="time" id="tickerClockTime">--:--:--</div>
+        <div class="tz" id="tickerClockTZ">Snapshot: --</div>
+      </div>
+
+      <!-- Scrolling ticker content -->
+      <div id="tickerWrap" class="ticker-wrap" aria-hidden="false" role="list">
+        <!-- JS will populate .ticker-item elements here; duplicated by script for seamless loop -->
+      </div>
+    </div>
+  <!-- ADD / ENTRY CARD -->
+  <div class="dashboard-grid">
+    <div class="card action-card col-span-4" id="addEntryCard">
+      <div class="action-header">
+        <div class="card-title">Add new entry</div>
+      </div>
+      <div class="action-body">
+        <div class="input-group-small">
+          <label>Type</label>
+          <select id="type">
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+            <option value="opening_balance">Opening Balance</option>
+          </select>
+        </div>
+        <div class="input-group-small">
+          <label>Amount (₹)</label>
+          <input id="amount" type="number" placeholder="0.00" style="font-weight:700; font-size:16px" step="any" />
+        </div>
+        <div class="input-group-small">
+          <label>Date</label>
+          <input id="date" type="date" />
+        </div>
+        <div class="input-group-large">
+          <label>Description</label>
+          <input id="desc" placeholder="What is this for?" />
+        </div>
+
+        <div id="dynamicFieldsContainer" class="full-width" style="border-top:1px solid var(--border); padding-top:15px">
+          <div id="regularFields" style="display:flex; gap:20px; flex-wrap:wrap">
+            <div id="categoryContainer" class="input-group-small">
+              <label>Category</label>
+              <select id="category"></select>
+            </div>
+            <div class="input-group-small">
+              <label>Method</label>
+              <select id="method"></select>
+            </div>
+            <div id="incomeSourceRow" class="hidden input-group-small">
+              <label>Source</label>
+              <select id="incomeSource"></select>
+            </div>
+
+            <div id="investmentRow" class="hidden full-width" style="display:flex; gap:20px; flex-wrap:wrap">
+              <div class="input-group-small">
+                <label>Investment category</label>
+                <select id="invGroup"></select>
+              </div>
+              <div class="input-group-small">
+                <label>Investment sub-type</label>
+                <select id="invSub"></select>
+              </div>
+            </div>
+
+            <div id="insuranceRow" class="hidden input-group-med">
+              <label>Insurance details</label>
+              <div class="flex-row">
+                <select id="insType"><option value="">Type</option><option value="Health">Health</option><option value="Life">Life</option></select>
+                <select id="insFor"><option value="">Insured</option><option value="Self">Self</option><option value="Family">Family</option></select>
+              </div>
+            </div>
+          </div>
+
+          <div id="openingBalanceRow" class="hidden full-width" style="display:flex; gap:20px; flex-wrap:wrap">
+            <div class="input-group-small">
+              <label>Asset type</label>
+              <select id="openingType">
+                <option value="Cash">Cash (Liquid)</option>
+                <option value="Investment">Investment Asset</option>
+              </select>
+            </div>
+            <div class="input-group-small hidden" id="openingGroupContainer">
+              <label id="openingGroupLabel">Asset category</label>
+              <select id="openingGroup"></select>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:12px;">
+          <button id="saveEntryBtn" class="btn-primary">Save entry</button>
+          <button id="clearEntryBtn" class="btn-outline">Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECENT TRANSACTIONS TABLE -->
+  <div class="dashboard-grid">
+    <div class="card col-span-4">
+      <div class="card-header">
+        <div class="card-title">Recent transactions</div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input id="recentSearch" placeholder="Search" style="padding:8px; min-width:180px;" />
+          <select id="recentSort" style="padding:8px;">
+            <option value="dateDesc">Newest</option>
+            <option value="dateAsc">Oldest</option>
+            <option value="amtDesc">Amount (High)</option>
+            <option value="amtAsc">Amount (Low)</option>
+          </select>
+          <select id="recentCategory" style="padding:8px;">
+            <option value="">All categories</option>
+          </select>
+          <select id="entryLimit" style="padding:8px;">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="all">All</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-container">
+          <table id="recentTable">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Method</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPORT / EXPORT / SETTINGS MODALS -->
+  <div id="importModal" class="modal">
+    <div class="modal-content modal-small">
+      <div class="card-header" style="background:#fff;">
+        <div class="card-title">Import data (CSV)</div>
+        <button id="closeImport" class="close-button">&times;</button>
+      </div>
+      <div class="modal-pad">
+        <p style="color:var(--text-muted);">Upload a CSV with headers like: type,amount,date,desc,category,method</p>
+        <input type="file" id="importFile" accept=".csv" />
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button id="processImportBtn" class="btn-primary">Process</button>
+          <button id="closeImportBtn" class="btn-outline closeModal" data-modal-id="importModal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL (placeholder, other settings exist in main app) -->
+  <div id="settingsModal" class="modal">
+    <div class="modal-content modal-small">
+      <div class="card-header">
+        <div class="card-title">Settings</div>
+        <button id="closeSettings" class="close-button">&times;</button>
+      </div>
+      <div class="modal-pad">
+        <p style="color:var(--text-muted);">General settings and backup options.</p>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button id="resetBtn" class="btn-danger">Reset all data</button>
+          <button id="closeSettingsBtn" class="btn-outline closeModal" data-modal-id="settingsModal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CALCULATOR (draggable) -->
+  <div id="calculator" style="display:none;">
+    <div id="calc-header">Calculator <button id="calc-close-btn" style="background:transparent; border:none; color:#ff6b6b; font-weight:700;">×</button></div>
+    <div id="calc-display">0</div>
+    <div id="calc-preview">Enter an expression…</div>
+    <div id="calc-buttons">
+      <button class="calc-clear">AC</button>
+      <button>±</button>
+      <button>%</button>
+      <button class="calc-operator">÷</button>
+
+      <button>7</button>
+      <button>8</button>
+      <button>9</button>
+      <button class="calc-operator">×</button>
+
+      <button>4</button>
+      <button>5</button>
+      <button>6</button>
+      <button class="calc-operator">−</button>
+
+      <button>1</button>
+      <button>2</button>
+      <button>3</button>
+      <button class="calc-operator">+</button>
+
+      <button class="calc-zero">0</button>
+      <button>.</button>
+      <button class="calc-equals">=</button>
+    </div>
+  </div>
+
+  <!-- END OF BODY CONTENT -->
+
+  <!-- FULL SCRIPT: data model, helpers, renderers, ticker, integration -->
+  <script>
+  /*************************************************************************
+   * MoneyMirror v5.0.8 — Remaining JS
+   * This script contains:
+   * - Data model and persistence
+   * - CRUD for entries
+   * - Import parsing
+   * - Recent entries rendering
+   * - Sample data loader
+   * - Calculator handlers and draggable helper
+   * - Market ticker functions (merged from Part 3)
+   * - Integration glue (merged from Part 4)
+   *************************************************************************/
+
+  // ---------- Basic data model & defaults ----------
+  let data = JSON.parse(localStorage.getItem('mm_data_v1') || '[]');
+  let settings = JSON.parse(localStorage.getItem('mm_settings_v1') || '{}');
+  settings.ccLimit = settings.ccLimit || 200000;
+  settings.trackedMarkets = settings.trackedMarkets || [];
+  let methodNames = {
+    'cash': 'Cash',
+    'salary_acct': 'Salary Account',
+    'savings_acct': 'Savings Account',
+    'digital_wallet': 'Digital Wallet',
+    'credit_card': 'Credit Card',
+    'credit_card_payment': 'Credit Card Payment'
+  };
+  const CANONICAL_METHODS = {...methodNames};
+  let incomeSources = ['Salary (Primary)', 'Freelance Income', 'Investment Income'];
+
+  // Utility: unique id
+  function uid() {
+    return 'id_' + Math.random().toString(36).slice(2, 9);
+  }
+
+  // Format currency (INR default)
+  function fmt(n) {
+    if (n === undefined || n === null) return '₹0';
+    const num = Number(n);
+    return '₹' + num.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  }
+
+  // Save all to localStorage
+  function saveAll() {
+    localStorage.setItem('mm_data_v1', JSON.stringify(data));
+    localStorage.setItem('mm_settings_v1', JSON.stringify(settings));
+  }
+
+  // ---------- CRUD: Add / Edit / Delete ----------
+  function clearEntryForm() {
+    document.getElementById('type').value = 'expense';
+    document.getElementById('amount').value = '';
+    document.getElementById('date').value = new Date().toISOString().slice(0,10);
+    document.getElementById('desc').value = '';
+    document.getElementById('category').value = '';
+    document.getElementById('method').value = '';
+    document.getElementById('incomeSource').value = '';
+    document.getElementById('openingType').value = 'Cash';
+    document.getElementById('openingGroup') && (document.getElementById('openingGroup').value = '');
+    toggleDynamicFields();
+  }
+
+  function saveEntry() {
+    const type = document.getElementById('type').value;
+    const amount = Number(document.getElementById('amount').value || 0);
+    const date = document.getElementById('date').value || new Date().toISOString().slice(0,10);
+    const desc = document.getElementById('desc').value || '';
+    const category = document.getElementById('category').value || 'Misc';
+    const method = document.getElementById('method').value || 'cash';
+    const incomeSource = document.getElementById('incomeSource').value || '';
+    const investmentGroup = document.getElementById('invGroup') ? document.getElementById('invGroup').value : '';
+    const investmentSub = document.getElementById('invSub') ? document.getElementById('invSub').value : '';
+    const insuranceType = document.getElementById('insType') ? document.getElementById('insType').value : '';
+    const insuranceFor = document.getElementById('insFor') ? document.getElementById('insFor').value : '';
+    const openingType = document.getElementById('openingType') ? document.getElementById('openingType').value : '';
+
+    if (!amount || amount <= 0) return alert('Please enter a valid amount.');
+    if (!desc) return alert('Please enter a description.');
+
+    const entry = {
+      id: uid(),
+      type,
+      amount,
+      date,
+      desc,
+      category,
+      method,
+      incomeSource,
+      investmentGroup,
+      investmentSub,
+      insuranceType,
+      insuranceFor,
+      openingType
+    };
+    data.push(entry);
+    saveAll();
+    renderAll();
+    clearEntryForm();
+  }
+
+  function loadEdit(id) {
+    const e = data.find(x => x.id === id);
+    if (!e) return alert('Entry not found.');
+    document.getElementById('type').value = e.type;
+    document.getElementById('amount').value = e.amount;
+    document.getElementById('date').value = e.date;
+    document.getElementById('desc').value = e.desc;
+    document.getElementById('category').value = e.category || '';
+    document.getElementById('method').value = e.method || '';
+    document.getElementById('incomeSource').value = e.incomeSource || '';
+    document.getElementById('invGroup') && (document.getElementById('invGroup').value = e.investmentGroup || '');
+    document.getElementById('invSub') && (document.getElementById('invSub').value = e.investmentSub || '');
+    toggleDynamicFields();
+    // For simplicity, editing will delete original and user can save new entry
+    if (confirm('Load entry into form for editing? The original entry will be removed.')) {
+      deleteEntry(id, false);
+    }
+  }
+
+  function deleteEntry(id, confirmPrompt = true) {
+    if (confirmPrompt && !confirm('Delete this entry?')) return;
+    data = data.filter(x => x.id !== id);
     saveAll();
     renderAll();
   }
-}
 
-function addMethod() {
-  const input = document.getElementById('newMethod');
-  const name = input.value.trim();
-  if (name) {
-    const key = toKey(name);
-    if (!methodNames[key]) {
-      methodNames[key] = name;
-      input.value = '';
+  // ---------- Import CSV ----------
+  function processImportedData() {
+    const fileInput = document.getElementById('importFile');
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) return alert('Please select a CSV file.');
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const text = e.target.result;
+      const importedData = parseCSV(text);
+      if (!importedData || importedData.length === 0) return alert('No valid data found.');
+      let newEntries = 0;
+      importedData.forEach(item => {
+          const entry = {
+              id: uid(),
+              type: item.type ? item.type.toLowerCase().trim() : 'expense',
+              amount: Number(item.amount),
+              date: item.date || new Date().toISOString().slice(0, 10),
+              desc: item.desc || item.description || '',
+              category: item.category || 'Misc',
+              method: item.method ? item.method.toLowerCase().trim() : 'cash',
+              incomeSource: item.income_source || item.incomeSource || '',
+              investmentGroup: item.investment_group || item.investmentGroup || '',
+              investmentSub: item.investment_sub || item.investmentSub || '',
+              insuranceType: item.insurance_type || item.insuranceType || '',
+              insuranceFor: item.insurance_for || item.insuranceFor || '',
+          };
+          if (entry.amount > 0 && entry.desc) {
+              data.push(entry);
+              newEntries++;
+          }
+      });
       saveAll();
       renderAll();
-    } else {
-      alert('Method already exists.');
-    }
+      document.getElementById('importModal').classList.remove('open');
+      alert(`Successfully imported ${newEntries} new entries.`);
+    };
+    reader.readAsText(file);
   }
-}
 
-function deleteIncome(source) {
-  if (confirm(`Remove income source "${source}"?`)) {
-    incomeSources = incomeSources.filter(s => s !== source);
-    saveAll();
-    renderAll();
-  }
-}
-
-function addIncome() {
-  const input = document.getElementById('newIncome');
-  const source = input.value.trim();
-  if (source && !incomeSources.includes(source)) {
-    incomeSources.push(source);
-    input.value = '';
-    saveAll();
-    renderAll();
-  } else if (source) {
-    alert('Income source already exists.');
-  }
-}
-
-function convertToCSV(data) {
-  const headers = ['id', 'type', 'amount', 'date', 'desc', 'category', 'method', 'incomeSource', 'investmentGroup', 'investmentSub', 'insuranceType', 'insuranceFor'];
-  const rows = data.map(obj => headers.map(header => {
-    let value = obj[header] ?? '';
-    // Handle commas and quotes in string values
-    if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
-      return `"${value.replace(/"/g, '""')}"`;
-    }
-    return value;
-  }).join(','));
-  const csvContent = [headers.join(','), ...rows].join('\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  if (link.download !== undefined) {
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `MoneyMirror_Export_${new Date().toISOString().slice(0, 10)}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-}
-
-document.getElementById('csvFile').addEventListener('change', importData);
-
-function processImportedData() {
-  const fileInput = document.getElementById('csvFile');
-  if (fileInput.files.length === 0) return alert('Please select a file first.');
-
-  const file = fileInput.files[0];
-  const reader = new FileReader();
-
-  reader.onload = function(e) {
-    const csvText = e.target.result;
-    const importedEntries = parseCSV(csvText);
-    let newEntries = 0;
-    let errors = 0;
-
-    importedEntries.forEach(entry => {
-      // Basic validation: must have amount, date, and type
-      if (entry.amount && entry.date && entry.type) {
-        // Check for existing ID to prevent duplicates if importing a previous export
-        if (!data.some(d => d.id === entry.id)) {
-          // Clean up amounts and dates
-          entry.amount = Number(entry.amount);
-          entry.date = new Date(entry.date).toISOString().slice(0, 10);
-          submitForm(entry, true); // Use submitForm in import mode
-          newEntries++;
-        }
-      } else {
-        errors++;
+  function parseCSV(csvText) {
+      const lines = csvText.split('\n').filter(line => line.trim() !== '');
+      if (lines.length < 2) return [];
+      const headerLine = lines[0];
+      const headers = headerLine.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g).map(h => h.replace(/"/g, '').toLowerCase().trim());
+      const dataRows = [];
+      for (let i = 1; i < lines.length; i++) {
+          const values = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+          if (!values || values.length !== headers.length) continue;
+          const entry = {};
+          for (let j = 0; j < headers.length; j++) {
+              let value = values[j] ? values[j].replace(/^"|"$/g, '').replace(/""/g, '"') : '';
+              entry[headers[j]] = value;
+          }
+          dataRows.push(entry);
       }
-    });
+      return dataRows;
+  }
 
-    saveAll();
-    renderAll();
-    document.getElementById('importModal').classList.remove('open');
-    alert(`Successfully imported ${newEntries} new entries. ${errors > 0 ? `(${errors} entries skipped due to missing required fields.)` : ''}`);
-  };
+  // ---------- Helper badges ----------
+  function getBadge(entry) {
+    if (entry.type === 'income') return '<span class="badge badge-income">Income</span>';
+    if (entry.type === 'opening_balance') return '<span class="badge badge-opening">Opening</span>';
+    if (entry.category === 'Investments') return '<span class="badge badge-inv">Invest</span>';
+    if (entry.category === 'Insurance') return '<span class="badge badge-ins">Insure</span>';
+    if (entry.category === 'Credit Card Payment') return '<span class="badge badge-cc">CC Pay</span>';
+    return '<span class="badge badge-expense">Expense</span>';
+  }
 
-  reader.readAsText(file);
-}
+  // ---------- Recent entries render ----------
+  function renderRecentEntries() {
+    try {
+        const tbody = document.querySelector('#recentTable tbody');
+        if (!tbody) return;
 
-function parseCSV(csvText) {
-  const lines = csvText.split('\n').filter(line => line.trim() !== '');
-  if (lines.length < 2) return [];
+        const searchEl = document.getElementById('recentSearch');
+        const sortEl = document.getElementById('recentSort');
+        const catEl = document.getElementById('recentCategory');
+        const limitEl = document.getElementById('entryLimit');
 
-  // Parse Header (handles quoted headers)
-  const headerLine = lines[0];
-  const headers = headerLine.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g).map(h => h.replace(/"/g, '').toLowerCase().trim());
+        const searchText = searchEl ? searchEl.value.toLowerCase() : '';
+        const sortMode = sortEl ? sortEl.value : 'dateDesc';
+        const categoryFilter = catEl ? catEl.value : '';
+        const limit = limitEl && limitEl.value !== 'all' ? Number(limitEl.value) : data.length;
 
-  const dataRows = [];
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-    // Regex to split CSV, correctly handling quoted fields
-    const values = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+        let filtered = data.filter(e => {
+            if (!e) return false;
+            const desc = (e.desc || '').toLowerCase();
+            const cat = (e.category || '').toLowerCase();
+            const amt = String(e.amount || 0);
 
-    if (!values || values.length !== headers.length) continue;
+            const matchesSearch = desc.includes(searchText) || cat.includes(searchText) || amt.includes(searchText);
+            const matchesCat = categoryFilter ? e.category === categoryFilter : true;
 
-    const entry = {};
-    for (let j = 0; j < headers.length; j++) {
-      let value = values[j] ? values[j].replace(/^"|"$/g, '').replace(/""/g, '"') : '';
-      entry[headers[j]] = value;
+            return matchesSearch && matchesCat;
+        });
+
+        filtered.sort((a, b) => {
+            const dateA = new Date(a.date || 0);
+            const dateB = new Date(b.date || 0);
+            if (sortMode === 'dateDesc') return dateB - dateA;
+            if (sortMode === 'dateAsc') return dateA - dateB;
+            if (sortMode === 'amtDesc') return b.amount - a.amount;
+            if (sortMode === 'amtAsc') return a.amount - b.amount;
+            return 0;
+        });
+
+        const slice = filtered.slice(0, limit);
+
+        if (slice.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--text-muted);">No transactions found.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = slice.map(e => {
+          const amountDisplay = e.type === 'income' || e.type === 'opening_balance'
+            ? `<span style="color:var(--success)">+${fmt(e.amount)}</span>`
+            : `<span style="color:var(--danger)">-${fmt(e.amount)}</span>`;
+
+          let methodDisplay = '';
+          if (e.type === 'opening_balance' && e.investmentGroup !== 'Cash') {
+              methodDisplay = e.investmentSub || e.investmentGroup;
+          } else if (e.type === 'expense' && e.category === 'Investments') {
+              methodDisplay = e.investmentSub || e.investmentGroup;
+          } else if (e.method === 'credit_card_payment') {
+              methodDisplay = 'N/A (Transfer)';
+          } else {
+              methodDisplay = methodNames[e.method] || e.method || '--';
+          }
+
+          let categoryDisplay = e.category === 'Investments' ? e.investmentSub :
+                                e.category === 'Insurance' ? `${e.insuranceType} (${e.insuranceFor})` :
+                                e.type === 'expense' ? e.category : '--';
+          return `
+            <tr>
+              <td>${getBadge(e)}</td>
+              <td>${e.date}</td>
+              <td style="font-weight:600; text-align:right">${amountDisplay}</td>
+              <td>${e.desc}</td>
+              <td>${categoryDisplay}</td>
+              <td>${methodDisplay}</td>
+              <td class="flex-row">
+                <button onclick="loadEdit('${e.id}')" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px" title="Edit">✎</button>
+                <button onclick="deleteEntry('${e.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:4px" title="Delete">×</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+    } catch (err) {
+        console.error("Error rendering table:", err);
     }
-    dataRows.push(entry);
-  }
-  return dataRows;
-}
-
-function loadSampleData() {
-  if (!confirm('This will load sample data and overwrite existing data. Continue?')) return;
-  if(!requireSignedIn()) return;
-
-  const sampleData = [];
-  const now = new Date();
-  const today = now.toISOString().slice(0, 10);
-  const getRandDate = (monthsAgo) => {
-    const d = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1);
-    d.setDate(Math.floor(Math.random() * 28) + 1);
-    return d.toISOString().slice(0, 10);
-  };
-  const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-
-  // 1. Opening Balances (Current Cash & Investments)
-  sampleData.push({ id: uid(), type: 'opening_balance', amount: 50000, date: today, desc: 'Initial Cash in Hand', category: 'N/A', method: 'cash', incomeSource: '', investmentGroup: 'Cash', investmentSub: 'Cash in Hand', insuranceType: '', insuranceFor: '' });
-  sampleData.push({ id: uid(), type: 'opening_balance', amount: 120000, date: today, desc: 'Initial Bank Account Balance', category: 'N/A', method: 'salary_acct', incomeSource: '', investmentGroup: 'Cash', investmentSub: 'Bank Account (Salary)', insuranceType: '', insuranceFor: '' });
-  sampleData.push({ id: uid(), type: 'opening_balance', amount: 250000, date: today, desc: 'Initial Mutual Fund Holdings', category: 'N/A', method: 'equity_funds', incomeSource: '', investmentGroup: 'Mutual Funds', investmentSub: 'Equity Funds', insuranceType: '', insuranceFor: '' });
-  sampleData.push({ id: uid(), type: 'opening_balance', amount: 150000, date: today, desc: 'Initial Large Cap Stock Holding', category: 'N/A', method: 'large_cap', incomeSource: '', investmentGroup: 'Equity (Stocks)', investmentSub: 'Large Cap', insuranceType: '', insuranceFor: '' });
-
-  // 2. Transactions for the last 6 months
-  for(let i = 0; i < 6; i++) {
-    const d = getRandDate(i);
-    // Income
-    sampleData.push({ id: uid(), type: 'income', amount: rand(80000, 120000), date: d, desc: 'Monthly Salary Credit', category: 'N/A', method: 'salary_acct', incomeSource: 'Salary', investmentGroup: '', investmentSub: '', insuranceType: '', insuranceFor: '' });
-    if(rand(1, 10) > 5) {
-      sampleData.push({ id: uid(), type: 'income', amount: rand(10000, 30000), date: d, desc: 'Freelance Project Payment', category: 'N/A', method: 'savings_acct', incomeSource: 'Freelance', investmentGroup: '', investmentSub: '', insuranceType: '', insuranceFor: '' });
-    }
-    // Fixed Expenses
-    sampleData.push({ id: uid(), type: 'expense', amount: 30000, date: d, desc: 'Rent Payment', category: 'Rent/Mortgage', method: 'salary_acct', incomeSource: '', investmentGroup: '', investmentSub: '', insuranceType: '', insuranceFor: '' });
-    sampleData.push({ id: uid(), type: 'expense', amount: 5000, date: d, desc: 'Electricity and Internet Bills', category: 'Utilities', method: 'savings_acct', incomeSource: '', investmentGroup: '', investmentSub: '', insuranceType: '', insuranceFor: '' });
-
-    // Variable Expenses
-    sampleData.push({ id: uid(), type: 'expense', amount: rand(8000, 15000), date: d, desc: 'Monthly Groceries', category: 'Groceries', method: 'credit_card', incomeSource: '', investmentGroup: '', investmentSub: '', insuranceType: '', insuranceFor: '' });
-    sampleData.push({ id: uid(), type: 'expense', amount: rand(3000, 8000), date: d, desc: 'Dining Out/Food Delivery', category: 'Food', method: 'cash', incomeSource: '', investmentGroup: '', investmentSub: '', insuranceType: '', insuranceFor: '' });
-
-    // Investments
-    sampleData.push({ id: uid(), type: 'expense', amount: 10000, date: d, desc: 'Monthly SIP - Equity Fund', category: 'Investments', method: 'equity_funds', incomeSource: '', investmentGroup: 'Mutual Funds', investmentSub: 'Equity Funds', insuranceType: '', insuranceFor: '' });
-    sampleData.push({ id: uid(), type: 'expense', amount: 5000, date: d, desc: 'Monthly PPF contribution', category: 'Investments', method: 'ppf', incomeSource: '', investmentGroup: 'Fixed Income / Savings Schemes', investmentSub: 'PPF', insuranceType: '', insuranceFor: '' });
-
-    // CC Payment
-    sampleData.push({ id: uid(), type: 'expense', amount: rand(15000, 35000), date: d, desc: 'Credit Card Bill Payment', category: 'Credit Card Payment', method: 'credit_card_payment', incomeSource: '', investmentGroup: '', investmentSub: '', insuranceType: '', insuranceFor: '' });
   }
 
-  data = sampleData;
-  saveAll();
-  renderAll();
-  alert('Sample data loaded successfully!');
-}
-
-// --- CALCULATOR LOGIC ---
-
-let displayValue = '0';
-let previewValue = '';
-let pendingOperation = null;
-let calculator = document.getElementById('calculator');
-
-function handleCalculatorInput(event) {
-    if (!calculator.style.display || calculator.style.display === 'none') return; // Only process if visible
-
-    const button = event.target.closest('button');
-    if (!button) return;
-
-    const input = button.textContent;
-    const display = document.getElementById('calc-display');
-    const preview = document.getElementById('calc-preview');
-
-    if (input === 'C') {
-        displayValue = '0';
-        previewValue = '';
-        pendingOperation = null;
-    } else if (input === '=') {
-        try {
-            // Evaluate the entire expression in the preview including the current display value
-            const finalExpression = previewValue + displayValue;
-            const result = eval(finalExpression);
-            displayValue = result.toString();
-            previewValue = finalExpression + ' = ';
-        } catch (e) {
-            displayValue = 'Error';
-            previewValue = '';
-        }
-    } else if (['+', '-', '*', '/', '(', ')'].includes(input)) {
-        if (displayValue !== '0' && displayValue !== 'Error') {
-            previewValue += displayValue;
-        }
-
-        // Prevent double operators
-        if (['+', '-', '*', '/'].includes(input) && ['+', '-', '*', '/'].includes(previewValue.slice(-1))) {
-            previewValue = previewValue.slice(0, -1) + input;
-        } else {
-            previewValue += input;
-        }
-        displayValue = '0';
-    } else if (input === '.') {
-        if (!displayValue.includes('.')) {
-            displayValue += '.';
-        }
-    } else {
-        if (displayValue === '0' || displayValue === 'Error') {
-            displayValue = input;
-        } else {
-            displayValue += input;
-        }
-    }
-
-    display.textContent = displayValue;
-    preview.textContent = previewValue || '0';
-}
-
-function makeDraggable(elmnt) {
-  let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-  if (document.getElementById(elmnt.id + "-header")) {
-    document.getElementById(elmnt.id + "-header").onmousedown = dragMouseDown;
-    document.getElementById(elmnt.id + "-header").ontouchstart = dragTouchStart;
-  } else {
-    elmnt.onmousedown = dragMouseDown;
-    elmnt.ontouchstart = dragTouchStart;
-  }
-
-  function dragMouseDown(e) {
-    e = e || window.event;
-    e.preventDefault();
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    document.onmouseup = closeDragElement;
-    document.onmousemove = elementDrag;
-  }
-
-  function elementDrag(e) {
-    e = e || window.event;
-    e.preventDefault();
-    pos1 = pos3 - e.clientX;
-    pos2 = pos4 - e.clientY;
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-    elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
-  }
-
-  function closeDragElement() {
-    document.onmouseup = null;
-    document.onmousemove = null;
-  }
-
-  function dragTouchStart(e) {
-      const touch = e.touches[0];
-      pos3 = touch.clientX;
-      pos4 = touch.clientY;
-      document.ontouchend = closeDragElement;
-      document.ontouchmove = elementTouchDrag;
-  }
-
-  function elementTouchDrag(e) {
-      e.preventDefault();
-      const touch = e.touches[0];
-      pos1 = pos3 - touch.clientX;
-      pos2 = pos4 - touch.clientY;
-      pos3 = touch.clientX;
-      pos4 = touch.clientY;
-      elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-      elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const d = new Date();
-  document.getElementById('currentDate').innerText = d.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  formEls.date.value = d.toISOString().slice(0, 10);
-  clearForm(); // Initialize form with today's date and default values
-
-  // Menu Toggle
-  const sidebar = document.getElementById('mainSidebar');
-  document.getElementById('mobileMenuBtn').addEventListener('click', () => {
-    sidebar.classList.toggle('mobile-open');
-  });
-  document.querySelectorAll('.nav-item').forEach(item => { item.addEventListener('click', () => sidebar.classList.remove('mobile-open')); });
-
-  // Modal Toggles
-  document.getElementById('navSettings').addEventListener('click', () => {
-    document.getElementById('settingsModal').classList.add('open');
-  });
-  document.getElementById('closeSettings').addEventListener('click', () => {
-    document.getElementById('settingsModal').classList.remove('open');
-  });
-
-  document.getElementById('navAnalytics').addEventListener('click', () => {
-    document.getElementById('analyticsModal').classList.add('open');
-    populateAnalyticsDropdowns();
-    renderAdvancedCharts();
-  });
-  document.getElementById('closeAnalytics').addEventListener('click', () => {
-    document.getElementById('analyticsModal').classList.remove('open');
-  });
-
-  document.getElementById('viewCategoriesBtn').addEventListener('click', () => {
-      document.getElementById('analyticsModal').classList.add('open');
-      document.getElementById('analyticsModal').scrollIntoView({ behavior: 'smooth' });
-      populateAnalyticsDropdowns();
-      renderAdvancedCharts();
-  });
-
-  document.getElementById('importDataBtn').addEventListener('click', () => {
-    document.getElementById('importModal').classList.add('open');
-  });
-  document.getElementById('closeImport').addEventListener('click', () => {
-    document.getElementById('importModal').classList.remove('open');
-  });
-
-  // Calculator Toggles and Drag
-  document.getElementById('calc-toggle').addEventListener('click', () => {
-    const calc = document.getElementById('calculator');
-    calc.style.display = calc.style.display === 'none' || !calc.style.display ? 'flex' : 'none';
-  });
-  document.getElementById('calc-close-btn').addEventListener('click', (e) => {
-    document.getElementById('calculator').style.display = 'none';
-    e.stopPropagation();
-  });
-  makeDraggable(document.getElementById('calculator'));
-
-  // Utility Buttons
-  document.getElementById('sampleBtn').addEventListener('click', loadSampleData);
-  document.getElementById('exportBtn').addEventListener('click', () => convertToCSV(data));
-  document.getElementById('processImportBtn').addEventListener('click', processImportedData);
-  document.getElementById('resetBtn').addEventListener('click', () => {
-    if (confirm('WARNING: This will erase ALL your data (local and Firestore). Are you absolutely sure?')) {
-      localStorage.clear();
+  // ---------- Sample Data ----------
+  function loadSampleData() {
+      if (!confirm("Overwrite data with sample?")) return;
+      function randBetween(min, max) { return Math.floor(Math.random() * (max - min + 1) + min); }
+      function pick(arr) { return arr[randBetween(0, arr.length - 1)]; }
+      function dateInLastMonths(range) {
+          const today = new Date();
+          const startMonth = range[0];
+          const endMonth = range.length > 1 ? range[1] : startMonth;
+          const monthDiff = randBetween(startMonth, endMonth);
+          const targetDate = new Date(today);
+          targetDate.setMonth(today.getMonth() - monthDiff);
+          const maxDays = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0).getDate();
+          targetDate.setDate(randBetween(1, maxDays));
+          return targetDate.toISOString().slice(0,10);
+      }
       data = [];
       methodNames = {...CANONICAL_METHODS};
-      incomeSources = ['Salary', 'Freelance', 'Interest'];
-      settings = { ccLimit: DEFAULT_CC_LIMIT };
+      incomeSources = ['Salary (Primary)', 'Freelance Income', 'Investment Income'];
+      settings.ccLimit = 200000;
+      settings.trackedMarkets = settings.trackedMarkets || [
+        { symbol: 'SENSEX', name: 'Sensex', price: 72000.00, change: 0.85 },
+        { symbol: 'NASDAQ', name: 'Nasdaq', price: 16000.00, change: -1.23 },
+        { symbol: 'XAUUSD', name: 'Gold/USD', price: 2350.00, change: 0.15 },
+        { symbol: 'XAGUSD', name: 'Silver/USD', price: 28.50, change: -0.55 },
+        { symbol: 'BTCUSD', name: 'Bitcoin', price: 68000.00, change: 2.10 }
+      ];
+
+      // Opening cash balances
+      data.push({id:uid(), type:'opening_balance', amount: 50000, date: dateInLastMonths([6,6]), desc:'Initial Salary Account Balance', investmentGroup:'Cash', investmentSub:'Bank Account (Salary)', method:'salary_acct', category:'N/A'});
+      data.push({id:uid(), type:'opening_balance', amount: 20000, date: dateInLastMonths([5,6]), desc:'Initial Savings Account Balance', investmentGroup:'Cash', investmentSub:'Bank Account (Savings)', method:'savings_acct', category:'N/A'});
+      data.push({id:uid(), type:'opening_balance', amount: 5000, date: dateInLastMonths([5,6]), desc:'Initial Physical Cash', investmentGroup:'Cash', investmentSub:'Cash', method:'cash', category:'N/A'});
+      // Opening investments
+      data.push({id:uid(), type:'opening_balance', amount: 35000, date: dateInLastMonths([6,6]), desc:'Opening — Equity MF (Large Cap)', investmentGroup:'Mutual Funds', investmentSub:'Equity MF - Large Cap/Mid Cap/Small Cap', method:'', category:'N/A'});
+      data.push({id:uid(), type:'opening_balance', amount: 18000, date: dateInLastMonths([6,6]), desc:'Opening — NPS Tier 1', investmentGroup:'Retirement Funds', investmentSub:'NPS Tier 1/Tier 2', method:'', category:'N/A'});
+      data.push({id:uid(), type:'opening_balance', amount: 12000, date: dateInLastMonths([6,6]), desc:'Opening — Gold ETF', investmentGroup:'ETFs', investmentSub:'Gold ETF', method:'', category:'N/A'});
+      data.push({id:uid(), type:'opening_balance', amount: 25000, date: dateInLastMonths([6,6]), desc:'Opening — Corporate Bonds', investmentGroup:'Bonds & Debt Instruments', investmentSub:'Corporate Bonds', method:'', category:'N/A'});
+      data.push({id:uid(), type:'opening_balance', amount: 8000, date: dateInLastMonths([6,6]), desc:'Opening — Bitcoin (BTC)', investmentGroup:'Crypto & Digital Assets', investmentSub:'Bitcoin (BTC)', method:'', category:'N/A'});
+
+      // Monthly incomes
+      for (let m = 6; m >= 0; m--) {
+        const salaryDate = dateInLastMonths([m,m]);
+        data.push({id:uid(), type:'income', amount: 120000, date: salaryDate, desc:`Salary credit (${salaryDate})`, category:'N/A', method:'salary_acct', incomeSource:'Salary (Primary)'});
+        if (Math.random() > 0.6) {
+          const freeDate = dateInLastMonths([m,m]);
+          data.push({id:uid(), type:'income', amount: randBetween(8000, 18000), date: freeDate, desc:`Freelance project (${freeDate})`, category:'N/A', method:'salary_acct', incomeSource:'Freelance Income'});
+        }
+      }
+      const expenseCategories = ['Food','Rent','Utilities','Shopping','Entertainment','Travel','Health','Misc'];
+      const methodsPool = ['salary_acct','savings_acct','cash','digital_wallet','credit_card'];
+      for (let i = 0; i < 90; i++) {
+        const dt = dateInLastMonths([randBetween(0, 6), randBetween(0, 6)]);
+        const cat = pick(expenseCategories);
+        const amt = randBetween(300, 9000);
+        const method = pick(methodsPool);
+        data.push({ id: uid(), type: 'expense', amount: amt, date: dt, desc: `${cat} expense`, category: cat, method });
+        if (Math.random() > 0.75) {
+          const invGroup = pick(Object.keys({ 'Mutual Funds':{}, 'ETFs':{}, 'Bonds & Debt Instruments':{}, 'Crypto & Digital Assets':{} }));
+          const invSub = 'Sample Sub';
+          data.push({ id: uid(), type: 'expense', amount: randBetween(2000, 15000), date: dt, desc: `Investment — ${invSub}`, category: 'Investments', method: pick(['salary_acct','savings_acct']), investmentGroup: invGroup, investmentSub: invSub });
+        }
+        if (Math.random() > 0.85) {
+          data.push({ id: uid(), type: 'expense', amount: randBetween(1500, 6000), date: dt, desc: 'Insurance premium', category: 'Insurance', method: pick(['salary_acct','savings_acct']), insuranceType: pick(['Health','Life']), insuranceFor: pick(['Self','Family']) });
+        }
+      }
+      for (let i = 0; i < 20; i++) {
+        const dt = dateInLastMonths([randBetween(0, 6), randBetween(0, 6)]);
+        data.push({ id: uid(), type: 'expense', amount: randBetween(500, 12000), date: dt, desc: 'Credit card spend', category: 'Shopping', method: 'credit_card' });
+        if (Math.random() > 0.7) {
+          data.push({ id: uid(), type: 'expense', amount: randBetween(3000, 20000), date: dt, desc: 'Credit card payment', category: 'Credit Card Payment', method: 'credit_card_payment' });
+        }
+      }
+      [
+        { group: 'Real Estate', sub: 'REITs (Real Estate Investment Trusts)', amount: 40000 },
+        { group: 'Mutual Funds', sub: 'Equity MF - ELSS (Tax Saving)', amount: 25000 },
+        { group: 'Fixed Income / Savings Schemes', sub: 'FD (Fixed Deposit)', amount: 60000 },
+      ].forEach(item => {
+        const dt = dateInLastMonths([randBetween(1,5), randBetween(1,5)]);
+        data.push({ id: uid(), type: 'expense', amount: item.amount, date: dt, desc: `One-off Investment — ${item.sub}`, category: 'Investments', method: pick(['salary_acct','savings_acct']), investmentGroup: item.group, investmentSub: item.sub });
+      });
       saveAll();
-      window.location.reload();
-    }
-  });
-
-  document.getElementById('toggleInvBreakdown').addEventListener('click', () => {
-    const panel = document.getElementById('invBreakdownPanel');
-    panel.classList.toggle('hidden');
-    if (!panel.classList.contains('hidden')) {
-        renderInvestmentBreakdown();
-    }
-  });
-
-  document.getElementById('invBucketFilter').addEventListener('change', renderInvestmentBreakdown);
-  document.getElementById('invViewMode').addEventListener('change', renderInvestmentBreakdown);
-  document.getElementById('invDateRange').addEventListener('change', renderInvestmentBreakdown);
-
-  // Calculator buttons
-  document.querySelectorAll('#calc-buttons button').forEach(button => {
-    button.addEventListener('click', handleCalculatorInput);
-  });
-
-  // Expense Multi-Select Setup
-  setupExpenseMultiSelect();
-
-  // Investment Group Dropdowns Setup (needed for form and analytics)
-  const allInvestmentGroups = Object.keys(INVESTMENT_STRUCTURE);
-  document.getElementById('invBucketFilter').innerHTML = '<option value="">All Buckets</option>' + allInvestmentGroups.map(group => `<option value="${group}">${group}</option>`).join('');
-
-  // Initial Auth Check
-  document.getElementById('loginBtn').addEventListener('click', signInWithGoogle);
-  document.getElementById('guestBtn').addEventListener('click', startGuestMode);
-  document.getElementById('logoutBtn').addEventListener('click', signOutUser);
-
-  if (auth) {
-    auth.onAuthStateChanged(user => {
-      if (user) onUserSignedIn(user);
-      else { resetToAuthGate(); }
-    });
+      renderAll();
+      document.getElementById('importModal').classList.remove('open');
+      alert('Sample data loaded.');
   }
-});
-</script>
-</body>
-</html>
+
+  // ---------- Calculator ----------
+  function handleCalculatorInput(e) {
+    const key = e.target.innerText;
+    const display = document.getElementById('calc-display');
+    const preview = document.getElementById('calc-preview');
+    if (!display) return;
+    if (key === 'AC') { display.textContent = '0'; preview.textContent = 'Enter an expression…'; return; }
+    if (key === '±' || key === '%') return;
+    if (key === '=') {
+      try {
+        const expr = display.textContent.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-');
+        const result = Function('"use strict";return ('+expr+')')();
+        display.textContent = String(result);
+        preview.textContent = fmt(Number(result));
+      } catch (err) { preview.textContent = 'Invalid expression'; }
+      return;
+    }
+    const mapped = key === '×' ? '*' : key === '÷' ? '/' : key === '−' ? '-' : key;
+    display.textContent = display.textContent === '0' ? mapped : display.textContent + mapped;
+    try {
+      const expr = display.textContent.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-');
+      const result = Function('"use strict";return ('+expr+')')();
+      preview.textContent = fmt(Number(result));
+    } catch (err) { preview.textContent = ''; }
+  }
+
+  // Attach calculator button handlers
+  document.addEventListener('click', (e) => {
+    if (!e.target) return;
+    if (e.target.closest && e.target.closest('#calc-buttons') && e.target.tagName === 'BUTTON') {
+      handleCalculatorInput(e);
+    }
+  });
+
+  // ---------- Draggable helper ----------
+  function dragElement(elmnt) {
+    if (!elmnt) return;
+    const header = document.getElementById(elmnt.id + "header") || document.getElementById('calc-header');
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    header.onmousedown = dragMouseDown;
+    header.ontouchstart = dragTouchStart;
+
+    function dragMouseDown(e) {
+      e = e || window.event;
+      e.preventDefault();
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+      document.onmouseup = closeDragElement;
+      document.onmousemove = elementDrag;
+    }
+
+    function elementDrag(e) {
+      e = e || window.event;
+      e.preventDefault();
+      pos1 = pos3 - e.clientX;
+      pos2 = pos4 - e.clientY;
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+      elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+      elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+    }
+
+    function closeDragElement() {
+      document.onmouseup = null;
+      document.onmousemove = null;
+    }
+
+    function dragTouchStart(e) {
+        const touch = e.touches[0];
+        pos3 = touch.clientX;
+        pos4 = touch.clientY;
+        document.ontouchend = closeDragElement;
+        document.ontouchmove = elementTouchDrag;
+    }
+
+    function elementTouchDrag(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        pos1 = pos3 - touch.clientX;
+        pos2 = pos4 - touch.clientY;
+        pos3 = touch.clientX;
+        pos4 = touch.clientY;
+        elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+        elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+    }
+  }
+
+  // ---------- Market Ticker (merged) ----------
+  const TICKER_SETTINGS_KEY = 'mm_ticker_settings_v1';
+  const defaultTickerSettings = {
+    trackedMajorMarkets: [
+      { symbol: 'NSEI', name: 'Nifty 50', enabled: true },
+      { symbol: 'SENSEX', name: 'Sensex', enabled: true },
+      { symbol: 'NASDAQ', name: 'NASDAQ Composite', enabled: true },
+      { symbol: 'SPX', name: 'S&P 500', enabled: false },
+      { symbol: 'DOWJ', name: 'Dow Jones', enabled: false },
+      { symbol: 'FTSE', name: 'FTSE 100', enabled: false },
+      { symbol: 'DAX', name: 'DAX', enabled: false },
+      { symbol: 'NIKKEI', name: 'Nikkei 225', enabled: false },
+      { symbol: 'HANGSENG', name: 'Hang Seng', enabled: false }
+    ],
+    trackedMetals: [
+      { metal: 'XAU', currency: 'INR', enabled: true },
+      { metal: 'XAG', currency: 'USD', enabled: false }
+    ],
+    lastSnapshot: null
+  };
+  let tickerSettings = (function loadTickerSettings() {
+    try {
+      const raw = localStorage.getItem(TICKER_SETTINGS_KEY);
+      if (!raw) {
+        localStorage.setItem(TICKER_SETTINGS_KEY, JSON.stringify(defaultTickerSettings));
+        return JSON.parse(JSON.stringify(defaultTickerSettings));
+      }
+      const parsed = JSON.parse(raw);
+      parsed.trackedMajorMarkets = parsed.trackedMajorMarkets || defaultTickerSettings.trackedMajorMarkets;
+      parsed.trackedMetals = parsed.trackedMetals || defaultTickerSettings.trackedMetals;
+      parsed.lastSnapshot = parsed.lastSnapshot || null;
+      return parsed;
+    } catch (e) {
+      console.warn('Ticker settings load failed, using defaults', e);
+      return JSON.parse(JSON.stringify(defaultTickerSettings));
+    }
+  })();
+
+  function saveTickerSettings() {
+    try {
+      localStorage.setItem(TICKER_SETTINGS_KEY, JSON.stringify(tickerSettings));
+    } catch (e) {
+      console.warn('Failed to save ticker settings', e);
+    }
+  }
+
+  function fetchMajorMarketPrice(market) {
+    const baseMap = {
+      'NSEI': 22000,
+      'SENSEX': 72000,
+      'NASDAQ': 16000,
+      'SPX': 5200,
+      'DOWJ': 36000,
+      'FTSE': 7600,
+      'DAX': 16000,
+      'NIKKEI': 36000,
+      'HANGSENG': 18000
+    };
+    const base = baseMap[market.symbol] || (Math.random() * 20000 + 2000);
+    const volatility = base * (0.002 + Math.random() * 0.01);
+    const changeAbs = (Math.random() - 0.5) * volatility;
+    const price = Math.max(1, base + changeAbs);
+    const changePct = ((price - base) / base) * 100;
+    return {
+      symbol: market.symbol,
+      name: market.name,
+      price: parseFloat(price.toFixed(price > 100 ? 2 : 4)),
+      change: parseFloat(changePct.toFixed(2))
+    };
+  }
+
+  function getSimulatedFxRate(currency) {
+    const map = {
+      'USD': 1,
+      'INR': 83.5,
+      'EUR': 0.92,
+      'GBP': 0.79,
+      'AED': 3.67,
+      'SGD': 1.35,
+      'AUD': 1.55
+    };
+    return map[currency] || 1;
+  }
+
+  function fetchMetalPrice(metalEntry) {
+    const baseUSD = { 'XAU': 2350.00, 'XAG': 28.50 };
+    const usd = baseUSD[metalEntry.metal] || 1000;
+    const volatility = usd * (0.001 + Math.random() * 0.01);
+    const priceUSD = Math.max(0.01, usd + (Math.random() - 0.5) * volatility);
+    const fx = getSimulatedFxRate(metalEntry.currency);
+    const priceLocal = priceUSD * fx;
+    const changePct = ((priceLocal - priceUSD * fx * (1 + (Math.random() - 0.5) * 0.002)) / (priceUSD * fx)) * 100;
+    return {
+      symbol: metalEntry.metal + '/' + metalEntry.currency,
+      name: (metalEntry.metal === 'XAU' ? 'Gold' : 'Silver') + ' / ' + metalEntry.currency,
+      price: parseFloat(priceLocal.toFixed(metalEntry.metal === 'XAG' ? 2 : 2)),
+      change: parseFloat(changePct.toFixed(2)),
+      currency: metalEntry.currency
+    };
+  }
+
+  function updateTickerClock(snapshotTime = null) {
+    const timeEl = document.getElementById('tickerClockTime');
+    const tzEl = document.getElementById('tickerClockTZ');
+    const now = snapshotTime ? new Date(snapshotTime) : new Date();
+    if (timeEl) {
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+      timeEl.textContent = `${hh}:${mm}:${ss}`;
+    }
+    if (tzEl) {
+      const isoDate = now.toISOString().replace('T', ' ').split('.')[0];
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local';
+      tzEl.textContent = `Snapshot: ${isoDate} (${tz})`;
+    }
+    tickerSettings.lastSnapshot = (snapshotTime || new Date()).toISOString();
+    saveTickerSettings();
+  }
+
+  let tickerIntervalHandle = null;
+  let tickerRefreshMs = 60000;
+
+  function renderMarketTicker() {
+    const wrap = document.getElementById('tickerWrap');
+    if (!wrap) return;
+
+    const majors = (tickerSettings.trackedMajorMarkets || []).filter(m => m.enabled);
+    const metals = (tickerSettings.trackedMetals || []).filter(m => m.enabled);
+
+    const majorData = majors.map(m => fetchMajorMarketPrice(m));
+    const metalData = metals.map(m => fetchMetalPrice(m));
+
+    let html = '';
+    majorData.forEach(item => {
+      const sign = item.change >= 0 ? '▲' : '▼';
+      const changeClass = item.change >= 0 ? 'change-up' : 'change-down';
+      const priceDisplay = (item.price).toLocaleString(undefined, { minimumFractionDigits: item.price < 100 ? 2 : 0, maximumFractionDigits: 2 });
+      html += `
+        <div class="ticker-item" role="listitem" aria-label="${item.name} ${priceDisplay}">
+          <span class="symbol">${item.name}</span>
+          <span class="price">${priceDisplay}</span>
+          <span class="${changeClass}">(${sign} ${Math.abs(item.change).toFixed(2)}%)</span>
+        </div>
+      `;
+    });
+
+    metalData.forEach(item => {
+      const sign = item.change >= 0 ? '▲' : '▼';
+      const changeClass = item.change >= 0 ? 'change-up' : 'change-down';
+      const priceDisplay = (item.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      html += `
+        <div class="ticker-item" role="listitem" aria-label="${item.name} ${priceDisplay}">
+          <span class="symbol">${item.name}</span>
+          <span class="price">${priceDisplay} ${item.currency}</span>
+          <span class="${changeClass}">(${sign} ${Math.abs(item.change).toFixed(2)}%)</span>
+        </div>
+      `;
+    });
+
+    wrap.innerHTML = html + html;
+    updateTickerClock(new Date());
+
+    if (tickerIntervalHandle) clearInterval(tickerIntervalHandle);
+    tickerIntervalHandle = setInterval(() => {
+      renderMarketTicker();
+    }, tickerRefreshMs);
+  }
+
+  function applyMarketFiltersFromControls() {
+    const majorSelect = document.getElementById('marketSelectMajor');
+    const metalSelect = document.getElementById('metalSelect');
+    const metalCountrySelect = document.getElementById('metalCountrySelect');
+
+    const selectedMajor = majorSelect ? majorSelect.value : null;
+    if (selectedMajor) {
+      tickerSettings.trackedMajorMarkets = tickerSettings.trackedMajorMarkets.map(m => {
+        return { ...m, enabled: (m.symbol === selectedMajor) || m.enabled };
+      });
+    }
+
+    const selectedMetal = metalSelect ? metalSelect.value : null;
+    const selectedCurrency = metalCountrySelect ? metalCountrySelect.value : null;
+    if (selectedMetal && selectedCurrency) {
+      const exists = tickerSettings.trackedMetals.find(m => m.metal === selectedMetal && m.currency === selectedCurrency);
+      if (!exists) {
+        tickerSettings.trackedMetals.push({ metal: selectedMetal, currency: selectedCurrency, enabled: true });
+      } else {
+        tickerSettings.trackedMetals = tickerSettings.trackedMetals.map(m => {
+          if (m.metal === selectedMetal && m.currency === selectedCurrency) return { ...m, enabled: true };
+          return m;
+        });
+      }
+    }
+
+    saveTickerSettings();
+    renderTrackedLists();
+    renderMarketTicker();
+  }
+
+  function renderTrackedLists() {
+    const majorList = document.getElementById('trackedMajorMarkets');
+    if (majorList) {
+      majorList.innerHTML = '';
+      tickerSettings.trackedMajorMarkets.forEach((m, idx) => {
+        const li = document.createElement('li');
+        li.style.display = 'flex';
+        li.style.justifyContent = 'space-between';
+        li.style.alignItems = 'center';
+        li.style.padding = '8px';
+        li.style.border = '1px solid var(--border)';
+        li.style.borderRadius = '8px';
+        li.innerHTML = `
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="checkbox" id="maj_chk_${idx}" ${m.enabled ? 'checked' : ''} />
+            <label for="maj_chk_${idx}" style="font-weight:600;">${m.name} (${m.symbol})</label>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-outline" data-idx="${idx}" onclick="editMajor(${idx})">Edit</button>
+            <button class="btn-danger" data-idx="${idx}" onclick="deleteMajor(${idx})">Delete</button>
+          </div>
+        `;
+        majorList.appendChild(li);
+        li.querySelector(`#maj_chk_${idx}`).addEventListener('change', (e) => {
+          tickerSettings.trackedMajorMarkets[idx].enabled = e.target.checked;
+          saveTickerSettings();
+        });
+      });
+    }
+
+    const metalList = document.getElementById('trackedMetals');
+    if (metalList) {
+      metalList.innerHTML = '';
+      tickerSettings.trackedMetals.forEach((m, idx) => {
+        const card = document.createElement('div');
+        card.style.display = 'flex';
+        card.style.alignItems = 'center';
+        card.style.justifyContent = 'space-between';
+        card.style.minWidth = '220px';
+        card.style.padding = '8px';
+        card.style.border = '1px solid var(--border)';
+        card.style.borderRadius = '8px';
+        card.innerHTML = `
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="checkbox" id="met_chk_${idx}" ${m.enabled ? 'checked' : ''} />
+            <div style="font-weight:600;">${m.metal === 'XAU' ? 'Gold' : 'Silver'} / ${m.currency}</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-outline" onclick="editMetal(${idx})">Edit</button>
+            <button class="btn-danger" onclick="deleteMetal(${idx})">Delete</button>
+          </div>
+        `;
+        metalList.appendChild(card);
+        card.querySelector(`#met_chk_${idx}`).addEventListener('change', (e) => {
+          tickerSettings.trackedMetals[idx].enabled = e.target.checked;
+          saveTickerSettings();
+        });
+      });
+    }
+  }
+
+  document.getElementById('addMajorBtn')?.addEventListener('click', () => {
+    const sym = (document.getElementById('newMajorSymbol')?.value || '').trim().toUpperCase();
+    const name = (document.getElementById('newMajorName')?.value || '').trim();
+    if (!sym || !name) { alert('Please enter both symbol and display name.'); return; }
+    tickerSettings.trackedMajorMarkets.push({ symbol: sym, name: name, enabled: true });
+    saveTickerSettings();
+    renderTrackedLists();
+    document.getElementById('newMajorSymbol').value = '';
+    document.getElementById('newMajorName').value = '';
+  });
+
+  function editMajor(idx) {
+    const m = tickerSettings.trackedMajorMarkets[idx];
+    if (!m) return;
+    const newName = prompt('Edit display name for ' + m.symbol, m.name);
+    if (newName !== null) {
+      tickerSettings.trackedMajorMarkets[idx].name = newName.trim() || m.name;
+      saveTickerSettings();
+      renderTrackedLists();
+    }
+  }
+
+  function deleteMajor(idx) {
+    if (!tickerSettings.trackedMajorMarkets[idx]) return;
+    if (!confirm(`Remove ${tickerSettings.trackedMajorMarkets[idx].name} (${tickerSettings.trackedMajorMarkets[idx].symbol}) from tracked majors?`)) return;
+    tickerSettings.trackedMajorMarkets.splice(idx, 1);
+    saveTickerSettings();
+    renderTrackedLists();
+  }
+
+  document.getElementById('addMetalBtn')?.addEventListener('click', () => {
+    const metal = (document.getElementById('modalMetalSelect')?.value || 'XAU');
+    const currency = (document.getElementById('modalMetalCountry')?.value || 'USD');
+    const exists = tickerSettings.trackedMetals.find(m => m.metal === metal && m.currency === currency);
+    if (exists) { alert('This metal/currency pair is already tracked.'); return; }
+    tickerSettings.trackedMetals.push({ metal, currency, enabled: true });
+    saveTickerSettings();
+    renderTrackedLists();
+  });
+
+  function editMetal(idx) {
+    const m = tickerSettings.trackedMetals[idx];
+    if (!m) return;
+    const newCurrency = prompt('Edit currency for ' + (m.metal === 'XAU' ? 'Gold' : 'Silver'), m.currency);
+    if (newCurrency !== null) {
+      tickerSettings.trackedMetals[idx].currency = newCurrency.trim().toUpperCase() || m.currency;
+      saveTickerSettings();
+      renderTrackedLists();
+    }
+  }
+
+  function deleteMetal(idx) {
+    if (!tickerSettings.trackedMetals[idx]) return;
+    if (!confirm(`Remove ${tickerSettings.trackedMetals[idx].metal} / ${tickerSettings.trackedMetals[idx].currency} from tracked metals?`)) return;
+    tickerSettings.trackedMetals.splice(idx, 1);
+    saveTickerSettings();
+    renderTrackedLists();
+  }
+
+  document.getElementById('saveTickerConfig')?.addEventListener('click', () => {
+    saveTickerSettings();
+    renderTrackedLists();
+    renderMarketTicker();
+    document.querySelectorAll('.closeModal').forEach(btn => {
+      const modalId = btn.dataset.modalId;
+      if (modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.classList.remove('open');
+      }
+    });
+  });
+
+  document.getElementById('applyMarketFilters')?.addEventListener('click', () => {
+    applyMarketFiltersFromControls();
+  });
+
+  function populateHeaderSelectsFromSettings() {
+    const majorSelect = document.getElementById('marketSelectMajor');
+    if (majorSelect) {
+      const firstEnabled = tickerSettings.trackedMajorMarkets.find(m => m.enabled);
+      if (firstEnabled) {
+        const opt = Array.from(majorSelect.options).find(o => o.value === firstEnabled.symbol);
+        if (opt) majorSelect.value = firstEnabled.symbol;
+      }
+    }
+    const metalSelect = document.getElementById('metalSelect');
+    const metalCountrySelect = document.getElementById('metalCountrySelect');
+    if (metalSelect && metalCountrySelect) {
+      const firstEnabledMetal = tickerSettings.trackedMetals.find(m => m.enabled);
+      if (firstEnabledMetal) {
+        metalSelect.value = firstEnabledMetal.metal || metalSelect.value;
+        metalCountrySelect.value = firstEnabledMetal.currency || metalCountrySelect.value;
+      }
+    }
+  }
+
+  // ---------- Integration glue ----------
+  (function integrateTickerWithApp() {
+    try {
+      if (typeof settings !== 'undefined' && settings) {
+        if (settings.ticker && typeof settings.ticker === 'object') {
+          if (Array.isArray(settings.ticker.trackedMajorMarkets)) {
+            tickerSettings.trackedMajorMarkets = settings.ticker.trackedMajorMarkets;
+          }
+          if (Array.isArray(settings.ticker.trackedMetals)) {
+            tickerSettings.trackedMetals = settings.ticker.trackedMetals;
+          }
+          if (settings.ticker.lastSnapshot) {
+            tickerSettings.lastSnapshot = settings.ticker.lastSnapshot;
+          }
+          saveTickerSettings();
+        } else {
+          settings.ticker = settings.ticker || {};
+          settings.ticker.trackedMajorMarkets = settings.ticker.trackedMajorMarkets || tickerSettings.trackedMajorMarkets;
+          settings.ticker.trackedMetals = settings.ticker.trackedMetals || tickerSettings.trackedMetals;
+        }
+      }
+    } catch (e) {
+      console.warn('Ticker integration merge failed', e);
+    }
+  })();
+
+  (function hookRenderAll() {
+    try {
+      if (typeof renderAll === 'function') {
+        const originalRenderAll = renderAll;
+        window.renderAll = function() {
+          try { originalRenderAll(); } catch (e) { console.error('renderAll wrapper: original renderAll error', e); }
+          try {
+            populateHeaderSelectsFromSettings();
+            renderTrackedLists();
+            renderMarketTicker();
+            renderRecentEntries();
+          } catch (err) {
+            console.warn('Ticker post-render update failed', err);
+          }
+        };
+      }
+    } catch (e) {
+      console.warn('Hooking renderAll failed', e);
+    }
+  })();
+
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      renderTrackedLists();
+      populateHeaderSelectsFromSettings();
+      renderMarketTicker();
+      setInterval(() => updateTickerClock(), 1000);
+
+      const tickerWrap = document.getElementById('tickerWrap');
+      if (tickerWrap) {
+        tickerWrap.addEventListener('mouseenter', () => tickerWrap.style.animationPlayState = 'paused');
+        tickerWrap.addEventListener('mouseleave', () => tickerWrap.style.animationPlayState = 'running');
+        tickerWrap.addEventListener('focusin', () => tickerWrap.style.animationPlayState = 'paused');
+        tickerWrap.addEventListener('focusout', () => tickerWrap.style.animationPlayState = 'running');
+      }
+
+      function adjustMarqueeForViewport() {
+        const wrapEl = document.querySelector('.ticker-wrap');
+        if (window.innerWidth <= 768) {
+          if (wrapEl) wrapEl.style.animationDuration = '45s';
+        } else {
+          if (wrapEl) wrapEl.style.animationDuration = '28s';
+        }
+      }
+      adjustMarqueeForViewport();
+      window.addEventListener('resize', adjustMarqueeForViewport);
+
+    } catch (e) {
+      console.error('Ticker DOMContentLoaded integration error', e);
+    }
+  });
+
+  // ---------- Render all (core) ----------
+  function renderAll() {
+    try {
+      // KPIs
+      const income = data.filter(d => d.type === 'income').reduce((s, x) => s + Number(x.amount || 0), 0);
+      const expense = data.filter(d => d.type === 'expense').reduce((s, x) => s + Number(x.amount || 0), 0);
+      const net = data.filter(d => d.type === 'opening_balance' || d.type === 'income').reduce((s, x) => s + Number(x.amount || 0), 0) - expense;
+      const invest = data.filter(d => d.category === 'Investments' || d.type === 'opening_balance' && d.investmentGroup).reduce((s, x) => s + Number(x.amount || 0), 0);
+
+      document.getElementById('kpiIncome') && (document.getElementById('kpiIncome').innerText = fmt(income));
+      document.getElementById('kpiExpense') && (document.getElementById('kpiExpense').innerText = fmt(expense));
+      document.getElementById('kpiNet') && (document.getElementById('kpiNet').innerText = fmt(net));
+      document.getElementById('kpiInvest') && (document.getElementById('kpiInvest').innerText = fmt(invest));
+
+      // net liquidity breakdown
+      const netEl = document.getElementById('netLiquidityBreakdown');
+      if (netEl) {
+        const cashItems = data.filter(d => d.type === 'opening_balance' && (d.investmentGroup === 'Cash' || d.openingType === 'Cash'));
+        netEl.innerHTML = cashItems.map(ci => `<div><span>${ci.desc}</span><span>${fmt(ci.amount)}</span></div>`).join('');
+      }
+
+      // categories for recent filter
+      const catEl = document.getElementById('recentCategory');
+      if (catEl) {
+        const cats = Array.from(new Set(data.map(d => d.category).filter(Boolean)));
+        catEl.innerHTML = '<option value="">All categories</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+      }
+
+      renderRecentEntries();
+      renderMarketTicker();
+    } catch (e) {
+      console.error('renderAll error', e);
+    }
+  }
+
+  // ---------- UI wiring ----------
+  document.getElementById('saveEntryBtn')?.addEventListener('click', saveEntry);
+  document.getElementById('clearEntryBtn')?.addEventListener('click', clearEntryForm);
+  document.getElementById('processImportBtn')?.addEventListener('click', processImportedData);
+  document.getElementById('sampleBtn')?.addEventListener('click', loadSampleData);
+
+  // dynamic fields toggle
+  function toggleDynamicFields() {
+    const type = document.getElementById('type').value;
+    document.getElementById('incomeSourceRow').classList.toggle('hidden', type !== 'income');
+    document.getElementById('investmentRow').classList.toggle('hidden', type !== 'expense');
+    document.getElementById('insuranceRow').classList.toggle('hidden', type !== 'expense');
+    document.getElementById('openingBalanceRow').classList.toggle('hidden', type !== 'opening_balance');
+  }
+  document.getElementById('type')?.addEventListener('change', toggleDynamicFields);
+
+  // initialize form defaults
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('date') && (document.getElementById('date').value = new Date().toISOString().slice(0,10));
+    toggleDynamicFields();
+    try { dragElement(document.getElementById('calculator')); } catch(e){}
+  });
+
+  // Expose functions for console debugging
+  window.MoneyMirror = {
+    data,
+    settings,
+    saveAll,
+    renderAll,
+    renderMarketTicker,
+    getTickerSettings: () => JSON.parse(localStorage.getItem(TICKER_SETTINGS_KEY) || '{}')
+  };
+
+  // Initial render
+  setTimeout(() => {
+    renderAll();
+  }, 200);
+
+  </script>
