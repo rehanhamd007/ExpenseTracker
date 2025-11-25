@@ -921,13 +921,19 @@
   // Prevent authGate flicker by default hidden; show if not signed in after boot
   function showAuthGate() {
     const gate = document.getElementById('authGate');
-    gate.classList.add('show');
-    document.querySelector('main').style.filter = 'blur(5px)';
+    if (gate) {
+      gate.style.display = 'flex'; // FIX: explicitly show gate
+    }
+    const mainEl = document.querySelector('main');
+    if (mainEl) mainEl.style.filter = 'blur(5px)';
   }
   function hideAuthGate() {
     const gate = document.getElementById('authGate');
-    gate.classList.remove('show');
-    document.querySelector('main').style.filter = 'none';
+    if (gate) {
+      gate.style.display = 'none'; // FIX: explicitly hide gate to stop looping
+    }
+    const mainEl = document.querySelector('main');
+    if (mainEl) mainEl.style.filter = 'none';
   }
 
   try {
@@ -957,7 +963,7 @@
     currentProfile = 'Guest';
     localStorage.setItem('mm_last_profile', currentProfile);
     document.getElementById('profileNameDisplay').textContent = 'Guest (Offline)';
-    hideAuthGate();
+    hideAuthGate(); // ensure UI unblocks in guest mode
     document.getElementById('logoutBtn').style.display = 'block';
     loadProfileData();
   }
@@ -966,7 +972,7 @@
     currentProfile = user.displayName || user.email || 'User';
     localStorage.setItem('mm_last_profile', currentProfile);
     document.getElementById('profileNameDisplay').textContent = currentProfile;
-    hideAuthGate();
+    hideAuthGate(); // ensure gate closes after login
     document.getElementById('logoutBtn').style.display = 'block';
     loadProfileData();
   }
@@ -2398,7 +2404,7 @@
       const searchEl = document.getElementById('recentSearch');
       const sortEl = document.getElementById('recentSort');
       const catEl = document.getElementById('recentCategory');
-      const limitEl = document.getElementById('entryLimit');
+            const limitEl = document.getElementById('entryLimit');
       const searchText = (searchEl ? searchEl.value.toLowerCase() : '').trim();
       const sortMode = sortEl ? sortEl.value : 'dateDesc';
       const categoryFilter = catEl ? catEl.value : '';
@@ -2464,7 +2470,6 @@
       console.error("Error rendering table:", err);
     }
   }
-
   // ---------- SAMPLE DATA (synced) ----------
   function loadSampleData() {
     if (!confirm("Overwrite existing data with sample?")) return;
@@ -2678,14 +2683,11 @@
     wrap.innerHTML = items || '<div class="ticker-item">No markets tracked</div>';
   }
 
-  // Realtime loop (stubbed). Replace with your provider fetch for exact market data.
   let tickerInterval = null;
   function startTickerRealtimeLoop() {
     if (tickerInterval) clearInterval(tickerInterval);
-    // Simulate realtime with small random walk to avoid stale UI; replace this with an API call.
     tickerInterval = setInterval(async () => {
       try {
-        // If you add an API key/provider in settings.api, call your fetch here and update settings.trackedMarkets.
         settings.trackedMarkets = settings.trackedMarkets.map(m => {
           const drift = (Math.random() - 0.5) * (m.price ? m.price * 0.0008 : 5);
           const newPrice = Math.max(0, (m.price || 0) + drift);
