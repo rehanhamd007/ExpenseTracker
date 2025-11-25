@@ -2671,23 +2671,54 @@
     renderMarketList();
     renderMarketTicker();
   }
+ // Renders the live market ticker bar at the bottom
   function renderMarketTicker() {
-    const wrap = document.getElementById('tickerWrap');
-    if (!wrap) return;
-    const items = settings.trackedMarkets.map(m => {
-      const price = (m.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      const change = Number(m.change || 0);
-      const changeClass = change >= 0 ? 'change-up' : 'change-down';
-      const changeText = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+    const container = document.getElementById('marketTickerContainer');
+    if (!container) return;
+
+    if (!settings.trackedMarkets || settings.trackedMarkets.length === 0) {
+      // Use a dark text color for visibility on a light background
+      container.innerHTML = '<div class="text-xs text-gray-900 p-2">No markets tracked</div>'; 
+      return;
+    }
+
+    const tickerHTML = settings.trackedMarkets.map(market => {
+      const isPositive = market.change >= 0;
+      
+      // Determine the color for the icon/sign (Green for up, Red for down)
+      // Using 600-level colors for better visibility than default 500
+      const iconColor = isPositive 
+        ? 'text-green-600' 
+        : 'text-red-600'; 
+
+      // The icon SVG (Up/Down arrow)
+      const changeIcon = isPositive 
+        // Up Arrow (rotated down arrow)
+        ? '<svg class="w-3 h-3 inline-block mr-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L10 12.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd" transform="rotate(180 10 10)"/></svg>' 
+        // Down Arrow
+        : '<svg class="w-3 h-3 inline-block mr-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L10 12.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>';
+
       return `
-        <div class="ticker-item">
-          <span class="symbol">${m.symbol}</span>
-          <span>${price}</span>
-          <span class="${changeClass}" style="margin-left:6px;">${changeText}</span>
+        <!-- Main container now uses text-gray-900 (black) for high contrast -->
+        <div class="inline-flex items-center mx-3 text-xs font-medium text-gray-900 whitespace-nowrap">
+          <span class="mr-1 font-semibold">${market.label || market.symbol}:</span>
+          <!-- Price is now black text -->
+          <span class="font-bold mr-2 text-gray-900">
+            ${market.price.toFixed(2)}
+          </span>
+          <!-- Percentage change text is now black, but the icon uses the color -->
+          <span class="flex items-center font-semibold text-gray-900">
+            <span class="${iconColor}">${changeIcon}</span>
+            ${Math.abs(market.change).toFixed(2)}%
+          </span>
         </div>
       `;
     }).join('');
-    wrap.innerHTML = items || '<div class="ticker-item">No markets tracked</div>';
+
+    // Ensure the container itself has a good background (like white)
+    container.innerHTML = `<div class="p-2 border-t border-gray-200 bg-white shadow-inner overflow-x-auto">
+      <div class="flex">${tickerHTML}</div>
+    </div>`;
   }
 
  // ---------------------------------------------------------
