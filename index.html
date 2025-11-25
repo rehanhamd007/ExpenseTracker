@@ -2690,26 +2690,92 @@
     wrap.innerHTML = items || '<div class="ticker-item">No markets tracked</div>';
   }
 
-  // Realtime loop (stubbed). Replace with your provider fetch for exact market data.
+  // ---------------------------------------------------------
+  // REPLACEMENT CODE: Real-Time Data via Yahoo Finance API
+  // ---------------------------------------------------------
+
+  // Mapping internal symbols to Yahoo Finance Tickers
+  const YAHOO_SYMBOL_MAP = {
+    // Indices
+    'NIFTY_50': '^NSEI',     // Nifty 50
+    'SENSEX': '^BSESN',      // Sensex
+    'NASDAQ': '^IXIC',       // Nasdaq Composite
+    'DJI': '^DJI',           // Dow Jones Industrial Average
+    'SPX': '^GSPC',          // S&P 500
+    'FTSE_100': '^FTSE',     // FTSE 100
+    'DAX': '^GDAXI',         // DAX Performance-Index
+    'CAC_40': '^FCHI',       // CAC 40
+    'NIKKEI_225': '^N225',   // Nikkei 225
+    'HSI': '^HSI',           // Hang Seng Index
+    
+    // Commodities (Futures)
+    'XAUUSD': 'GC=F',        // Gold Futures
+    'XAGUSD': 'SI=F',        // Silver Futures
+    // Note: Yahoo doesn't provide free spot INR pairs easily, defaulting to Global Futures
+    'XAUINR': 'GC=F',        
+    'XAGINR': 'SI=F',
+    
+    // Crypto
+    'BTCUSD': 'BTC-USD'
+  };
+
+  async function fetchRealMarketData() {
+    if (!settings.trackedMarkets || settings.trackedMarkets.length === 0) return;
+
+    // We use Promise.all to fetch all tickers in parallel
+    const updatedMarkets = await Promise.all(settings.trackedMarkets.map(async (market) => {
+      // 1. Determine the correct Yahoo Ticker
+      const yahooTicker = YAHOO_SYMBOL_MAP[market.symbol] || market.symbol;
+      
+      try {
+        // 2. Fetch data via CORS Proxy to bypass browser restrictions
+        // We use the unofficial v8 Chart API which is robust and free
+        const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooTicker}?interval=1d&range=1d`;
+        const proxyUrl = `https://corsproxy.io/?` + encodeURIComponent(targetUrl);
+        
+        const response = await fetch(proxyUrl);
+        if (!response.ok) throw new Error('Network error');
+        
+        const data = await response.json();
+        const result = data.chart.result?.[0];
+        
+        if (result && result.meta) {
+          const price = result.meta.regularMarketPrice;
+          const prevClose = result.meta.chartPreviousClose;
+          
+          // 3. Calculate live percentage change
+          const change = ((price - prevClose) / prevClose) * 100;
+
+          // Return updated market object
+          return {
+            ...market,
+            price: Number(price.toFixed(2)),
+            change: Number(change.toFixed(2))
+          };
+        }
+      } catch (error) {
+        console.warn(`[Ticker] Failed to fetch ${market.symbol}:`, error);
+      }
+      
+      // If fetch fails, return the old data so the UI doesn't break
+      return market; 
+    }));
+
+    // 4. Update the settings object and re-render the ticker
+    settings.trackedMarkets = updatedMarkets;
+    renderMarketTicker();
+  }
+
   let tickerInterval = null;
   function startTickerRealtimeLoop() {
     if (tickerInterval) clearInterval(tickerInterval);
-    // Simulate realtime with small random walk to avoid stale UI; replace this with an API call.
-    tickerInterval = setInterval(async () => {
-      try {
-        if (!settings || !settings.trackedMarkets) return; // safety check
-        // If you add an API key/provider in settings.api, call your fetch here and update settings.trackedMarkets.
-        settings.trackedMarkets = settings.trackedMarkets.map(m => {
-          const drift = (Math.random() - 0.5) * (m.price ? m.price * 0.0008 : 5);
-          const newPrice = Math.max(0, (m.price || 0) + drift);
-          const change = ((newPrice - (m.price || newPrice)) / (m.price || newPrice || 1)) * 100;
-          return { ...m, price: Number(newPrice.toFixed(2)), change: Number(change.toFixed(2)) };
-        });
-        renderMarketTicker();
-      } catch (e) {
-        console.warn('Ticker update loop error:', e);
-      }
-    }, 3500); // Refresh every 3.5 seconds
+
+    // 1. Fetch immediately upon load
+    fetchRealMarketData();
+
+    // 2. Schedule updates every 60 seconds 
+    // (We use 60s to be polite to the free API and avoid rate limits)
+    tickerInterval = setInterval(fetchRealMarketData, 60000);
   }
 
   // ---------- EXPOSED ----------
