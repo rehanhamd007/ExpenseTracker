@@ -2690,94 +2690,128 @@
     wrap.innerHTML = items || '<div class="ticker-item">No markets tracked</div>';
   }
 
-  // ---------------------------------------------------------
-  // REPLACEMENT CODE: Real-Time Data via Yahoo Finance API
-  // ---------------------------------------------------------
+ // ---------------------------------------------------------
+// REPLACEMENT CODE: Real-Time Data via Yahoo Finance API
+// ---------------------------------------------------------
 
-  // Mapping internal symbols to Yahoo Finance Tickers
-  const YAHOO_SYMBOL_MAP = {
-    // Indices
-    'NIFTY_50': '^NSEI',     // Nifty 50
-    'SENSEX': '^BSESN',      // Sensex
-    'NASDAQ': '^IXIC',       // Nasdaq Composite
-    'DJI': '^DJI',           // Dow Jones Industrial Average
-    'SPX': '^GSPC',          // S&P 500
-    'FTSE_100': '^FTSE',     // FTSE 100
-    'DAX': '^GDAXI',         // DAX Performance-Index
-    'CAC_40': '^FCHI',       // CAC 40
-    'NIKKEI_225': '^N225',   // Nikkei 225
-    'HSI': '^HSI',           // Hang Seng Index
-    
-    // Commodities (Futures)
-    'XAUUSD': 'GC=F',        // Gold Futures
-    'XAGUSD': 'SI=F',        // Silver Futures
-    // Note: Yahoo doesn't provide free spot INR pairs easily, defaulting to Global Futures
-    'XAUINR': 'GC=F',        
-    'XAGINR': 'SI=F',
-    
-    // Crypto
-    'BTCUSD': 'BTC-USD'
-  };
+// Mapping internal symbols to Yahoo Finance Tickers
+const YAHOO_SYMBOL_MAP = {
+  // Indices
+  'NIFTY_50': '^NSEI',     // Nifty 50
+  'SENSEX': '^BSESN',      // Sensex
+  'NASDAQ': '^IXIC',       // Nasdaq Composite
+  'DJI': '^DJI',           // Dow Jones Industrial Average
+  'SPX': '^GSPC',          // S&P 500
+  'FTSE_100': '^FTSE',     // FTSE 100
+  'DAX': '^GDAXI',         // DAX Performance-Index
+  'CAC_40': '^FCHI',       // CAC 40
+  'NIKKEI_225': '^N225',   // Nikkei 225
+  'HSI': '^HSI',           // Hang Seng Index
+  
+  // Commodities (Futures)
+  'XAUUSD': 'GC=F',        // Gold Futures
+  'XAGUSD': 'SI=F',        // Silver Futures
+  // Note: Yahoo doesn't provide free spot INR pairs easily, defaulting to Global Futures
+  'XAUINR': 'GC=F',        
+  'XAGINR': 'SI=F',
+  
+  // Crypto
+  'BTCUSD': 'BTC-USD'
+};
 
-  async function fetchRealMarketData() {
-    if (!settings.trackedMarkets || settings.trackedMarkets.length === 0) return;
-
-    // We use Promise.all to fetch all tickers in parallel
-    const updatedMarkets = await Promise.all(settings.trackedMarkets.map(async (market) => {
-      // 1. Determine the correct Yahoo Ticker
-      const yahooTicker = YAHOO_SYMBOL_MAP[market.symbol] || market.symbol;
-      
+// Function to handle exponential backoff for retries (prevents failures due to transient network issues)
+function exponentialBackoffFetch(url, maxRetries = 3, delay = 1000) {
+  return new Promise((resolve, reject) => {
+    const attemptFetch = async (attempt) => {
       try {
-        // 2. Fetch data via CORS Proxy to bypass browser restrictions
-        // We use the unofficial v8 Chart API which is robust and free
-        const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooTicker}?interval=1d&range=1d`;
-        const proxyUrl = `https://corsproxy.io/?` + encodeURIComponent(targetUrl);
-        
-        const response = await fetch(proxyUrl);
-        if (!response.ok) throw new Error('Network error');
-        
-        const data = await response.json();
-        const result = data.chart.result?.[0];
-        
-        if (result && result.meta) {
-          const price = result.meta.regularMarketPrice;
-          const prevClose = result.meta.chartPreviousClose;
-          
-          // 3. Calculate live percentage change
-          const change = ((price - prevClose) / prevClose) * 100;
-
-          // Return updated market object
-          return {
-            ...market,
-            price: Number(price.toFixed(2)),
-            change: Number(change.toFixed(2))
-          };
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
         }
+        resolve(response);
       } catch (error) {
-        console.warn(`[Ticker] Failed to fetch ${market.symbol}:`, error);
+        if (attempt < maxRetries) {
+          setTimeout(() => attemptFetch(attempt + 1), delay);
+          delay *= 2; // Exponentially increase delay
+        } else {
+          // Reject after max retries
+          reject(new Error(`Failed to fetch ${url} after ${maxRetries} attempts. Last error: ${error.message}`));
+        }
       }
+    };
+    attemptFetch(0);
+  });
+}
+
+async function fetchRealMarketData() {
+  if (!settings.trackedMarkets || settings.trackedMarkets.length === 0) return;
+
+  // We use Promise.all to fetch all tickers in parallel
+  const updatedMarkets = await Promise.all(settings.trackedMarkets.map(async (market) => {
+    // 1. Determine the correct Yahoo Ticker
+    const yahooTicker = YAHOO_SYMBOL_MAP[market.symbol] || market.symbol;
+    
+    // Safety check for unknown symbols
+    if (!yahooTicker) {
+        console.warn(`[Ticker] Skipping unknown symbol: ${market.symbol}`);
+        return market;
+    }
+
+    try {
+      // 2. Fetch data via a robust CORS Proxy to bypass browser restrictions
+      // Changed CORS proxy for better stability and reliability
+      const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooTicker}?interval=1d&range=1d`;
+      const proxyUrl = `https://api.allorigins.win/raw?url=` + encodeURIComponent(targetUrl);
       
-      // If fetch fails, return the old data so the UI doesn't break
-      return market; 
-    }));
+      const response = await exponentialBackoffFetch(proxyUrl);
+      
+      const data = await response.json();
+      const result = data.chart.result?.[0];
+      
+      if (result && result.meta) {
+        const price = result.meta.regularMarketPrice;
+        const prevClose = result.meta.chartPreviousClose;
+        
+        // 3. Calculate live percentage change (Handle potential division by zero if prevClose is 0)
+        let change = 0;
+        if (prevClose && price !== prevClose) {
+            change = ((price - prevClose) / prevClose) * 100;
+        }
 
-    // 4. Update the settings object and re-render the ticker
-    settings.trackedMarkets = updatedMarkets;
-    renderMarketTicker();
-  }
+        // Return updated market object
+        return {
+          ...market,
+          price: Number(price.toFixed(2)),
+          change: Number(change.toFixed(2))
+        };
+      } else {
+          console.warn(`[Ticker] No market data found for ${market.symbol} (${yahooTicker}) in API response.`);
+      }
+    } catch (error) {
+      console.error(`[Ticker] CRITICAL FETCH FAIL for ${market.symbol} (${yahooTicker}):`, error.message);
+    }
+    
+    // If fetch fails, return the old data so the UI doesn't break
+    return market; 
+  }));
 
-  let tickerInterval = null;
-  function startTickerRealtimeLoop() {
-    if (tickerInterval) clearInterval(tickerInterval);
+  // 4. Update the settings object and re-render the ticker
+  settings.trackedMarkets = updatedMarkets;
+  renderMarketTicker();
+}
 
-    // 1. Fetch immediately upon load
-    fetchRealMarketData();
+let tickerInterval = null;
+function startTickerRealtimeLoop() {
+  if (tickerInterval) clearInterval(tickerInterval);
 
-    // 2. Schedule updates every 60 seconds 
-    // (We use 60s to be polite to the free API and avoid rate limits)
-    tickerInterval = setInterval(fetchRealMarketData, 60000);
-  }
+  // 1. Fetch immediately upon load
+  fetchRealMarketData();
 
+  // 2. Schedule updates every 60 seconds 
+  // (We use 60s to be polite to the free API and avoid rate limits)
+  tickerInterval = setInterval(fetchRealMarketData, 60000);
+}
+ 
   // ---------- EXPOSED ----------
   // These make functions available to buttons/onclick events in the HTML
   window.loadEdit = loadEdit;
