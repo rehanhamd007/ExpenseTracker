@@ -227,7 +227,9 @@
     .market-ticker-strip {
       background-color: #1e293b;
       color: #f1f5f9;
-      padding: 8px 0;
+      height: 46px;                 /* Explicit height */
+      display: flex;                /* Flexbox for vertical centering */
+      align-items: center;          /* Center text vertically */
       margin-bottom: 20px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
       position: relative;
@@ -1552,15 +1554,18 @@
       }
     }
 
-    if(editId) {
-      data = data.map(t => t.id === editId ? entry : t);
-      editId = null;
-      formEls.addBtn.classList.remove('hidden');
-      formEls.saveBtn.classList.add('hidden');
-      formEls.cancelBtn.classList.add('hidden');
-    } else {
-      data.push(entry);
-    }
+   if (editId) {
+  // If editing an existing entry, update it in place
+  data = data.map(t => t.id === editId ? entry : t);
+  editId = null; // Clear the edit state
+  // Restore Add button state
+  formEls.addBtn.classList.remove('hidden');
+  formEls.saveBtn.classList.add('hidden');
+  formEls.cancelBtn.classList.add('hidden');
+} else {
+  // If adding a new entry, use unshift() to place it at the beginning of the array.
+  data.unshift(entry);
+}
 
     saveAll();
     renderAll();
