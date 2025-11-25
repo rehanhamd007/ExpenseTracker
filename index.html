@@ -898,9 +898,8 @@
   </div>
 </div>
 
-
 <script>
-  // ---------- CONFIG ----------
+  // Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyCAZvHT6dG61ISR57AJoZh8GSO7nY_mEGc",
     authDomain: "moneymirror-22543.firebaseapp.com",
@@ -910,31 +909,12 @@
     appId: "1:61775081584:web:3ec184985e324cf6f1c4b5",
     measurementId: "G-8RPXH1VEFG"
   };
-  const FIRESTORE_COLLECTION_NAME = 'moneymirror_v5_profile';
 
   let db = null;
   let auth = null;
   let USE_FIRESTORE = false;
+  const FIRESTORE_COLLECTION_NAME = 'moneymirror_v4_transactions';
   let currentProfile = null;
-
-  // ---------- AUTH & BOOT ----------
-  // Prevent authGate flicker by default hidden; show if not signed in after boot
-  function showAuthGate() {
-    const gate = document.getElementById('authGate');
-    if (gate) {
-      gate.style.display = 'flex'; // FIX: explicitly show gate
-    }
-    const mainEl = document.querySelector('main');
-    if (mainEl) mainEl.style.filter = 'blur(5px)';
-  }
-  function hideAuthGate() {
-    const gate = document.getElementById('authGate');
-    if (gate) {
-      gate.style.display = 'none'; // FIX: explicitly hide gate to stop looping
-    }
-    const mainEl = document.querySelector('main');
-    if (mainEl) mainEl.style.filter = 'none';
-  }
 
   try {
     if (typeof firebase !== 'undefined') {
@@ -942,70 +922,74 @@
       db = app.firestore();
       auth = app.auth();
       USE_FIRESTORE = true;
+      console.log("Firebase initialized.");
+    } else {
+      console.warn("Firebase SDK not loaded.");
     }
   } catch (e) {
-    console.warn("Firebase init failed. Using local-only mode.");
+    console.warn("Firebase init failed, falling back to LocalStorage:", e);
   }
 
   async function signInWithGoogle() {
-    if (!auth) return alert('Auth not available. Use Guest Mode.');
+    if (!auth) return alert('Auth not initialized. Check internet or use Guest Mode.');
     const provider = new firebase.auth.GoogleAuthProvider();
     try {
       const result = await auth.signInWithPopup(provider);
-      onUserSignedIn(result.user);
+      const user = result.user;
+      onUserSignedIn(user);
     } catch (err) {
       console.error("Login failed:", err);
-      alert('Sign-in failed. Try Guest Mode.');
+      alert('Sign-in failed. If using a local file, try Guest Mode.');
     }
   }
 
   function startGuestMode() {
-    currentProfile = 'Guest';
-    localStorage.setItem('mm_last_profile', currentProfile);
-    document.getElementById('profileNameDisplay').textContent = 'Guest (Offline)';
-    hideAuthGate(); // ensure UI unblocks in guest mode
-    document.getElementById('logoutBtn').style.display = 'block';
-    loadProfileData();
+      currentProfile = 'Guest';
+      document.getElementById('profileNameDisplay').textContent = 'Guest (Offline)';
+      document.getElementById('authGate').style.display = 'none';
+      document.querySelector('main').style.filter = 'none';
+      document.getElementById('logoutBtn').style.display = 'block';
+      loadProfileData();
   }
 
   function onUserSignedIn(user) {
     currentProfile = user.displayName || user.email || 'User';
     localStorage.setItem('mm_last_profile', currentProfile);
     document.getElementById('profileNameDisplay').textContent = currentProfile;
-    hideAuthGate(); // ensure gate closes after login
+    document.getElementById('authGate').style.display = 'none';
+    document.querySelector('main').style.filter = 'none';
     document.getElementById('logoutBtn').style.display = 'block';
     loadProfileData();
   }
 
   function signOutUser() {
     if (auth) {
-      auth.signOut().then(resetToAuthGate);
+      auth.signOut().then(() => {
+          resetToAuthGate();
+      });
     } else {
-      resetToAuthGate();
+        resetToAuthGate();
     }
   }
 
   function resetToAuthGate() {
-    currentProfile = null;
-    document.getElementById('profileNameDisplay').textContent = '--';
-    document.getElementById('logoutBtn').style.display = 'none';
-    showAuthGate();
+      currentProfile = null;
+      document.getElementById('profileNameDisplay').textContent = '--';
+      document.getElementById('logoutBtn').style.display = 'none';
+      document.getElementById('authGate').style.display = 'flex';
+      document.querySelector('main').style.filter = 'blur(5px)';
   }
 
-  // ---------- DOM READY ----------
   document.addEventListener('DOMContentLoaded', () => {
-    // Login buttons
-    document.getElementById('loginBtn').addEventListener('click', signInWithGoogle);
-    document.getElementById('guestBtn').addEventListener('click', startGuestMode);
-    document.getElementById('logoutBtn').addEventListener('click', signOutUser);
-
-    // Date & clock
     const d = new Date();
     const currentDateEl = document.getElementById('currentDate');
     if (currentDateEl) currentDateEl.innerText = d.toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     const today = new Date().toISOString().slice(0,10);
     const dateEl = document.getElementById('date');
     if (dateEl) dateEl.value = today;
+    dragElement(document.getElementById("calculator"));
+
+    // NEW: Live clock init (IST)
     const clockEl = document.getElementById('currentClock');
     function renderClock() {
       const now = new Date();
@@ -1016,7 +1000,6 @@
       setInterval(renderClock, 1000);
     }
 
-    // Mobile sidebar toggle
     const mobileBtn = document.getElementById('mobileMenuBtn');
     const sidebar = document.getElementById('mainSidebar');
     if (mobileBtn && sidebar) {
@@ -1028,77 +1011,87 @@
       });
     }
 
-    // Modals
     document.getElementById('navSettings').addEventListener('click', () => {
-      document.getElementById('settingsModal').classList.add('open');
+        document.getElementById('settingsModal').classList.add('open');
     });
     document.getElementById('closeSettings').addEventListener('click', () => {
-      document.getElementById('settingsModal').classList.remove('open');
+        document.getElementById('settingsModal').classList.remove('open');
     });
     document.getElementById('navAnalytics').addEventListener('click', () => {
-      document.getElementById('analyticsModal').classList.add('open');
-      populateAnalyticsDropdowns();
-      renderAdvancedCharts();
+        document.getElementById('analyticsModal').classList.add('open');
+        populateAnalyticsDropdowns();
+        renderAdvancedCharts();
     });
     document.getElementById('closeAnalytics').addEventListener('click', () => {
-      document.getElementById('analyticsModal').classList.remove('open');
+        document.getElementById('analyticsModal').classList.remove('open');
     });
     document.getElementById('importDataBtn').addEventListener('click', () => {
-      document.getElementById('importModal').classList.add('open');
+        document.getElementById('importModal').classList.add('open');
     });
     document.getElementById('closeImport').addEventListener('click', () => {
-      document.getElementById('importModal').classList.remove('open');
+        document.getElementById('importModal').classList.remove('open');
     });
-    document.querySelectorAll('.openModal').forEach(el => {
-      el.addEventListener('click', (e) => {
-        e.preventDefault();
-        const id = e.currentTarget.dataset.modalId;
-        const modal = document.getElementById(id);
-        if (modal) {
-          modal.classList.add('open');
-          if (id === 'marketSettingsModal') renderMarketList();
-        }
-      });
-    });
-    document.querySelectorAll('.closeModal').forEach(el => {
-      el.addEventListener('click', (e) => {
-        const id = e.currentTarget.dataset.modalId;
-        const modal = document.getElementById(id);
-        if (modal) modal.classList.remove('open');
-      });
-    });
-
-    // Calculator
     document.getElementById('calc-toggle').addEventListener('click', () => {
-      const calc = document.getElementById('calculator');
-      calc.style.display = calc.style.display === 'none' ? 'flex' : 'none';
+        const calc = document.getElementById('calculator');
+        calc.style.display = calc.style.display === 'none' ? 'flex' : 'none';
     });
     document.getElementById('calc-close-btn').addEventListener('click', (e) => {
-      document.getElementById('calculator').style.display = 'none';
-      e.stopPropagation();
+        document.getElementById('calculator').style.display = 'none';
+        e.stopPropagation();
     });
-    document.querySelectorAll('#calc-buttons button').forEach(button => {
-      button.addEventListener('click', handleCalculatorInput);
-    });
-    dragElement(document.getElementById("calculator"));
-
-    // Data actions
     document.getElementById('sampleBtn').addEventListener('click', loadSampleData);
     document.getElementById('exportBtn').addEventListener('click', () => convertToCSV(data));
     document.getElementById('processImportBtn').addEventListener('click', processImportedData);
     document.getElementById('resetBtn').addEventListener('click', () => {
-      if (confirm('WARNING: This will erase ALL your data. Are you sure?')) {
-        localStorage.clear();
-        data = [];
-        methodNames = {...CANONICAL_METHODS};
-        incomeSources = ['Salary', 'Freelance', 'Interest'];
-        settings = { ...DEFAULT_SETTINGS };
-        saveAll();
-        window.location.reload();
-      }
+        if (confirm('WARNING: This will erase ALL your data (local and Firestore). Are you absolutely sure?')) {
+            localStorage.clear();
+            data = [];
+            methodNames = {...CANONICAL_METHODS};
+            incomeSources = ['Salary', 'Freelance', 'Interest'];
+            settings = { ccLimit: DEFAULT_CC_LIMIT, trackedMarkets: settings.trackedMarkets || [], commodityCountry: settings.commodityCountry || '' };
+            saveAll();
+            window.location.reload();
+        }
     });
 
-    // Market settings listeners
+    // Calculator buttons
+    document.querySelectorAll('#calc-buttons button').forEach(button => {
+      button.addEventListener('click', handleCalculatorInput);
+    });
+
+    // Open generic modals
+    document.querySelectorAll('.openModal').forEach(button => {
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        const modalId = e.currentTarget.dataset.modalId;
+        const modal = document.getElementById(modalId);
+        if (modal) {
+          modal.classList.add('open');
+          if (modalId === 'marketSettingsModal') renderMarketList();
+        }
+      });
+    });
+    document.querySelectorAll('.closeModal').forEach(button => {
+      button.addEventListener('click', (e) => {
+        const modalId = e.currentTarget.dataset.modalId;
+        const modal = document.getElementById(modalId);
+        if (modal) modal.classList.remove('open');
+      });
+    });
+
+    if (auth) {
+      auth.onAuthStateChanged(user => {
+        if (user) onUserSignedIn(user);
+        else {
+          resetToAuthGate();
+        }
+      });
+    }
+    
+    setupExpenseMultiSelect();
+    setupInvestmentFilters();
+
+    // NEW: Market modal listeners (overrides older placeholder)
     const addMarketFormEl = document.getElementById('addMarketForm');
     const majorIndexSelect = document.getElementById('majorIndexSelect');
     const commodityCountrySelect = document.getElementById('commodityCountrySelect');
@@ -1113,18 +1106,23 @@
         majorIndexSelect.value = '';
         renderMarketList();
         renderMarketTicker();
+        alert('Index added to ticker.');
       });
     }
     if (applyCommodityFilterBtn && commodityCountrySelect) {
       applyCommodityFilterBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        settings.commodityCountry = commodityCountrySelect.value || '';
+        const country = commodityCountrySelect.value || '';
+        settings.commodityCountry = country;
         remapCommoditySymbolsByCountry();
         saveAll();
         renderMarketList();
         renderMarketTicker();
+        alert('Commodity region applied.');
       });
     }
+
+    // NEW: Sidebar quick add
     const sidebarIdxSelect = document.getElementById('sidebarIndexSelect');
     const sidebarAddIndexBtn = document.getElementById('sidebarAddIndexBtn');
     if (sidebarIdxSelect && sidebarAddIndexBtn) {
@@ -1136,39 +1134,14 @@
         sidebarIdxSelect.value = '';
         renderMarketList();
         renderMarketTicker();
+        alert('Index added to ticker.');
       });
     }
-
-    // Auth state -> avoid flicker
-    const lastProfile = localStorage.getItem('mm_last_profile');
-    if (auth) {
-      auth.onAuthStateChanged(user => {
-        if (user) {
-          onUserSignedIn(user);
-        } else if (lastProfile === 'Guest') {
-          startGuestMode();
-        } else {
-          showAuthGate();
-        }
-      });
-    } else {
-      if (lastProfile === 'Guest') {
-        startGuestMode();
-      } else {
-        showAuthGate();
-      }
-    }
-
-    setupExpenseMultiSelect();
-    setupInvestmentFilters();
 
     renderAll();
-
-    // Start ticker refresh loop (realtime stub; replace fetch with your API)
-    startTickerRealtimeLoop();
   });
 
-  // ---------- STATE ----------
+  // --- UTILS AND CONSTANTS ---
   const DEFAULT_CC_LIMIT = 200000;
   const CANONICAL_METHODS = {
     'cash': 'Cash',
@@ -1178,93 +1151,76 @@
     'digital_wallet': 'Digital Wallet'
   };
   const BASE_CATS = ['Food', 'Rent', 'Utilities', 'Shopping', 'Entertainment', 'Travel', 'Health', 'Investments', 'Insurance', 'Credit Card Payment', 'Misc'];
-
-  const DEFAULT_SETTINGS = {
-    ccLimit: DEFAULT_CC_LIMIT,
-    commodityCountry: '',
-    api: { // add your keys here if needed
-      provider: 'none',
-      key: ''
-    },
-    trackedMarkets: [
-      { symbol: 'SENSEX', name: 'Sensex', price: 72000.00, change: 0.85 },
-      { symbol: 'NASDAQ', name: 'Nasdaq', price: 16000.00, change: -1.23 },
-      { symbol: 'XAUUSD', name: 'Gold/USD', price: 2350.00, change: 0.15 },
-      { symbol: 'XAGUSD', name: 'Silver/USD', price: 28.50, change: -0.55 },
-      { symbol: 'BTCUSD', name: 'Bitcoin', price: 68000.00, change: 2.10 }
-    ]
-  };
-
   const INVESTMENT_STRUCTURE = {
-    'Equity (Stocks)': {
-      'India - Large Cap/Mid Cap/Small Cap': 'Equity (Stocks)',
-      'India - Index Stocks/Preferred Stock': 'Equity (Stocks)',
-      'India - Derivatives (Options/Futures)': 'Equity (Stocks)',
-      'US - Stocks': 'Equity (Stocks)',
-      'International - Other': 'Equity (Stocks)',
-    },
-    'Mutual Funds': {
-      'Equity MF - Large Cap/Mid Cap/Small Cap': 'Mutual Funds',
-      'Equity MF - Multi-cap': 'Mutual Funds',
-      'Equity MF - ELSS (Tax Saving)': 'Mutual Funds',
-      'Debt MF - Overnight/Liquid/Ultra Short Term': 'Mutual Funds',
-      'Debt MF - Corporate/Dynamic Bond': 'Mutual Funds',
-      'Hybrid/Balanced MF': 'Mutual Funds',
-      'International/Global Index MF': 'Mutual Funds',
-      'Gold/Sectoral/Thematic MF': 'Mutual Funds',
-    },
-    'ETFs': {
-      'Equity ETF': 'ETFs',
-      'Debt ETF': 'ETFs',
-      'Gold ETF': 'ETFs',
-      'Index ETF': 'ETFs',
-      'Thematic ETF': 'ETFs',
-    },
-    'Bonds & Debt Instruments': {
-      'Government Bonds': 'Bonds & Debt Instruments',
-      'Corporate Bonds': 'Bonds & Debt Instruments',
-      'Treasury Bills': 'Bonds & Debt Instruments',
-      'Tax-Free Bonds': 'Bonds & Debt Instruments',
-      'Sovereign Gold Bonds (SGB)': 'Bonds & Debt Instruments',
-    },
-    'Commodities': {
-      'Gold (Physical/Digital)': 'Commodities',
-      'Silver': 'Commodities',
-      'Crude Oil/Natural Gas': 'Commodities',
-      'Other Metals (Copper/Nickel)': 'Commodities',
-    },
-    'Crypto & Digital Assets': {
-      'Bitcoin (BTC)': 'Crypto & Digital Assets',
-      'Ethereum (ETH)': 'Crypto & Digital Assets',
-      'Stablecoins': 'Crypto & Digital Assets',
-      'Altcoins': 'Crypto & Digital Assets',
-      'NFTs / Web3 Assets': 'Crypto & Digital Assets',
-    },
-    'Real Estate': {
-      'Residential Property': 'Real Estate',
-      'Commercial Property': 'Real Estate',
-      'Land': 'Real Estate',
-      'REITs (Real Estate Investment Trusts)': 'Real Estate',
-    },
-    'Fixed Income / Savings Schemes': {
-      'FD (Fixed Deposit)': 'Fixed Income / Savings Schemes',
-      'RD (Recurring Deposit)': 'Fixed Income / Savings Schemes',
-      'PPF': 'Fixed Income / Savings Schemes',
-      'NSC/KVP/Postal MIS': 'Fixed Income / Savings Schemes',
-      'High-Interest Savings Account': 'Fixed Income / Savings Schemes',
-    },
-    'Retirement Funds': {
-      'NPS Tier 1/Tier 2': 'Retirement Funds',
-      'EPF (Employees’ Provident Fund)': 'Retirement Funds',
-      'IRA/401k (USA users)': 'Retirement Funds',
-      'Other Pension Schemes': 'Retirement Funds',
-    },
-    'Other Investments': {
-      'Angel Investing / Startup Equity': 'Other Investments',
-      'Peer-to-Peer Lending': 'Other Investments',
-      'Private Funds / AIFs': 'Other Investments',
-      'Alternative Assets': 'Other Investments',
-    }
+      'Equity (Stocks)': {
+          'India - Large Cap/Mid Cap/Small Cap': 'Equity (Stocks)',
+          'India - Index Stocks/Preferred Stock': 'Equity (Stocks)',
+          'India - Derivatives (Options/Futures)': 'Equity (Stocks)',
+          'US - Stocks': 'Equity (Stocks)',
+          'International - Other': 'Equity (Stocks)',
+      },
+      'Mutual Funds': {
+          'Equity MF - Large Cap/Mid Cap/Small Cap': 'Mutual Funds',
+          'Equity MF - Multi-cap': 'Mutual Funds',
+          'Equity MF - ELSS (Tax Saving)': 'Mutual Funds',
+          'Debt MF - Overnight/Liquid/Ultra Short Term': 'Mutual Funds',
+          'Debt MF - Corporate/Dynamic Bond': 'Mutual Funds',
+          'Hybrid/Balanced MF': 'Mutual Funds',
+          'International/Global Index MF': 'Mutual Funds',
+          'Gold/Sectoral/Thematic MF': 'Mutual Funds',
+      },
+      'ETFs': {
+          'Equity ETF': 'ETFs',
+          'Debt ETF': 'ETFs',
+          'Gold ETF': 'ETFs',
+          'Index ETF': 'ETFs',
+          'Thematic ETF': 'ETFs',
+      },
+      'Bonds & Debt Instruments': {
+          'Government Bonds': 'Bonds & Debt Instruments',
+          'Corporate Bonds': 'Bonds & Debt Instruments',
+          'Treasury Bills': 'Bonds & Debt Instruments',
+          'Tax-Free Bonds': 'Bonds & Debt Instruments',
+          'Sovereign Gold Bonds (SGB)': 'Bonds & Debt Instruments',
+      },
+      'Commodities': {
+          'Gold (Physical/Digital)': 'Commodities',
+          'Silver': 'Commodities',
+          'Crude Oil/Natural Gas': 'Commodities',
+          'Other Metals (Copper/Nickel)': 'Commodities',
+      },
+      'Crypto & Digital Assets': {
+          'Bitcoin (BTC)': 'Crypto & Digital Assets',
+          'Ethereum (ETH)': 'Crypto & Digital Assets',
+          'Stablecoins': 'Crypto & Digital Assets',
+          'Altcoins': 'Crypto & Digital Assets',
+          'NFTs / Web3 Assets': 'Crypto & Digital Assets',
+      },
+      'Real Estate': {
+          'Residential Property': 'Real Estate',
+          'Commercial Property': 'Real Estate',
+          'Land': 'Real Estate',
+          'REITs (Real Estate Investment Trusts)': 'Real Estate',
+      },
+      'Fixed Income / Savings Schemes': {
+          'FD (Fixed Deposit)': 'Fixed Income / Savings Schemes',
+          'RD (Recurring Deposit)': 'Fixed Income / Savings Schemes',
+          'PPF': 'Fixed Income / Savings Schemes',
+          'NSC/KVP/Postal MIS': 'Fixed Income / Savings Schemes',
+          'High-Interest Savings Account': 'Fixed Income / Savings Schemes',
+      },
+      'Retirement Funds': {
+          'NPS Tier 1/Tier 2': 'Retirement Funds',
+          'EPF (Employees’ Provident Fund)': 'Retirement Funds',
+          'IRA/401k (USA users)': 'Retirement Funds',
+          'Other Pension Schemes': 'Retirement Funds',
+      },
+      'Other Investments': {
+          'Angel Investing / Startup Equity': 'Other Investments',
+          'Peer-to-Peer Lending': 'Other Investments',
+          'Private Funds / AIFs': 'Other Investments',
+          'Alternative Assets': 'Other Investments',
+      }
   };
   const MAJOR_BUCKETS = {
     'Equity (Stocks)': 'Equity',
@@ -1278,126 +1234,20 @@
     'Crypto & Digital Assets': 'Crypto',
     'Other Investments': 'Other'
   };
-
   let data = [];
   let methodNames = {...CANONICAL_METHODS};
   let incomeSources = ['Salary', 'Freelance', 'Interest'];
-  let settings = { ...DEFAULT_SETTINGS };
+
+  // Settings with market ticker defaults + NEW commodity region
+  let settings = { ccLimit: DEFAULT_CC_LIMIT, commodityCountry: '', trackedMarkets: [
+    { symbol: 'SENSEX', name: 'Sensex', price: 72000.00, change: 0.85 },
+    { symbol: 'NASDAQ', name: 'Nasdaq', price: 16000.00, change: -1.23 },
+    { symbol: 'XAUUSD', name: 'Gold/USD', price: 2350.00, change: 0.15 },
+    { symbol: 'XAGUSD', name: 'Silver/USD', price: 28.50, change: -0.55 },
+    { symbol: 'BTCUSD', name: 'Bitcoin', price: 68000.00, change: 2.10 }
+  ]};
   let editId = null;
   let selectedExpenseCategories = [];
-
-  // ---------- PERSISTENCE ----------
-  function getTxKey() { return currentProfile ? `mm_data_${currentProfile}` : 'mm_data_default'; }
-  function getMethodKey() { return currentProfile ? `mm_methods_${currentProfile}` : 'mm_methods_default'; }
-  function getIncomeKey() { return currentProfile ? `mm_income_${currentProfile}` : 'mm_income_default'; }
-  function getSettingsKey() { return currentProfile ? `mm_settings_${currentProfile}` : 'mm_settings_default'; }
-  function toKey(name) { return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '_'); }
-
-  function saveLocal() {
-    localStorage.setItem(getTxKey(), JSON.stringify(data));
-    localStorage.setItem(getMethodKey(), JSON.stringify(methodNames));
-    localStorage.setItem(getIncomeKey(), JSON.stringify(incomeSources));
-    localStorage.setItem(getSettingsKey(), JSON.stringify(settings));
-  }
-
-  function saveAll() {
-    if (!currentProfile || !USE_FIRESTORE || !db) {
-      saveLocal();
-      return;
-    }
-    const docRef = db.collection(FIRESTORE_COLLECTION_NAME).doc(toKey(currentProfile));
-    docRef.set({
-      data, methodNames, incomeSources, settings, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).catch((error) => {
-      console.error("Firestore write error:", error);
-      saveLocal();
-    });
-  }
-
-  function loadLocal() {
-    methodNames = JSON.parse(localStorage.getItem(getMethodKey())) || {...CANONICAL_METHODS};
-    incomeSources = JSON.parse(localStorage.getItem(getIncomeKey())) || ['Salary', 'Freelance', 'Interest'];
-    data = JSON.parse(localStorage.getItem(getTxKey())) || [];
-    const storedSettings = JSON.parse(localStorage.getItem(getSettingsKey()));
-    if (storedSettings) {
-      settings = { ...DEFAULT_SETTINGS, ...storedSettings };
-      if (!settings.trackedMarkets) settings.trackedMarkets = DEFAULT_SETTINGS.trackedMarkets.slice();
-      if (!settings.api) settings.api = { provider: 'none', key: '' };
-    }
-    // normalize data
-    data = data.map(d => ({
-      id: d.id || uid(),
-      type: d.type || 'expense',
-      amount: Number(d.amount) || 0,
-      date: d.date || new Date().toISOString().slice(0,10),
-      desc: d.desc || '',
-      category: d.category || (d.type === 'income' ? 'N/A' : 'Misc'),
-      method: d.method || (d.type === 'income' ? 'salary_acct' : 'cash'),
-      incomeSource: d.incomeSource || '',
-      investmentGroup: d.investmentGroup || '',
-      investmentSub: d.investmentSub || '',
-      insuranceType: d.insuranceType || '',
-      insuranceFor: d.insuranceFor || '',
-    }));
-  }
-
-  async function loadProfileData() {
-    loadLocal();
-    if (USE_FIRESTORE && db && currentProfile) {
-      try {
-        const doc = await db.collection(FIRESTORE_COLLECTION_NAME).doc(toKey(currentProfile)).get();
-        if (doc.exists) {
-          const server = doc.data();
-          data = server.data || data;
-          methodNames = server.methodNames || methodNames;
-          incomeSources = server.incomeSources || incomeSources;
-          settings = { ...DEFAULT_SETTINGS, ...(server.settings || {}) };
-        }
-      } catch (e) {
-        console.error("Firestore read error:", e);
-      }
-    }
-    renderAll();
-  }
-
-  // ---------- RENDER ----------
-  function renderAll() {
-    data.sort((a,b) => new Date(b.date) - new Date(a.date));
-    setupDropdowns();
-    renderKPIs();
-    renderCharts();
-    renderRecentEntries();
-    renderSettings();
-    remapCommoditySymbolsByCountry();
-    renderMarketTicker();
-  }
-
-  function setupDropdowns() {
-    // Methods
-    formEls.method.innerHTML = Object.keys(methodNames)
-      .filter(key => key !== 'credit_card')
-      .map(key => `<option value="${key}">${methodNames[key]}</option>`).join('');
-    // Income sources
-    formEls.incomeSource.innerHTML = '<option value="">Select Source</option>' + incomeSources.map(s => `<option value="${s}">${s}</option>`).join('');
-    // Categories
-    formEls.category.innerHTML = BASE_CATS.map(c => `<option value="${c}">${c}</option>`).join('');
-    // Recent filter
-    const recentCat = document.getElementById('recentCategory');
-    if (recentCat) {
-      const allCats = Array.from(new Set([...BASE_CATS, 'Income', 'Opening Balance']));
-      recentCat.innerHTML = '<option value="">All Cats</option>' + allCats.map(c => `<option value="${c}">${c}</option>`).join('');
-    }
-
-    // Listeners
-    formEls.type.onchange = updateTransactionFormFields;
-    formEls.category.onchange = updateTransactionFormFields;
-    formEls.openingType.onchange = updateTransactionFormFields;
-    formEls.invGroup.onchange = () => updateInvestmentSubDropdown(formEls.invGroup, formEls.invSub);
-    formEls.openingGroup.onchange = () => updateInvestmentSubDropdown(formEls.openingGroup, formEls.openingSub);
-
-    populateInvestmentGroupDropdowns();
-    updateTransactionFormFields();
-  }
 
   const formEls = {
     type: document.getElementById('type'),
@@ -1413,9 +1263,13 @@
     openingGroup: document.getElementById('openingGroup'),
     openingSub: document.getElementById('openingSub'),
     openingSubLabel: document.getElementById('openingSubLabel'),
+    insType: document.getElementById('insType'),
+    insFor: document.getElementById('insFor'),
+
     addBtn: document.getElementById('addBtn'),
     saveBtn: document.getElementById('saveBtn'),
     cancelBtn: document.getElementById('cancelBtn'),
+
     categoryContainer: document.getElementById('categoryContainer'),
     incomeRow: document.getElementById('incomeSourceRow'),
     invRow: document.getElementById('investmentRow'),
@@ -1423,131 +1277,281 @@
     openingBalanceRow: document.getElementById('openingBalanceRow'),
     regularFieldsDiv: document.getElementById('regularFields'),
   };
+  let chartMain = null;
+  let donutChart = null;
+  let chartNetWorth = null;
+  let chartInvTypesModal = null;
+  let chartInvGrowthModal = null;
+  let invBreakdownBarChart = null;
+  let invBreakdownPieChart = null;
+
+  // Persistence
+  function getTxKey() { return currentProfile ? `mm_data_${currentProfile}` : 'mm_data_default'; }
+  function getMethodKey() { return currentProfile ? `mm_methods_${currentProfile}` : 'mm_methods_default'; }
+  function getIncomeKey() { return currentProfile ? `mm_income_${currentProfile}` : 'mm_income_default'; }
+  function getSettingsKey() { return currentProfile ? `mm_settings_${currentProfile}` : 'mm_settings_default'; }
+  function toKey(name) { return name.toLowerCase().replace(/[^a-z0-9]+/g, '_'); }
+
+  function saveToLocalStorage() {
+    localStorage.setItem(getTxKey(), JSON.stringify(data));
+    localStorage.setItem(getMethodKey(), JSON.stringify(methodNames));
+    localStorage.setItem(getIncomeKey(), JSON.stringify(incomeSources));
+    localStorage.setItem(getSettingsKey(), JSON.stringify(settings));
+  }
+
+  function saveAll() {
+    if (!currentProfile) { saveToLocalStorage(); return; }
+    if (USE_FIRESTORE && db) {
+      const docRef = db.collection(FIRESTORE_COLLECTION_NAME).doc(toKey(currentProfile));
+      docRef.set({
+        data, methodNames, incomeSources, settings, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch((error) => {
+        console.error("Firestore write error:", error);
+        saveToLocalStorage();
+      });
+    } else {
+      saveToLocalStorage();
+    }
+  }
+
+  function loadFromLocalStorage() {
+    methodNames = JSON.parse(localStorage.getItem(getMethodKey())) || {...CANONICAL_METHODS};
+    incomeSources = JSON.parse(localStorage.getItem(getIncomeKey())) || ['Salary', 'Freelance', 'Interest'];
+    data = JSON.parse(localStorage.getItem(getTxKey())) || [];
+    const storedSettings = JSON.parse(localStorage.getItem(getSettingsKey()));
+    if (storedSettings) {
+      settings = storedSettings;
+      if (!settings.trackedMarkets) settings.trackedMarkets = [
+        { symbol: 'SENSEX', name: 'Sensex', price: 72000.00, change: 0.85 },
+        { symbol: 'NASDAQ', name: 'Nasdaq', price: 16000.00, change: -1.23 },
+        { symbol: 'XAUUSD', name: 'Gold/USD', price: 2350.00, change: 0.15 },
+        { symbol: 'XAGUSD', name: 'Silver/USD', price: 28.50, change: -0.55 },
+        { symbol: 'BTCUSD', name: 'Bitcoin', price: 68000.00, change: 2.10 }
+      ];
+      if (!settings.commodityCountry) settings.commodityCountry = '';
+    }
+
+    data = data.map(d => ({
+      id: d.id,
+      type: d.type || 'expense',
+      amount: Number(d.amount) || 0,
+      date: d.date || new Date().toISOString().slice(0,10),
+      desc: d.desc || '',
+      category: d.category || 'Misc',
+      method: d.method || 'cash',
+      incomeSource: d.incomeSource || '',
+      investmentGroup: d.investmentGroup || '',
+      investmentSub: d.investmentSub || '',
+      insuranceType: d.insuranceType || '',
+      insuranceFor: d.insuranceFor || '',
+    }));
+  }
+
+  async function loadProfileData() {
+    loadFromLocalStorage();
+    if (USE_FIRESTORE && db && currentProfile) {
+      try {
+        const doc = await db.collection(FIRESTORE_COLLECTION_NAME).doc(toKey(currentProfile)).get();
+        if (doc.exists) {
+          const serverData = doc.data();
+          data = serverData.data || data;
+          methodNames = serverData.methodNames || methodNames;
+          incomeSources = serverData.incomeSources || incomeSources;
+          settings = serverData.settings || settings;
+          if (!settings.trackedMarkets) settings.trackedMarkets = [
+            { symbol: 'SENSEX', name: 'Sensex', price: 72000.00, change: 0.85 },
+            { symbol: 'NASDAQ', name: 'Nasdaq', price: 16000.00, change: -1.23 },
+            { symbol: 'XAUUSD', name: 'Gold/USD', price: 2350.00, change: 0.15 },
+            { symbol: 'XAGUSD', name: 'Silver/USD', price: 28.50, change: -0.55 },
+            { symbol: 'BTCUSD', name: 'Bitcoin', price: 68000.00, change: 2.10 }
+          ];
+          if (!settings.commodityCountry) settings.commodityCountry = '';
+        }
+      } catch (e) {
+        console.error("Firestore read error, using local data:", e);
+      }
+    }
+    renderAll();
+  }
+
+  // --- RENDER & SETUP ---
+  function renderAll() {
+    data.sort((a,b) => new Date(b.date) - new Date(a.date));
+    setupDropdowns();
+    renderKPIs();
+    renderCharts();
+    renderRecentEntries();
+    renderSettings();
+    remapCommoditySymbolsByCountry(); // ensure commodities follow selected country
+    renderMarketTicker();
+  }
+
+  function setupDropdowns() {
+    // Methods
+    formEls.method.innerHTML = Object.keys(methodNames)
+      .filter(key => key !== 'credit_card')
+      .map(key => `<option value="${key}">${methodNames[key]}</option>`).join('');
+    // Income sources
+    formEls.incomeSource.innerHTML = '<option value="">Select Source</option>' + incomeSources.map(s => `<option value="${s}">${s}</option>`).join('');
+    // Categories
+    formEls.category.innerHTML = BASE_CATS.map(c => `<option value="${c}">${c}</option>`).join('');
+    
+    // Recent Table Filter
+    const recentCat = document.getElementById('recentCategory');
+    if(recentCat) {
+        const allCats = Array.from(new Set([...BASE_CATS, 'Income', 'Opening Balance']));
+        recentCat.innerHTML = '<option value="">All Cats</option>' + allCats.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+
+    // Listeners
+    formEls.type.onchange = updateTransactionFormFields;
+    formEls.category.onchange = updateTransactionFormFields;
+    formEls.openingType.onchange = updateTransactionFormFields;
+    formEls.invGroup.onchange = () => updateInvestmentSubDropdown(formEls.invGroup, formEls.invSub);
+    formEls.openingGroup.onchange = () => updateInvestmentSubDropdown(formEls.openingGroup, formEls.openingSub);
+    // Populate groups
+    populateInvestmentGroupDropdowns();
+    updateTransactionFormFields();
+  }
 
   function populateInvestmentGroupDropdowns() {
     const options = Object.keys(INVESTMENT_STRUCTURE).map(group => `<option value="${group}">${group}</option>`).join('');
     formEls.invGroup.innerHTML = '<option value="">Select Category</option>' + options;
     formEls.openingGroup.innerHTML = '<option value="">Select Category</option>' + options;
   }
+
   function updateInvestmentSubDropdown(groupEl, subEl, initialValue = null) {
-    const selectedGroup = groupEl.value;
-    let optionsHtml = '<option value="">Select Sub-Type</option>';
-    if (selectedGroup && INVESTMENT_STRUCTURE[selectedGroup]) {
-      const subTypes = Object.keys(INVESTMENT_STRUCTURE[selectedGroup]);
-      optionsHtml += subTypes.map(sub => `<option value="${sub}" ${initialValue === sub ? 'selected' : ''}>${sub}</option>`).join('');
-    }
-    subEl.innerHTML = optionsHtml;
+      const selectedGroup = groupEl.value;
+      let optionsHtml = '<option value="">Select Sub-Type</option>';
+      if (selectedGroup && INVESTMENT_STRUCTURE[selectedGroup]) {
+          const subTypes = Object.keys(INVESTMENT_STRUCTURE[selectedGroup]);
+          optionsHtml += subTypes.map(sub => `<option value="${sub}" ${initialValue === sub ? 'selected' : ''}>${sub}</option>`).join('');
+      }
+      subEl.innerHTML = optionsHtml;
   }
+
   function updateTransactionFormFields(editEntry = null){
-    const entryType = formEls.type.value;
-    const cat = formEls.category.value;
-    const openingType = formEls.openingType.value;
+      const entryType = formEls.type.value;
+      const cat = formEls.category.value;
+      const openingType = formEls.openingType.value;
 
-    formEls.regularFieldsDiv.classList.remove('hidden');
-    formEls.openingBalanceRow.classList.add('hidden');
-    formEls.incomeRow.classList.add('hidden');
-    formEls.invRow.classList.add('hidden');
-    formEls.insRow.classList.add('hidden');
-    formEls.categoryContainer.classList.remove('hidden');
+      formEls.regularFieldsDiv.classList.remove('hidden');
+      formEls.openingBalanceRow.classList.add('hidden');
+      formEls.incomeRow.classList.add('hidden');
+      formEls.invRow.classList.add('hidden');
+      formEls.insRow.classList.add('hidden');
+      formEls.categoryContainer.classList.remove('hidden');
 
-    document.getElementById('openingGroupContainer').classList.add('hidden');
-    document.getElementById('openingSubContainer').classList.add('hidden');
+      document.getElementById('openingGroupContainer').classList.add('hidden');
+      document.getElementById('openingSubContainer').classList.add('hidden');
 
-    if(entryType === 'opening_balance'){
-      formEls.openingBalanceRow.classList.remove('hidden');
-      formEls.regularFieldsDiv.classList.add('hidden');
-      if (openingType === 'Investment') {
-        document.getElementById('openingGroupContainer').classList.remove('hidden');
-        document.getElementById('openingSubContainer').classList.remove('hidden');
-        formEls.openingGroupLabel.textContent = 'Investment Category';
-        document.getElementById('openingSubLabel').textContent = 'Investment Sub-Type';
-        if (editEntry) {
-          formEls.openingGroup.value = editEntry.investmentGroup || '';
-          updateInvestmentSubDropdown(formEls.openingGroup, formEls.openingSub, editEntry.investmentSub);
-        } else {
-          updateInvestmentSubDropdown(formEls.openingGroup, formEls.openingSub);
-        }
-      } else {
-        document.getElementById('openingSubContainer').classList.remove('hidden');
-        formEls.openingGroupLabel.textContent = 'Account Group';
-        document.getElementById('openingSubLabel').textContent = 'Cash Account';
-        formEls.openingGroup.innerHTML = `<option value="Cash">Cash</option>`;
-        formEls.openingSub.innerHTML = `<option value="">Select Account</option>` +
-          Object.keys(methodNames).filter(key => key !== 'credit_card').map(key =>
-            `<option value="${key}" ${editEntry && editEntry.method === key ? 'selected' : ''}>${methodNames[key]}</option>`
-          ).join('');
+      populateInvestmentGroupDropdowns();
+      if(entryType === 'opening_balance'){
+          formEls.openingBalanceRow.classList.remove('hidden');
+          formEls.regularFieldsDiv.classList.add('hidden');
+          if (openingType === 'Investment') {
+              document.getElementById('openingGroupContainer').classList.remove('hidden');
+              document.getElementById('openingSubContainer').classList.remove('hidden');
+              formEls.openingGroupLabel.textContent = 'Investment Category';
+              formEls.openingSubLabel.textContent = 'Investment Sub-Type';
+
+              if (editEntry) {
+                  formEls.openingGroup.value = editEntry.investmentGroup || '';
+                  updateInvestmentSubDropdown(formEls.openingGroup, formEls.openingSub, editEntry.investmentSub);
+              } else {
+                  updateInvestmentSubDropdown(formEls.openingGroup, formEls.openingSub);
+              }
+          } else {
+              document.getElementById('openingSubContainer').classList.remove('hidden');
+              formEls.openingGroupLabel.textContent = 'Account Group';
+              formEls.openingSubLabel.textContent = 'Cash Account';
+
+              formEls.openingGroup.innerHTML = `<option value="Cash">Cash</option>`;
+              formEls.openingSub.innerHTML = `<option value="">Select Account</option>` +
+                  Object.keys(methodNames).filter(key => key !== 'credit_card').map(key =>
+                      `<option value="${key}" ${editEntry && editEntry.method === key ? 'selected' : ''}>${methodNames[key]}</option>`
+                  ).join('');
+          }
+
+      } else if (entryType === 'income') {
+          formEls.incomeRow.classList.remove('hidden');
+          formEls.categoryContainer.classList.add('hidden');
+
+      } else if (entryType === 'expense') {
+          if(cat === 'Investments') {
+              formEls.invRow.classList.remove('hidden');
+              if (editEntry) {
+                  formEls.invGroup.value = editEntry.investmentGroup || '';
+                  updateInvestmentSubDropdown(formEls.invGroup, formEls.invSub, editEntry.investmentSub);
+              } else {
+                  updateInvestmentSubDropdown(formEls.invGroup, formEls.invSub);
+              }
+          } else if(cat === 'Insurance') {
+              formEls.insRow.classList.remove('hidden');
+          }
       }
-    } else if (entryType === 'income') {
-      formEls.incomeRow.classList.remove('hidden');
-      formEls.categoryContainer.classList.add('hidden');
-    } else if (entryType === 'expense') {
-      if(cat === 'Investments') {
-        formEls.invRow.classList.remove('hidden');
-        if (editEntry) {
-          formEls.invGroup.value = editEntry.investmentGroup || '';
-          updateInvestmentSubDropdown(formEls.invGroup, formEls.invSub, editEntry.investmentSub);
-        } else {
-          updateInvestmentSubDropdown(formEls.invGroup, formEls.invSub);
-        }
-      } else if(cat === 'Insurance') {
-        formEls.insRow.classList.remove('hidden');
-      }
-    }
   }
 
-  // ---------- CRUD ----------
+  // --- CRUD ---
   function uid() { return 'id' + Date.now() + Math.random().toString(16).slice(2); }
-  function requireSignedIn() { return true; } // allow offline entry; persistence handled by local or firestore
+  function requireSignedIn() { if (!currentProfile) { alert('Please sign in to proceed.'); return false; } return true; }
 
   function submitForm(e, isImportOrEdit=false){
+    if(!requireSignedIn()) return;
     const type = formEls.type.value;
     const amount = Number(formEls.amount.value);
     const date = formEls.date.value;
     const desc = formEls.desc.value;
     const method = formEls.method.value;
-
-    if(amount <= 0 || isNaN(amount)) return alert('Enter a valid amount.');
-    if(!date) return alert('Select a date.');
-    if(!desc) return alert('Enter a description.');
+    if(amount <= 0 || isNaN(amount)) return alert('Please enter a valid amount.');
+    if(!date) return alert('Please select a date.');
+    if(!desc) return alert('Please enter a description.');
 
     const entry = { id: e ? e.id : uid(), type, amount, date, desc, category: '', method: method, incomeSource: '', investmentGroup: '', investmentSub: '', insuranceType: '', insuranceFor: '' };
     if(type === 'income') {
       entry.incomeSource = formEls.incomeSource.value || (e ? e.incomeSource : '');
+      if(!entry.incomeSource && !isImportOrEdit) return alert('Please select an Income Source.');
       entry.category = 'N/A';
       entry.investmentGroup = entry.investmentSub = '';
     } else if(type === 'opening_balance') {
-      const obType = formEls.openingType.value;
-      if (obType === 'Cash') {
-        entry.method = formEls.openingSub.value || (e ? e.method : '');
-        entry.investmentGroup = 'Cash';
-        entry.investmentSub = formEls.openingSub.value || (e ? e.investmentSub : '');
-        if(!entry.method && !isImportOrEdit) return alert('Select a cash account.');
-      } else {
-        entry.method = '';
-        entry.investmentGroup = formEls.openingGroup.value || (e ? e.investmentGroup : '');
-        entry.investmentSub = formEls.openingSub.value || (e ? e.investmentSub : '');
-        if(!entry.investmentGroup && !isImportOrEdit) return alert('Select Investment Category.');
-        if(!entry.investmentSub && !isImportOrEdit) return alert('Select Investment Sub-Type.');
-      }
-      entry.category = 'N/A';
+        const obType = formEls.openingType.value;
+        if (obType === 'Cash') {
+            entry.method = formEls.openingSub.value || (e ? e.method : '');
+            entry.investmentGroup = 'Cash';
+            entry.investmentSub = formEls.openingSub.value || (e ? e.investmentSub : '');
+            if(!entry.method && !isImportOrEdit) return alert('Please select a cash account.');
+        } else if (obType === 'Investment') {
+            entry.method = '';
+            entry.investmentGroup = formEls.openingGroup.value || (e ? e.investmentGroup : '');
+            entry.investmentSub = formEls.openingSub.value || (e ? e.investmentSub : '');
+            if(!entry.investmentGroup && !isImportOrEdit) return alert('Please select an Investment Category.');
+            if(!entry.investmentSub && !isImportOrEdit) return alert('Please select an Investment Sub-Type.');
+        }
+        entry.category = 'N/A';
     } else if(type === 'expense') {
       entry.category = formEls.category.value || (e ? e.category : '');
-      if(!entry.category && !isImportOrEdit) return alert('Select a Category.');
-      if(!entry.method && !isImportOrEdit && entry.category !== 'Credit Card Payment') return alert('Select a Payment Method.');
+      if(!entry.category && !isImportOrEdit) return alert('Please select a Category.');
+      if(!entry.method && !isImportOrEdit && entry.category !== 'Credit Card Payment') return alert('Please select a Payment Method.');
       if(entry.category === 'Investments') {
-        entry.investmentGroup = formEls.invGroup.value || (e ? e.investmentGroup : '');
-        entry.investmentSub = formEls.invSub.value || (e ? e.investmentSub : '');
-        if(!entry.investmentGroup && !isImportOrEdit) return alert('Select Investment Category.');
-        if(!entry.investmentSub && !isImportOrEdit) return alert('Select Investment Sub-Type.');
-        entry.insuranceType = entry.insuranceFor = '';
-      } else if(entry.category === 'Insurance') {
+          entry.investmentGroup = formEls.invGroup.value || (e ? e.investmentGroup : '');
+          entry.investmentSub = formEls.invSub.value || (e ? e.investmentSub : '');
+          if(!entry.investmentGroup && !isImportOrEdit) return alert('Please select an Investment Category.');
+          if(!entry.investmentSub && !isImportOrEdit) return alert('Please select an Investment Sub-Type.');
+          entry.insuranceType = entry.insuranceFor = '';
+      } else {
+          entry.investmentGroup = entry.investmentSub = '';
+      }
+
+      if(entry.category === 'Insurance') {
         entry.insuranceType = formEls.insType.value || (e ? e.insuranceType : 'General');
         entry.insuranceFor = formEls.insFor.value || (e ? e.insuranceFor : 'Self');
-      } else if (entry.category === 'Credit Card Payment') {
-        entry.method = 'credit_card_payment';
-      } else {
         entry.investmentGroup = entry.investmentSub = '';
-        entry.insuranceType = entry.insuranceFor = '';
+      } else {
+          entry.insuranceType = entry.insuranceFor = '';
+      }
+
+      if (entry.category === 'Credit Card Payment') {
+          entry.method = 'credit_card_payment';
       }
     }
 
@@ -1561,9 +1565,11 @@
       data.push(entry);
     }
 
-    saveAll();
-    renderAll();
-    if (!isImportOrEdit) clearForm();
+    if(!isImportOrEdit) {
+      saveAll();
+      renderAll();
+      clearForm();
+    }
   }
 
   formEls.addBtn.addEventListener('click', () => submitForm());
@@ -1572,14 +1578,14 @@
     if (entryToEdit) submitForm(entryToEdit);
   });
   formEls.cancelBtn.addEventListener('click', () => {
-    editId = null;
-    formEls.addBtn.classList.remove('hidden');
-    formEls.saveBtn.classList.add('hidden');
-    formEls.cancelBtn.classList.add('hidden');
-    clearForm();
+      editId = null;
+      formEls.addBtn.classList.remove('hidden');
+      formEls.saveBtn.classList.add('hidden');
+      formEls.cancelBtn.classList.add('hidden');
+      clearForm();
   });
-
   function loadEdit(id) {
+    if(!requireSignedIn()) return;
     const e = data.find(t => t.id === id);
     if (!e) return;
     editId = id;
@@ -1588,28 +1594,32 @@
     formEls.amount.value = e.amount;
     formEls.date.value = e.date;
     formEls.desc.value = e.desc;
-    formEls.category.value = e.category || 'Food';
-    formEls.method.value = e.method || 'cash';
-    formEls.incomeSource.value = e.incomeSource || '';
-    formEls.insType.value = e.insuranceType || '';
-    formEls.insFor.value = e.insuranceFor || '';
+    formEls.category.value = e.category;
+    formEls.method.value = e.method;
+    formEls.incomeSource.value = e.incomeSource;
+    formEls.insType.value = e.insuranceType;
+    formEls.insFor.value = e.insuranceFor;
 
+    formEls.category.value = e.category || 'Food';
     if (e.type === 'opening_balance') {
       if (e.investmentGroup && e.investmentGroup !== 'Cash') {
-        formEls.openingType.value = 'Investment';
+          formEls.openingType.value = 'Investment';
       } else {
-        formEls.openingType.value = 'Cash';
+          formEls.openingType.value = 'Cash';
+          formEls.method.value = e.method || 'cash';
       }
+    } else if (e.type === 'expense' && e.category !== 'Credit Card Payment') {
+        formEls.method.value = e.method || 'cash';
     }
 
     updateTransactionFormFields(e);
 
     if (e.type === 'opening_balance') {
       if (formEls.openingType.value === 'Investment') {
-        formEls.openingGroup.value = e.investmentGroup || '';
-        updateInvestmentSubDropdown(formEls.openingGroup, formEls.openingSub, e.investmentSub);
-      } else {
-        formEls.openingSub.value = e.method || '';
+          formEls.openingGroup.value = e.investmentGroup || '';
+          updateInvestmentSubDropdown(formEls.openingGroup, formEls.openingSub, e.investmentSub);
+      } else if (formEls.openingType.value === 'Cash') {
+          formEls.openingSub.value = e.method || '';
       }
     } else if (e.type === 'expense' && e.category === 'Investments') {
       formEls.invGroup.value = e.investmentGroup || '';
@@ -1622,7 +1632,8 @@
   }
 
   function deleteEntry(id) {
-    if (confirm('Delete this transaction?')) {
+    if(!requireSignedIn()) return;
+    if (confirm('Are you sure you want to delete this transaction?')) {
       data = data.filter(t => t.id !== id);
       saveAll();
       renderAll();
@@ -1647,7 +1658,7 @@
     updateTransactionFormFields();
   }
 
-  // ---------- KPIs ----------
+  // --- KPIs ---
   function fmt(n) { return (n || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
   function pct(n) { return (n || 0).toFixed(1) + '%'; }
   function getNextPaymentDate() {
@@ -1685,12 +1696,10 @@
 
     const momIncEl = document.getElementById('momIncome');
     momIncEl.className = momInc >= 0 ? 'trend-up' : 'trend-down';
-    momIncEl.innerHTML = `${momInc >= 0 ? '▲' : '▼'} ${pct(Math.abs(momInc))} vs Last`;
-
+    momIncEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="${momInc >= 0 ? '18 15 12 9 6 15' : '18 9 12 15 6 9'}"></polyline></svg> ${pct(Math.abs(momInc))} vs Last`;
     const momExpEl = document.getElementById('momExpense');
     momExpEl.className = momExp <= 0 ? 'trend-up' : 'trend-down';
-    momExpEl.innerHTML = `${momExp <= 0 ? '▲' : '▼'} ${pct(Math.abs(momExp))} vs Last`;
-
+    momExpEl.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="${momExp <= 0 ? '18 15 12 9 6 15' : '18 9 12 15 6 9'}"></polyline></svg> ${pct(Math.abs(momExp))} vs Last`;
     // Credit card logic
     const ccOpen = sum(data.filter(d => d.type === 'opening_balance' && d.method === 'credit_card'));
     const ccExp = sum(data.filter(d => d.type === 'expense' && d.method === 'credit_card'));
@@ -1710,8 +1719,7 @@
     document.getElementById('kpiCCDue').innerText = fmt(creditCardDue);
     document.getElementById('ccLimitDisplay').innerText = fmt(ccLimit);
     document.getElementById('ccPaymentDate').innerText = `Next: ${getNextPaymentDate()}`;
-
-    // Net liquidity breakdown
+    
     const breakdownContainer = document.getElementById('netLiquidityBreakdown');
     let breakdownHtml = '';
     const liquidMethods = data.filter(d => (d.type === 'opening_balance' && d.investmentGroup && d.investmentGroup !== 'Cash') || (d.type === 'income') || (d.type === 'expense' && d.category !== 'Investments'));
@@ -1736,18 +1744,20 @@
     renderInvestmentKPICharts();
   }
 
-  // ---------- INVESTMENT KPI CHARTS ----------
+  // --- Investment breakdown helpers and rendering ---
   function getColorPalette(count) {
     const colorsVars = ['--c1','--c2','--c3','--c4','--c5','--c6','--c7','--c8','--c9','--c10','--c11','--c12']
       .map(v => getComputedStyle(document.documentElement).getPropertyValue(v).trim() || '#3b82f6');
     return Array.from({length: count}, (_, i) => colorsVars[i % colorsVars.length]);
   }
+
   function applyDateRangeToInvestments(entries, range) {
     if(!range || range === 'all') return entries;
     const cutoff = new Date();
-    cutoff.setMonth(cutoff.getMonth() - Number(range));
+    cutoff.setMonth(cuttoff.getMonth() - Number(range));
     return entries.filter(e => new Date(e.date) >= cutoff);
   }
+
   function rollupMajorBuckets(entries) {
     const byBucket = entries.reduce((acc, curr) => {
       const group = curr.investmentGroup || 'Uncategorized';
@@ -1759,6 +1769,7 @@
     items.sort((a,b) => b.amount - a.amount);
     return items;
   }
+
   function rollupSubcategories(entries, selectedBucket) {
     const groupsInBucket = Object.keys(MAJOR_BUCKETS).filter(g => MAJOR_BUCKETS[g] === selectedBucket);
     const filtered = entries.filter(e => groupsInBucket.includes(e.investmentGroup));
@@ -1770,16 +1781,21 @@
     const items = Object.entries(bySub).map(([sub, amount]) => ({ sub, amount })).sort((a,b) => b.amount - a.amount);
     return items;
   }
+
   function setupInvestmentFilters() {
     const bucketSelect = document.getElementById('invBucketFilter');
     const uniqueBuckets = Array.from(new Set(Object.values(MAJOR_BUCKETS)));
     bucketSelect.innerHTML = '<option value="">Select bucket</option>' + uniqueBuckets.map(b => `<option value="${b}">${b}</option>`).join('');
-    document.getElementById('invViewMode').addEventListener('change', renderInvestmentKPICharts);
-    bucketSelect.addEventListener('change', renderInvestmentKPICharts);
-    document.getElementById('invDateRange').addEventListener('change', renderInvestmentKPICharts);
+
+    document.getElementById('invViewMode').addEventListener('change', () => renderInvestmentKPICharts());
+    bucketSelect.addEventListener('change', () => renderInvestmentKPICharts());
+    document.getElementById('invDateRange').addEventListener('change', () => renderInvestmentKPICharts());
+
     const toggleBtn = document.getElementById('toggleInvBreakdown');
     const panel = document.getElementById('invBreakdownPanel');
-    if (toggleBtn && panel) toggleBtn.onclick = () => panel.classList.toggle('hidden');
+    if (toggleBtn && panel) {
+      toggleBtn.onclick = () => panel.classList.toggle('hidden');
+    }
     const viewCatsBtn = document.getElementById('viewCategoriesBtn');
     if (viewCatsBtn) {
       viewCatsBtn.onclick = () => {
@@ -1790,19 +1806,20 @@
       };
     }
   }
-  let invBreakdownBarChart = null;
-  let invBreakdownPieChart = null;
+
   function renderQuickSubDropdowns(entries){
     const container = document.getElementById('invQuickSubs');
     if(!container) return;
     const order = ['Equity','Debt','ETFs','Mutual Funds','Retirement','Real Estate','Commodities','Crypto','Other'];
     const items = rollupMajorBuckets(entries);
     const totals = Object.fromEntries(items.map(i => [i.bucket, i.amount]));
+    
     const blocks = order.filter(b => Object.keys(totals).includes(b)).map(bucket => {
       const groupsInBucket = Object.keys(MAJOR_BUCKETS).filter(g => MAJOR_BUCKETS[g] === bucket);
       const subsSet = new Set();
       groupsInBucket.forEach(g => Object.keys(INVESTMENT_STRUCTURE[g] || {}).forEach(s => subsSet.add(s)));
       const subs = Array.from(subsSet);
+      
       const subValues = subs.map(sub => {
         const sumAmt = entries.filter(d =>
           (((d.type === 'opening_balance' && d.investmentGroup && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments'))) &&
@@ -1810,12 +1827,14 @@
         ).reduce((acc,c) => acc + Number(c.amount), 0);
         return {sub, amount: sumAmt};
       }).filter(x => x.amount > 0).sort((a,b) => b.amount - a.amount);
+
       const dropdownHtml = subValues.length ? subValues.map(x => `
         <div class="sub-dropdown-item">
             <span>${x.sub}</span>
             <strong style="color:var(--primary-dark)">${fmt(x.amount)}</strong>
         </div>
       `).join('') : `<div class="sub-dropdown-item" style="color:#aaa;">No data</div>`;
+
       return `
         <div class="quick-sub-card">
           <div class="quick-sub-header">
@@ -1832,18 +1851,24 @@
         </div>
       `;
     }).join('');
+
     container.innerHTML = blocks;
+    
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.sub-dropdown-container')) {
-        document.querySelectorAll('.sub-dropdown-menu').forEach(m => m.classList.remove('show'));
-      }
+        if (!e.target.closest('.sub-dropdown-container')) {
+            document.querySelectorAll('.sub-dropdown-menu').forEach(m => m.classList.remove('show'));
+        }
     });
   }
+
   function toggleSubMenu(btn) {
-    const currentMenu = btn.parentElement.querySelector('.sub-dropdown-menu');
-    document.querySelectorAll('.sub-dropdown-menu').forEach(m => { if (m !== currentMenu) m.classList.remove('show'); });
-    currentMenu.classList.toggle('show');
+      const currentMenu = btn.parentElement.querySelector('.sub-dropdown-menu');
+      document.querySelectorAll('.sub-dropdown-menu').forEach(m => {
+          if (m !== currentMenu) m.classList.remove('show');
+      });
+      currentMenu.classList.toggle('show');
   }
+
   function renderInvestmentKPICharts() {
     if (typeof Chart === 'undefined') return;
     const rawInvestments = data.filter(d => (d.type === 'opening_balance' && d.investmentGroup && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments'));
@@ -1851,6 +1876,7 @@
     const viewMode = document.getElementById('invViewMode')?.value || 'top4';
     const selectedBucket = document.getElementById('invBucketFilter')?.value || '';
     const entries = applyDateRangeToInvestments(rawInvestments, range);
+
     let labels = [], values = [];
     const colors = getColorPalette(10);
     if(viewMode === 'subcats' && selectedBucket) {
@@ -1867,6 +1893,7 @@
       document.getElementById('invBarTitle').innerText = 'Investment by major bucket (Top 4)';
       document.getElementById('invPieTitle').innerText = 'Share by bucket (Top 4)';
     }
+
     if (invBreakdownBarChart) invBreakdownBarChart.destroy();
     const barCtx = document.getElementById('invBreakdownBar');
     if (barCtx) {
@@ -1876,11 +1903,13 @@
         options: {
           maintainAspectRatio: false,
           responsive: true,
-          plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c)=>`${c.label}: ${fmt(c.parsed.y)}` } } },
+          plugins: { legend: { display: false }, tooltip: { 
+            callbacks: { label: (c)=>`${c.label}: ${fmt(c.parsed.y)}` } } },
           scales: { y: { beginAtZero: true, ticks: { callback: (v)=>fmt(v).replace('?','? ') }, grid:{color:'#eef2ff'} }, x:{grid:{display:false}} }
         }
       });
     }
+
     if (invBreakdownPieChart) invBreakdownPieChart.destroy();
     const pieCtx = document.getElementById('invBreakdownPie');
     if (pieCtx) {
@@ -1912,14 +1941,15 @@
     renderQuickSubDropdowns(entries);
   }
 
-  // ---------- CHARTS ----------
+  // --- CHART FUNCTIONS ---
   function prepareMonthlyData(range, filteredData = data) {
     const monthlyData = {};
-    const dates = filteredData.map(d => new Date(d.date));
+    const dates = filteredData.map(d => d.date);
     if (dates.length === 0) return { labels: [], income: [], expense: [], investment: [] };
-    const start = range === 'all' ? new Date(Math.min(...dates)) : new Date();
+    const start = range === 'all' ? new Date(Math.min(...dates.map(d => new Date(d)))) : new Date();
     if (range !== 'all') start.setMonth(start.getMonth() - Number(range));
     start.setDate(1);
+
     let currentDate = new Date(start.getFullYear(), start.getMonth(), 1);
     const today = new Date();
     while (currentDate <= today) {
@@ -1927,6 +1957,7 @@
       monthlyData[key] = { income: 0, expense: 0, investment: 0, month: currentDate.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' }) };
       currentDate.setMonth(currentDate.getMonth() + 1);
     }
+
     filteredData.forEach(d => {
       const date = new Date(d.date);
       const key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
@@ -1948,13 +1979,12 @@
     };
   }
 
-  let chartMain = null;
-  let donutChart = null;
   function renderCharts() {
     if (typeof Chart === 'undefined') return;
     const range = document.getElementById('mainChartFilter').value;
     const { labels, income, expense, investment } = prepareMonthlyData(range === 'all' ? 'all' : Number(range), data);
     const netIncomeSeries = income.map((v, i) => v - expense[i]);
+
     if (chartMain) chartMain.destroy();
     const ctxMain = document.getElementById('mainChart').getContext('2d');
     chartMain = new Chart(ctxMain, {
@@ -1976,12 +2006,16 @@
           y: { stacked: true, ticks: { callback: function(value) { return fmt(Math.abs(value)).replace('?', '? '); } } }
         },
         plugins: {
-          tooltip: { callbacks: { label: function(context) {
-            let label = context.dataset.label || '';
-            if (label) label += ': ';
-            if (context.parsed.y !== null) label += fmt(Math.abs(context.parsed.y));
-            return label;
-          }}},
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) label += ': ';
+                if (context.parsed.y !== null) label += fmt(Math.abs(context.parsed.y));
+                return label;
+              }
+            }
+          },
           legend: { position: 'top' }
         }
       }
@@ -1989,44 +2023,45 @@
     renderWalletUnified();
   }
 
-  // ---------- WALLET / EXPENSE ----------
+  // --- WALLET / EXPENSE FILTER LOGIC ---
   function setupExpenseMultiSelect() {
-    const container = document.getElementById('expenseFilterContainer');
-    const btn = document.getElementById('expenseFilterBtn');
-    const dropdown = document.getElementById('expenseMultiselectDropdown');
-    const list = document.getElementById('expenseCheckboxes');
-    const clearBtn = document.getElementById('msClear');
-    const applyBtn = document.getElementById('msApply');
+      const container = document.getElementById('expenseFilterContainer');
+      const btn = document.getElementById('expenseFilterBtn');
+      const dropdown = document.getElementById('expenseMultiselectDropdown');
+      const list = document.getElementById('expenseCheckboxes');
+      const clearBtn = document.getElementById('msClear');
+      const applyBtn = document.getElementById('msApply');
 
-    const categories = BASE_CATS.filter(c => !['Investments','Credit Card Payment'].includes(c));
-    list.innerHTML = categories.map(cat => `
-      <div class="ms-item">
-        <input type="checkbox" id="chk_${cat}" value="${cat}" class="expense-chk">
-        <label for="chk_${cat}" style="cursor:pointer; margin:0; font-weight:400; text-transform:none; color:#333;">${cat}</label>
-      </div>
-    `).join('');
+      const categories = BASE_CATS.filter(c => !['Investments','Credit Card Payment'].includes(c));
+      list.innerHTML = categories.map(cat => `
+          <div class="ms-item">
+              <input type="checkbox" id="chk_${cat}" value="${cat}" class="expense-chk">
+              <label for="chk_${cat}" style="cursor:pointer; margin:0; font-weight:400; text-transform:none; color:#333;">${cat}</label>
+          </div>
+      `).join('');
 
-    btn.onclick = (e) => { e.stopPropagation(); dropdown.classList.toggle('show'); };
-    dropdown.onclick = (e) => e.stopPropagation();
-    document.addEventListener('click', (e) => { if (!container.contains(e.target)) dropdown.classList.remove('show'); });
+      btn.onclick = (e) => { e.stopPropagation(); dropdown.classList.toggle('show'); };
+      dropdown.onclick = (e) => e.stopPropagation();
+      document.addEventListener('click', (e) => { if (!container.contains(e.target)) dropdown.classList.remove('show'); });
 
-    applyBtn.onclick = () => {
-      const checkboxes = document.querySelectorAll('.expense-chk');
-      selectedExpenseCategories = [];
-      checkboxes.forEach(chk => { if (chk.checked) selectedExpenseCategories.push(chk.value); });
-      dropdown.classList.remove('show');
-      btn.textContent = selectedExpenseCategories.length > 0 ? `${selectedExpenseCategories.length} selected ?` : 'Select Categories ?';
-      renderWalletUnified();
-      document.getElementById('resetExpenseDrilldown').classList.remove('hidden');
-    };
-    clearBtn.onclick = () => {
-      document.querySelectorAll('.expense-chk').forEach(chk => chk.checked = false);
-      selectedExpenseCategories = [];
-      dropdown.classList.remove('show');
-      btn.textContent = 'Select Categories ?';
-      renderWalletUnified();
-      document.getElementById('resetExpenseDrilldown').classList.add('hidden');
-    };
+      applyBtn.onclick = () => {
+          const checkboxes = document.querySelectorAll('.expense-chk');
+          selectedExpenseCategories = [];
+          checkboxes.forEach(chk => { if (chk.checked) selectedExpenseCategories.push(chk.value); });
+          dropdown.classList.remove('show');
+          btn.textContent = selectedExpenseCategories.length > 0 ? `${selectedExpenseCategories.length} selected ?` : 'Select Categories ?';
+          renderWalletUnified();
+          document.getElementById('resetExpenseDrilldown').classList.remove('hidden');
+      };
+
+      clearBtn.onclick = () => {
+          document.querySelectorAll('.expense-chk').forEach(chk => chk.checked = false);
+          selectedExpenseCategories = [];
+          dropdown.classList.remove('show');
+          btn.textContent = 'Select Categories ?';
+          renderWalletUnified();
+          document.getElementById('resetExpenseDrilldown').classList.add('hidden');
+      };
   }
 
   function renderWalletUnified() {
@@ -2039,6 +2074,7 @@
     if (mode === 'wallet') {
       document.getElementById('expenseFilterContainer').classList.add('hidden');
       document.getElementById('resetExpenseDrilldown').classList.add('hidden');
+      
       const liquidMethods = data.filter(d => (d.type === 'opening_balance' && d.investmentGroup === 'Cash') || (d.type === 'income') || (d.type === 'expense' && d.category !== 'Investments'));
       const methodBalances = liquidMethods.reduce((acc, curr) => {
         const key = curr.method || 'cash';
@@ -2052,6 +2088,7 @@
         .filter(([key, balance]) => balance > 0 && key !== 'credit_card')
         .map(([key, balance]) => ({ label: methodNames[key] || key, balance }));
       positiveBalances.sort((a,b) => b.balance - a.balance);
+
       if (donutChart) donutChart.destroy();
       const ctxDonut = document.getElementById('donutChart').getContext('2d');
       donutChart = new Chart(ctxDonut, {
@@ -2060,7 +2097,10 @@
           labels: positiveBalances.map(b => b.label),
           datasets: [{ data: positiveBalances.map(b => b.balance), backgroundColor: getColorPalette(positiveBalances.length), hoverOffset: 4 }]
         },
-        options: { maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        options: {
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } }
+        }
       });
       legendEl.innerHTML = positiveBalances.map((b, i) => `
         <div style="display:flex; justify-content:space-between;">
@@ -2075,25 +2115,32 @@
     } else {
       document.getElementById('expenseFilterContainer').classList.remove('hidden');
       const filteredData = data.filter(d => {
-        if (d.type !== 'expense' || d.category === 'Investments' || d.category === 'Credit Card Payment') return false;
-        if (selectedExpenseCategories.length > 0 && !selectedExpenseCategories.includes(d.category)) return false;
-        return true;
+          if (d.type !== 'expense' || d.category === 'Investments' || d.category === 'Credit Card Payment') return false;
+          if (selectedExpenseCategories.length > 0 && !selectedExpenseCategories.includes(d.category)) return false;
+          return true;
       });
+
       const title = selectedExpenseCategories.length > 0 ? `Selected Categories Breakdown` : 'All expenses (Top 10 categories)';
       const expenseMap = filteredData.reduce((acc, curr) => {
         const key = selectedExpenseCategories.length === 1 ? curr.desc.substring(0, 30) : curr.category;
         acc[key] = (acc[key] || 0) + Number(curr.amount);
         return acc;
       }, {});
-      const sortedExpenses = Object.entries(expenseMap).sort(([, a], [, b]) => b - a).slice(0, 10);
+      const sortedExpenses = Object.entries(expenseMap)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 10);
       const labels = sortedExpenses.map(([key]) => key);
       const amounts = sortedExpenses.map(([, amount]) => amount);
+
       if (donutChart) donutChart.destroy();
       const ctxExpense = document.getElementById('donutChart').getContext('2d');
       donutChart = new Chart(ctxExpense, {
         type: 'doughnut',
         data: { labels, datasets: [{ data: amounts, backgroundColor: getColorPalette(labels.length), hoverOffset: 4 }] },
-        options: { maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10 } } } }
+        options: {
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'right', labels: { boxWidth: 10 } } }
+        }
       });
       legendEl.innerHTML = labels.map((lbl, i) => `
         <div style="display:flex; justify-content:space-between;">
@@ -2107,6 +2154,7 @@
       infoEl.innerText = title;
     }
   }
+
   function resetExpenseDrilldown() {
     selectedExpenseCategories = [];
     document.querySelectorAll('.expense-chk').forEach(c => c.checked = false);
@@ -2115,65 +2163,89 @@
     renderWalletUnified();
   }
 
-  // ---------- ADVANCED ANALYTICS ----------
+  // --- ADVANCED ANALYTICS WITH SYNCED FILTERS ---
   function populateAnalyticsDropdowns() {
-    const groupSelect = document.getElementById('anlInvGroup');
-    const options = Object.keys(INVESTMENT_STRUCTURE).map(group => `<option value="${group}">${group}</option>`).join('');
-    groupSelect.innerHTML = '<option value="">All Groups</option>' + options;
+      const groupSelect = document.getElementById('anlInvGroup');
+      const options = Object.keys(INVESTMENT_STRUCTURE).map(group => `<option value="${group}">${group}</option>`).join('');
+      groupSelect.innerHTML = '<option value="">All Groups</option>' + options;
   }
+
   function updateAnlSubDropdown() {
-    const group = document.getElementById('anlInvGroup').value;
-    const subSelect = document.getElementById('anlInvSub');
-    let options = '<option value="">All Types</option>';
-    if(group && INVESTMENT_STRUCTURE[group]) {
-      options += Object.keys(INVESTMENT_STRUCTURE[group]).map(sub => `<option value="${sub}">${sub}</option>`).join('');
-    }
-    subSelect.innerHTML = options;
-  }
-  let chartNetWorth = null;
-  let chartInvTypesModal = null;
-  let chartInvGrowthModal = null;
-  function renderAdvancedCharts() {
-    if (typeof Chart === 'undefined') return;
-    const range = document.getElementById('dateFilter').value;
-    const chartType = document.getElementById('chartType').value;
-    const invGroup = document.getElementById('anlInvGroup').value;
-    const invSub = document.getElementById('anlInvSub').value;
-    let relevantData = data;
-    if (invGroup || invSub) {
-      relevantData = data.filter(d => {
-        if (invGroup && d.investmentGroup !== invGroup) return false;
-        if (invSub && d.investmentSub !== invSub) return false;
-        const isInv = (d.type === 'opening_balance' && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments');
-        return isInv;
-      });
-    }
-    const { labels, income, expense, investment } = prepareMonthlyData(range === 'all' ? 'all' : Number(range), relevantData);
-    const sumAmt = (arr) => arr.reduce((a,b)=>a+Number(b.amount||0),0);
-    let initialValue = sumAmt(relevantData.filter(d => d.type === 'opening_balance' && (invGroup ? d.investmentGroup === invGroup : true)));
-    let currentValue = initialValue;
-    const valueData = labels.map((label, idx) => {
-      if(invGroup || invSub) {
-        currentValue += (investment[idx] || 0);
-      } else {
-        const monthIncome = income[idx] || 0;
-        const monthExpense = expense[idx] || 0;
-        currentValue += (monthIncome - monthExpense);
+      const group = document.getElementById('anlInvGroup').value;
+      const subSelect = document.getElementById('anlInvSub');
+      let options = '<option value="">All Types</option>';
+      if(group && INVESTMENT_STRUCTURE[group]) {
+          options += Object.keys(INVESTMENT_STRUCTURE[group]).map(sub => `<option value="${sub}">${sub}</option>`).join('');
       }
-      return currentValue;
-    });
-    if (chartNetWorth) chartNetWorth.destroy();
-    const ctxNetWorth = document.getElementById('chartNetWorth').getContext('2d');
-    chartNetWorth = new Chart(ctxNetWorth, {
-      type: chartType,
-      data: { labels, datasets: [{ label: (invGroup || invSub) ? 'Cumulative Value (Filtered)' : 'Cumulative Net Worth', data: valueData, backgroundColor: 'rgba(59, 130, 246, 0.2)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 2, fill: chartType === 'line' ? 'start' : false, tension: 0.3 }] },
-      options: { maintainAspectRatio: false, responsive: true, scales: { y: { beginAtZero: false, ticks: { callback: (v)=>fmt(v).replace('?','? ') } } } }
-    });
-    renderInvestmentAnalytics('modal', relevantData);
+      subSelect.innerHTML = options;
   }
+
+  function renderAdvancedCharts() {
+      if (typeof Chart === 'undefined') return;
+      
+      const range = document.getElementById('dateFilter').value;
+      const chartType = document.getElementById('chartType').value;
+      const invGroup = document.getElementById('anlInvGroup').value;
+      const invSub = document.getElementById('anlInvSub').value;
+
+      let relevantData = data;
+      if (invGroup || invSub) {
+          relevantData = data.filter(d => {
+              if (invGroup && d.investmentGroup !== invGroup) return false;
+              if (invSub && d.investmentSub !== invSub) return false;
+              const isInv = (d.type === 'opening_balance' && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments');
+              return isInv;
+          });
+      }
+
+      const { labels, income, expense, investment } = prepareMonthlyData(range === 'all' ? 'all' : Number(range), relevantData);
+      
+      const sumAmt = (arr) => arr.reduce((a,b)=>a+Number(b.amount||0),0);
+      let initialValue = sumAmt(relevantData.filter(d => d.type === 'opening_balance' && (invGroup ? d.investmentGroup === invGroup : true)));
+      
+      let currentValue = initialValue;
+      const valueData = labels.map((label, idx) => {
+          if(invGroup || invSub) {
+              currentValue += (investment[idx] || 0); 
+          } else {
+              const monthIncome = income[idx] || 0;
+              const monthExpense = expense[idx] || 0;
+              currentValue += (monthIncome - monthExpense);
+          }
+          return currentValue;
+      });
+
+      if (chartNetWorth) chartNetWorth.destroy();
+      const ctxNetWorth = document.getElementById('chartNetWorth').getContext('2d');
+      chartNetWorth = new Chart(ctxNetWorth, {
+        type: chartType,
+        data: {
+          labels: labels,
+          datasets: [{
+            label: (invGroup || invSub) ? 'Cumulative Value (Filtered)' : 'Cumulative Net Worth',
+            data: valueData,
+            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+            borderColor: 'rgba(59, 130, 246, 1)',
+            borderWidth: 2,
+            fill: chartType === 'line' ? 'start' : false,
+            tension: 0.3
+          }]
+        },
+        options: {
+          maintainAspectRatio: false,
+          responsive: true,
+          scales: { y: { beginAtZero: false, ticks: { callback: (v)=>fmt(v).replace('?','? ') } } }
+        }
+      });
+
+      renderInvestmentAnalytics('modal', relevantData);
+  }
+
   function renderInvestmentAnalytics(scope, dataset) {
     if (typeof Chart === 'undefined') return;
+    
     const invs = dataset.filter(d => (d.type === 'opening_balance' && d.investmentGroup && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments' ));
+    
     const byType = invs.reduce((acc,curr) => {
       const key = curr.investmentSub || curr.investmentGroup || 'Uncategorized';
       acc[key] = (acc[key] || 0) + Number(curr.amount);
@@ -2181,24 +2253,44 @@
     }, {});
     const labels = Object.keys(byType).sort((a,b) => byType[b]-byType[a]);
     const values = labels.map(l => byType[l]);
+
     const points = invs.map(i => ({ date: new Date(i.date), amount: Number(i.amount) })).sort((a,b)=>a.date-b.date);
     let cumulative = 0;
     const growthLabels = points.map(p => p.date.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' }));
     const growthValues = points.map(p => { cumulative += p.amount; return cumulative; });
+
     const colors = getColorPalette(labels.length);
+    
     const ctxTypes = document.getElementById('chartInvTypesModal')?.getContext('2d');
     if (ctxTypes) {
       if (chartInvTypesModal) chartInvTypesModal.destroy();
-      chartInvTypesModal = new Chart(ctxTypes, { type: 'doughnut', data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth:1 }] }, options: { maintainAspectRatio: false, plugins: { legend: { position:'right', labels:{boxWidth:10} } }, cutout: '60%' } });
+      chartInvTypesModal = new Chart(ctxTypes, {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth:1 }] },
+        options: {
+          maintainAspectRatio: false,
+          plugins: { legend: { position:'right', labels:{boxWidth:10} } },
+          cutout: '60%'
+        }
+      });
     }
+
     const ctxGrowth = document.getElementById('chartInvGrowthModal')?.getContext('2d');
     if (ctxGrowth) {
       if (chartInvGrowthModal) chartInvGrowthModal.destroy();
-      chartInvGrowthModal = new Chart(ctxGrowth, { type: 'line', data: { labels: growthLabels, datasets: [{ label: 'Invested Amount', data: growthValues, borderColor: '#10b981', tension: 0.3, borderWidth:2, pointRadius:0 }] }, options: { maintainAspectRatio: false, plugins: { legend: { display:false } }, scales: { y: { beginAtZero: false, ticks: { callback: (v)=>fmt(v).replace('?','') } }, x:{ display:false } } } });
+      chartInvGrowthModal = new Chart(ctxGrowth, {
+        type: 'line',
+        data: { labels: growthLabels, datasets: [{ label: 'Invested Amount', data: growthValues, borderColor: '#10b981', tension: 0.3, borderWidth:2, pointRadius:0 }] },
+        options: {
+          maintainAspectRatio: false,
+          plugins: { legend: { display:false } },
+          scales: { y: { beginAtZero: false, ticks: { callback: (v)=>fmt(v).replace('?','') } }, x:{ display:false } }
+        }
+      });
     }
   }
 
-  // ---------- SETTINGS ----------
+  // --- RESTORED SETTINGS RENDER ---
   function renderSettings() {
     const methodContainer = document.getElementById('methodEditor');
     methodContainer.innerHTML = Object.entries(methodNames).map(([key, name]) => `
@@ -2207,6 +2299,7 @@
         <button class="btn-danger" style="padding:4px 8px; font-size:11px" onclick="deleteMethod('${key}')">Remove</button>
       </div>
     `).join('');
+    
     const incomeContainer = document.getElementById('incomeList');
     incomeContainer.innerHTML = incomeSources.map(source => `
       <span style="border:1px solid var(--border); padding:6px 10px; border-radius:6px; font-size:12px; display:inline-flex; align-items:center; background:#f8fafc; margin-bottom:4px;">
@@ -2216,179 +2309,163 @@
     `).join('');
     document.getElementById('ccLimitInput').value = settings.ccLimit;
   }
+
   document.getElementById('addMethod').addEventListener('click', addMethod);
   document.getElementById('addIncomeBtn').addEventListener('click', addIncome);
   document.getElementById('saveCCLimit').addEventListener('click', () => {
-    const limit = Number(document.getElementById('ccLimitInput').value);
-    if (limit > 0) {
-      settings.ccLimit = limit;
-      saveAll();
-      renderKPIs();
-      alert('Credit Card Limit saved.');
-    } else {
-      alert('Please enter a valid credit card limit.');
-    }
-  });
-  function updateMethodName(el) {
-    const key = el.dataset.key;
-    const newName = el.value.trim();
-    if (newName && key) {
-      methodNames[key] = newName;
-      saveAll();
-      renderAll();
-    }
-  }
-  function deleteMethod(key) {
-    if (confirm(`Remove "${methodNames[key]}"?`)) {
-      delete methodNames[key];
-      saveAll();
-      renderAll();
-    }
-  }
-  function addMethod() {
-    const input = document.getElementById('newMethod');
-    const name = input.value.trim();
-    if (name) {
-      const key = toKey(name);
-      if (!methodNames[key]) {
-        methodNames[key] = name;
-        input.value = '';
-        saveAll();
-        renderAll();
+      const limit = Number(document.getElementById('ccLimitInput').value);
+      if (limit > 0) {
+          settings.ccLimit = limit;
+          saveAll();
+          renderKPIs();
+          alert('Credit Card Limit saved.');
       } else {
-        alert('Method already exists.');
+          alert('Please enter a valid credit card limit.');
       }
-    }
+  });
+
+  function updateMethodName(el) {
+      const key = el.dataset.key;
+      const newName = el.value.trim();
+      if (newName && key) {
+          methodNames[key] = newName;
+          saveAll();
+          renderAll();
+      }
   }
+
+  function deleteMethod(key) {
+      if (confirm(`Are you sure you want to remove the method "${methodNames[key]}"?`)) {
+          delete methodNames[key];
+          saveAll();
+          renderAll();
+      }
+  }
+
+  function addMethod() {
+      const input = document.getElementById('newMethod');
+      const name = input.value.trim();
+      if (name) {
+          const key = toKey(name);
+          if (!methodNames[key]) {
+              methodNames[key] = name;
+              input.value = '';
+              saveAll();
+              renderAll();
+          } else {
+              alert('Method already exists.');
+          }
+      }
+  }
+
   function deleteIncome(source) {
-    if (confirm(`Remove income source "${source}"?`)) {
-      incomeSources = incomeSources.filter(s => s !== source);
-      saveAll();
-      renderAll();
-    }
+      if (confirm(`Remove income source "${source}"?`)) {
+          incomeSources = incomeSources.filter(s => s !== source);
+          saveAll();
+          renderAll();
+      }
   }
+
   function addIncome() {
-    const input = document.getElementById('newIncome');
-    const source = input.value.trim();
-    if (source && !incomeSources.includes(source)) {
-      incomeSources.push(source);
-      input.value = '';
-      saveAll();
-      renderAll();
-    } else if (source) {
-      alert('Income source already exists.');
-    }
+      const input = document.getElementById('newIncome');
+      const source = input.value.trim();
+      if (source && !incomeSources.includes(source)) {
+          incomeSources.push(source);
+          input.value = '';
+          saveAll();
+          renderAll();
+      } else if (source) {
+          alert('Income source already exists.');
+      }
   }
 
-  // ---------- CSV/JSON IMPORT (fixed) ----------
   function convertToCSV(data) {
-    const headers = ['id', 'type', 'amount', 'date', 'desc', 'category', 'method', 'incomeSource', 'investmentGroup', 'investmentSub', 'insuranceType', 'insuranceFor'];
-    const rows = data.map(obj => headers.map(header => {
-      let value = obj[header] ?? '';
-      if (typeof value === 'string' && value.includes(',')) {
-        return `"${value.replace(/"/g, '""')}"`;
+      const headers = ['id', 'type', 'amount', 'date', 'desc', 'category', 'method', 'incomeSource', 'investmentGroup', 'investmentSub', 'insuranceType', 'insuranceFor'];
+      const rows = data.map(obj => headers.map(header => {
+          let value = obj[header] ?? '';
+          if (typeof value === 'string' && value.includes(',')) {
+              return `"${value.replace(/"/g, '""')}"`;
+          }
+          return value;
+      }).join(','));
+      const csvContent = [headers.join(','), ...rows].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      if (link.download !== undefined) {
+          const url = URL.createObjectURL(blob);
+          link.setAttribute('href', url);
+          link.setAttribute('download', 'MoneyMirror_Export.csv');
+          link.style.visibility = 'hidden';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
       }
-      return value;
-    }).join(','));
-    const csvContent = [headers.join(','), ...rows].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', 'MoneyMirror_Export.csv');
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  }
-  function processImportedData() {
-    const fileInput = document.getElementById('importFile');
-    const file = fileInput.files[0];
-    if (!file) return alert('Please select a file.');
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const content = e.target.result;
-      let importedData = [];
-      try {
-        if (file.name.toLowerCase().endsWith('.json')) {
-          importedData = JSON.parse(content);
-        } else if (file.name.toLowerCase().endsWith('.csv')) {
-          importedData = parseCSV(content);
-        } else {
-          return alert('Unsupported file type. Use CSV or JSON.');
-        }
-      } catch (err) {
-        return alert('Failed to parse file: ' + err.message);
-      }
-      if (!Array.isArray(importedData) || importedData.length === 0) return alert('No valid data found.');
-      let newEntries = 0;
-      importedData.forEach(item => {
-        const type = String(item.type || '').toLowerCase();
-        const validType = ['income','expense','opening_balance'].includes(type) ? type : 'expense';
-        const amt = Number(item.amount);
-        const desc = item.desc || item.description || '';
-        if (!amt || amt <= 0 || !desc) return;
-        const entry = {
-          id: item.id || uid(),
-          type: validType,
-          amount: amt,
-          date: item.date || new Date().toISOString().slice(0, 10),
-          desc,
-          category: item.category || (validType === 'income' ? 'N/A' : 'Misc'),
-          method: item.method ? toKey(item.method) : (validType === 'income' ? 'salary_acct' : 'cash'),
-          incomeSource: item.incomeSource || item.income_source || '',
-          investmentGroup: item.investmentGroup || item.investment_group || '',
-          investmentSub: item.investmentSub || item.investment_sub || '',
-          insuranceType: item.insuranceType || item.insurance_type || '',
-          insuranceFor: item.insuranceFor || item.insurance_for || '',
-        };
-        data.push(entry);
-        newEntries++;
-      });
-      saveAll();
-      renderAll();
-      document.getElementById('importModal').classList.remove('open');
-      alert(`Imported ${newEntries} entries.`);
-    };
-    reader.readAsText(file);
-  }
-  function parseCSV(csvText) {
-    const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
-    if (lines.length < 2) return [];
-    const headerLine = lines[0];
-    const headers = headerLine.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g).map(h => h.replace(/"/g, '').trim());
-    const lowerHeaders = headers.map(h => h.toLowerCase());
-    const dataRows = [];
-    for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
-      if (!values) continue;
-      const entry = {};
-      for (let j = 0; j < lowerHeaders.length; j++) {
-        const raw = values[j] || '';
-        const value = raw.replace(/^"|"$/g, '').replace(/""/g, '"');
-        entry[lowerHeaders[j]] = value;
-      }
-      dataRows.push({
-        id: entry.id,
-        type: entry.type,
-        amount: entry.amount,
-        date: entry.date,
-        desc: entry.desc || entry.description,
-        category: entry.category,
-        method: entry.method,
-        incomeSource: entry.incomesource || entry.income_source,
-        investmentGroup: entry.investmentgroup || entry.investment_group,
-        investmentSub: entry.investmentsub || entry.investment_sub,
-        insuranceType: entry.insurancetype || entry.insurance_type,
-        insuranceFor: entry.insurancefor || entry.insurance_for,
-      });
-    }
-    return dataRows;
   }
 
-  // ---------- RECENT ENTRIES (synced) ----------
+  function processImportedData() {
+      const fileInput = document.getElementById('importFile');
+      const file = fileInput.files[0];
+      if (!file) return alert('Please select a file.');
+      const reader = new FileReader();
+      reader.onload = function(e) {
+          const content = e.target.result;
+          let importedData = [];
+          if (file.name.endsWith('.json')) {
+              try { importedData = JSON.parse(content); } catch (err) { return alert('Error parsing JSON file: ' + err.message); }
+          } else if (file.name.endsWith('.csv')) {
+              importedData = parseCSV(content);
+          } else { return alert('Unsupported file type. Please use CSV or JSON.'); }
+
+          if (!importedData || importedData.length === 0) return alert('No valid data found.');
+          let newEntries = 0;
+          importedData.forEach(item => {
+              const entry = {
+                  id: uid(),
+                  type: item.type ? item.type.toLowerCase().trim() : 'expense',
+                  amount: Number(item.amount),
+                  date: item.date || new Date().toISOString().slice(0, 10),
+                  desc: item.desc || item.description || '',
+                  category: item.category || 'Misc',
+                  method: item.method ? toKey(item.method) : 'cash',
+                  incomeSource: item.income_source || item.incomeSource || '',
+                  investmentGroup: item.investment_group || item.investmentGroup || '',
+                  investmentSub: item.investment_sub || item.investmentSub || '',
+                  insuranceType: item.insurance_type || item.insuranceType || '',
+                  insuranceFor: item.insurance_for || item.insuranceFor || '',
+              };
+              if (entry.amount > 0 && entry.desc) {
+                  data.push(entry);
+                  newEntries++;
+              }
+          });
+          saveAll();
+          renderAll();
+          document.getElementById('importModal').classList.remove('open');
+          alert(`Successfully imported ${newEntries} new entries.`);
+      };
+      reader.readAsText(file);
+  }
+
+  function parseCSV(csvText) {
+      const lines = csvText.split('\n').filter(line => line.trim() !== '');
+      if (lines.length < 2) return [];
+      const headerLine = lines[0];
+      const headers = headerLine.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g).map(h => h.replace(/"/g, '').toLowerCase().trim());
+      const dataRows = [];
+      for (let i = 1; i < lines.length; i++) {
+          const values = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+          if (!values || values.length !== headers.length) continue;
+          const entry = {};
+          for (let j = 0; j < headers.length; j++) {
+              let value = values[j] ? values[j].replace(/^"|"$/g, '').replace(/""/g, '"') : '';
+              entry[headers[j]] = value;
+          }
+          dataRows.push(entry);
+      }
+      return dataRows;
+  }
+  
+  // --- Helper badges ---
   function getBadge(entry) {
     if (entry.type === 'income') return '<span class="badge badge-income">Income</span>';
     if (entry.type === 'opening_balance') return '<span class="badge badge-opening">Opening</span>';
@@ -2397,157 +2474,179 @@
     if (entry.category === 'Credit Card Payment') return '<span class="badge badge-cc">CC Pay</span>';
     return '<span class="badge badge-expense">Expense</span>';
   }
+
+  // --- Recent entries render ---
   function renderRecentEntries() {
     try {
-      const tbody = document.querySelector('#recentTable tbody');
-      if (!tbody) return;
-      const searchEl = document.getElementById('recentSearch');
-      const sortEl = document.getElementById('recentSort');
-      const catEl = document.getElementById('recentCategory');
-            const limitEl = document.getElementById('entryLimit');
-      const searchText = (searchEl ? searchEl.value.toLowerCase() : '').trim();
-      const sortMode = sortEl ? sortEl.value : 'dateDesc';
-      const categoryFilter = catEl ? catEl.value : '';
-      const limit = limitEl && limitEl.value !== 'all' ? Number(limitEl.value) : data.length;
+        const tbody = document.querySelector('#recentTable tbody');
+        if (!tbody) return;
 
-      let filtered = data.filter(e => {
-        const desc = (e.desc || '').toLowerCase();
-        const cat = (e.category || '').toLowerCase();
-        const amt = String(e.amount || 0);
-        const matchesSearch = !searchText || desc.includes(searchText) || cat.includes(searchText) || amt.includes(searchText);
-        const matchesCat = categoryFilter ? e.category === categoryFilter : true;
-        return matchesSearch && matchesCat;
-      });
+        const searchEl = document.getElementById('recentSearch');
+        const sortEl = document.getElementById('recentSort');
+        const catEl = document.getElementById('recentCategory');
+        const limitEl = document.getElementById('entryLimit');
 
-      filtered.sort((a, b) => {
-        const dateA = new Date(a.date || 0);
-        const dateB = new Date(b.date || 0);
-        if (sortMode === 'dateDesc') return dateB - dateA;
-        if (sortMode === 'dateAsc') return dateA - dateB;
-        if (sortMode === 'amtDesc') return b.amount - a.amount;
-        if (sortMode === 'amtAsc') return a.amount - b.amount;
-        return 0;
-      });
+        const searchText = searchEl ? searchEl.value.toLowerCase() : '';
+        const sortMode = sortEl ? sortEl.value : 'dateDesc';
+        const categoryFilter = catEl ? catEl.value : '';
+        const limit = limitEl && limitEl.value !== 'all' ? Number(limitEl.value) : data.length;
 
-      const slice = filtered.slice(0, limit);
-      if (slice.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--text-muted);">No transactions found.</td></tr>';
-        return;
-      }
-      tbody.innerHTML = slice.map(e => {
-        const amountDisplay = e.type === 'income' || e.type === 'opening_balance'
-          ? `<span style="color:var(--success)">+${fmt(e.amount)}</span>`
-          : `<span style="color:var(--danger)">-${fmt(e.amount)}</span>`;
-        let methodDisplay = '';
-        if (e.type === 'opening_balance' && e.investmentGroup !== 'Cash') {
-          methodDisplay = e.investmentSub || e.investmentGroup;
-        } else if (e.type === 'expense' && e.category === 'Investments') {
-          methodDisplay = e.investmentSub || e.investmentGroup;
-        } else if (e.method === 'credit_card_payment') {
-          methodDisplay = 'N/A (Transfer)';
-        } else {
-          methodDisplay = methodNames[e.method] || e.method || '--';
+        let filtered = data.filter(e => {
+            if (!e) return false;
+            const desc = (e.desc || '').toLowerCase();
+            const cat = (e.category || '').toLowerCase();
+            const amt = String(e.amount || 0);
+            
+            const matchesSearch = desc.includes(searchText) || cat.includes(searchText) || amt.includes(searchText);
+            const matchesCat = categoryFilter ? e.category === categoryFilter : true;
+            
+            return matchesSearch && matchesCat;
+        });
+
+        filtered.sort((a, b) => {
+            const dateA = new Date(a.date || 0);
+            const dateB = new Date(b.date || 0);
+            if (sortMode === 'dateDesc') return dateB - dateA;
+            if (sortMode === 'dateAsc') return dateA - dateB;
+            if (sortMode === 'amtDesc') return b.amount - a.amount;
+            if (sortMode === 'amtAsc') return a.amount - b.amount;
+            return 0;
+        });
+
+        const slice = filtered.slice(0, limit);
+
+        if (slice.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--text-muted);">No transactions found.</td></tr>';
+            return;
         }
-        let categoryDisplay = e.category === 'Investments' ? e.investmentSub :
-                              e.category === 'Insurance' ? `${e.insuranceType} (${e.insuranceFor})` :
-                              e.type === 'expense' ? e.category : '--';
-        return `
-          <tr>
-            <td>${getBadge(e)}</td>
-            <td>${e.date}</td>
-            <td style="font-weight:600; text-align:right">${amountDisplay}</td>
-            <td>${e.desc}</td>
-            <td>${categoryDisplay}</td>
-            <td>${methodDisplay}</td>
-            <td class="flex-row">
-              <button onclick="loadEdit('${e.id}')" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px" title="Edit">✎</button>
-              <button onclick="deleteEntry('${e.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:4px" title="Delete">×</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
+
+        tbody.innerHTML = slice.map(e => {
+          const amountDisplay = e.type === 'income' || e.type === 'opening_balance'
+            ? `<span style="color:var(--success)">+${fmt(e.amount)}</span>`
+            : `<span style="color:var(--danger)">-${fmt(e.amount)}</span>`;
+
+          let methodDisplay = '';
+          if (e.type === 'opening_balance' && e.investmentGroup !== 'Cash') {
+              methodDisplay = e.investmentSub || e.investmentGroup;
+          } else if (e.type === 'expense' && e.category === 'Investments') {
+              methodDisplay = e.investmentSub || e.investmentGroup;
+          } else if (e.method === 'credit_card_payment') {
+              methodDisplay = 'N/A (Transfer)';
+          } else {
+              methodDisplay = methodNames[e.method] || e.method || '--';
+          }
+
+          let categoryDisplay = e.category === 'Investments' ? e.investmentSub :
+                                e.category === 'Insurance' ? `${e.insuranceType} (${e.insuranceFor})` :
+                                e.type === 'expense' ? e.category : '--';
+          return `
+            <tr>
+              <td>${getBadge(e)}</td>
+              <td>${e.date}</td>
+              <td style="font-weight:600; text-align:right">${amountDisplay}</td>
+              <td>${e.desc}</td>
+              <td>${categoryDisplay}</td>
+              <td>${methodDisplay}</td>
+              <td class="flex-row">
+                <button onclick="loadEdit('${e.id}')" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px" title="Edit">?</button>
+                <button onclick="deleteEntry('${e.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:4px" title="Delete">×</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
     } catch (err) {
-      console.error("Error rendering table:", err);
+        console.error("Error rendering table:", err);
     }
   }
-  // ---------- SAMPLE DATA (synced) ----------
+
+  // --- Sample Data ---
   function loadSampleData() {
-    if (!confirm("Overwrite existing data with sample?")) return;
-    function randBetween(min, max) { return Math.floor(Math.random() * (max - min + 1) + min); }
-    function pick(arr) { return arr[randBetween(0, arr.length - 1)]; }
-    function dateInLastMonths(mMin, mMax) {
-      const today = new Date();
-      const monthDiff = randBetween(mMin, mMax);
-      const targetDate = new Date(today);
-      targetDate.setMonth(today.getMonth() - monthDiff);
-      const maxDays = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0).getDate();
-      targetDate.setDate(randBetween(1, maxDays));
-      return targetDate.toISOString().slice(0,10);
-    }
-    data = [];
-    methodNames = {...CANONICAL_METHODS};
-    incomeSources = ['Salary (Primary)', 'Freelance Income', 'Investment Income'];
-    settings = { ...settings, ccLimit: 200000, commodityCountry: settings.commodityCountry || '', trackedMarkets: settings.trackedMarkets || DEFAULT_SETTINGS.trackedMarkets.slice() };
+      if (!confirm("Overwrite data with sample?")) return;
+      function randBetween(min, max) { return Math.floor(Math.random() * (max - min + 1) + min); }
+      function pick(arr) { return arr[randBetween(0, arr.length - 1)]; }
+      function dateInLastMonths(months) {
+          const today = new Date();
+          const startMonth = months[0];
+          const endMonth = months.length > 1 ? months[1] : startMonth;
+          const monthDiff = randBetween(startMonth, endMonth);
+          const targetDate = new Date(today);
+          targetDate.setMonth(today.getMonth() - monthDiff);
+          const maxDays = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0).getDate();
+          targetDate.setDate(randBetween(1, maxDays));
+          return targetDate.toISOString().slice(0,10);
+      }
+      data = [];
+      methodNames = {...CANONICAL_METHODS};
+      incomeSources = ['Salary (Primary)', 'Freelance Income', 'Investment Income'];
+      settings.ccLimit = 200000;
+      settings.commodityCountry = settings.commodityCountry || '';
+      settings.trackedMarkets = settings.trackedMarkets || [
+        { symbol: 'SENSEX', name: 'Sensex', price: 72000.00, change: 0.85 },
+        { symbol: 'NASDAQ', name: 'Nasdaq', price: 16000.00, change: -1.23 },
+        { symbol: 'XAUUSD', name: 'Gold/USD', price: 2350.00, change: 0.15 },
+        { symbol: 'XAGUSD', name: 'Silver/USD', price: 28.50, change: -0.55 },
+        { symbol: 'BTCUSD', name: 'Bitcoin', price: 68000.00, change: 2.10 }
+      ];
 
-    // Opening cash balances
-    data.push({id:uid(), type:'opening_balance', amount: 50000, date: dateInLastMonths(6,6), desc:'Initial Salary Account Balance', investmentGroup:'Cash', investmentSub:'Bank Account (Salary)', method:'salary_acct', category:'N/A'});
-    data.push({id:uid(), type:'opening_balance', amount: 20000, date: dateInLastMonths(5,6), desc:'Initial Savings Account Balance', investmentGroup:'Cash', investmentSub:'Bank Account (Savings)', method:'savings_acct', category:'N/A'});
-    data.push({id:uid(), type:'opening_balance', amount: 5000, date: dateInLastMonths(5,6), desc:'Initial Physical Cash', investmentGroup:'Cash', investmentSub:'Cash', method:'cash', category:'N/A'});
-    // Opening investments
-    data.push({id:uid(), type:'opening_balance', amount: 35000, date: dateInLastMonths(6,6), desc:'Opening — Equity MF (Large Cap)', investmentGroup:'Mutual Funds', investmentSub:'Equity MF - Large Cap/Mid Cap/Small Cap', method:'', category:'N/A'});
-    data.push({id:uid(), type:'opening_balance', amount: 18000, date: dateInLastMonths(6,6), desc:'Opening — NPS Tier 1', investmentGroup:'Retirement Funds', investmentSub:'NPS Tier 1/Tier 2', method:'', category:'N/A'});
-    data.push({id:uid(), type:'opening_balance', amount: 12000, date: dateInLastMonths(6,6), desc:'Opening — Gold ETF', investmentGroup:'ETFs', investmentSub:'Gold ETF', method:'', category:'N/A'});
-    data.push({id:uid(), type:'opening_balance', amount: 25000, date: dateInLastMonths(6,6), desc:'Opening — Corporate Bonds', investmentGroup:'Bonds & Debt Instruments', investmentSub:'Corporate Bonds', method:'', category:'N/A'});
-    data.push({id:uid(), type:'opening_balance', amount: 8000, date: dateInLastMonths(6,6), desc:'Opening — Bitcoin (BTC)', investmentGroup:'Crypto & Digital Assets', investmentSub:'Bitcoin (BTC)', method:'', category:'N/A'});
-
-    // Monthly incomes
-    for (let m = 6; m >= 0; m--) {
-      const salaryDate = dateInLastMonths(m,m);
-      data.push({id:uid(), type:'income', amount: 120000, date: salaryDate, desc:`Salary credit (${salaryDate})`, category:'N/A', method:'salary_acct', incomeSource:'Salary (Primary)'});
-      if (Math.random() > 0.6) {
-        const freeDate = dateInLastMonths(m,m);
-        data.push({id:uid(), type:'income', amount: randBetween(8000, 18000), date: freeDate, desc:`Freelance project (${freeDate})`, category:'N/A', method:'salary_acct', incomeSource:'Freelance Income'});
+      // Opening cash balances
+      data.push({id:uid(), type:'opening_balance', amount: 50000, date: dateInLastMonths([6,6]), desc:'Initial Salary Account Balance', investmentGroup:'Cash', investmentSub:'Bank Account (Salary)', method:'salary_acct', category:'N/A'});
+      data.push({id:uid(), type:'opening_balance', amount: 20000, date: dateInLastMonths([5,6]), desc:'Initial Savings Account Balance', investmentGroup:'Cash', investmentSub:'Bank Account (Savings)', method:'savings_acct', category:'N/A'});
+      data.push({id:uid(), type:'opening_balance', amount: 5000, date: dateInLastMonths([5,6]), desc:'Initial Physical Cash', investmentGroup:'Cash', investmentSub:'Cash', method:'cash', category:'N/A'});
+      // Opening investments
+      data.push({id:uid(), type:'opening_balance', amount: 35000, date: dateInLastMonths([6,6]), desc:'Opening — Equity MF (Large Cap)', investmentGroup:'Mutual Funds', investmentSub:'Equity MF - Large Cap/Mid Cap/Small Cap', method:'', category:'N/A'});
+      data.push({id:uid(), type:'opening_balance', amount: 18000, date: dateInLastMonths([6,6]), desc:'Opening — NPS Tier 1', investmentGroup:'Retirement Funds', investmentSub:'NPS Tier 1/Tier 2', method:'', category:'N/A'});
+      data.push({id:uid(), type:'opening_balance', amount: 12000, date: dateInLastMonths([6,6]), desc:'Opening — Gold ETF', investmentGroup:'ETFs', investmentSub:'Gold ETF', method:'', category:'N/A'});
+      data.push({id:uid(), type:'opening_balance', amount: 25000, date: dateInLastMonths([6,6]), desc:'Opening — Corporate Bonds', investmentGroup:'Bonds & Debt Instruments', investmentSub:'Corporate Bonds', method:'', category:'N/A'});
+      data.push({id:uid(), type:'opening_balance', amount: 8000, date: dateInLastMonths([6,6]), desc:'Opening — Bitcoin (BTC)', investmentGroup:'Crypto & Digital Assets', investmentSub:'Bitcoin (BTC)', method:'', category:'N/A'});
+      
+      // Monthly incomes
+      for (let m = 6; m >= 0; m--) {
+        const salaryDate = dateInLastMonths([m,m]);
+        data.push({id:uid(), type:'income', amount: 120000, date: salaryDate, desc:`Salary credit (${salaryDate})`, category:'N/A', method:'salary_acct', incomeSource:'Salary (Primary)'});
+        if (Math.random() > 0.6) {
+          const freeDate = dateInLastMonths([m,m]);
+          data.push({id:uid(), type:'income', amount: randBetween(8000, 18000), date: freeDate, desc:`Freelance project (${freeDate})`, category:'N/A', method:'salary_acct', incomeSource:'Freelance Income'});
+        }
       }
-    }
-    const expenseCategories = ['Food','Rent','Utilities','Shopping','Entertainment','Travel','Health','Misc'];
-    const methodsPool = ['salary_acct','savings_acct','cash','digital_wallet','credit_card'];
-    for (let i = 0; i < 90; i++) {
-      const dt = dateInLastMonths(randBetween(0, 6), randBetween(0, 6));
-      const cat = pick(expenseCategories);
-      const amt = randBetween(300, 9000);
-      const method = pick(methodsPool);
-      data.push({ id: uid(), type: 'expense', amount: amt, date: dt, desc: `${cat} expense`, category: cat, method });
-      if (Math.random() > 0.75) {
-        const invGroup = pick(Object.keys(INVESTMENT_STRUCTURE));
-        const invSub = pick(Object.keys(INVESTMENT_STRUCTURE[invGroup]));
-        data.push({ id: uid(), type: 'expense', amount: randBetween(2000, 15000), date: dt, desc: `Investment — ${invSub}`, category: 'Investments', method: pick(['salary_acct','savings_acct']), investmentGroup: invGroup, investmentSub: invSub });
+      const expenseCategories = ['Food','Rent','Utilities','Shopping','Entertainment','Travel','Health','Misc'];
+      const methodsPool = ['salary_acct','savings_acct','cash','digital_wallet','credit_card'];
+      for (let i = 0; i < 90; i++) {
+        const dt = dateInLastMonths([randBetween(0, 6), randBetween(0, 6)]);
+        const cat = pick(expenseCategories);
+        const amt = randBetween(300, 9000);
+        const method = pick(methodsPool);
+        data.push({ id: uid(), type: 'expense', amount: amt, date: dt, desc: `${cat} expense`, category: cat, method });
+        if (Math.random() > 0.75) {
+          const invGroup = pick(Object.keys(INVESTMENT_STRUCTURE));
+          const invSub = pick(Object.keys(INVESTMENT_STRUCTURE[invGroup]));
+          data.push({ id: uid(), type: 'expense', amount: randBetween(2000, 15000), date: dt, desc: `Investment — ${invSub}`, category: 'Investments', method: pick(['salary_acct','savings_acct']), investmentGroup: invGroup, investmentSub: invSub });
+        }
+        if (Math.random() > 0.85) {
+          data.push({ id: uid(), type: 'expense', amount: randBetween(1500, 6000), date: dt, desc: 'Insurance premium', category: 'Insurance', method: pick(['salary_acct','savings_acct']), insuranceType: pick(['Health','Life']), insuranceFor: pick(['Self','Family']) });
+        }
       }
-      if (Math.random() > 0.85) {
-        data.push({ id: uid(), type: 'expense', amount: randBetween(1500, 6000), date: dt, desc: 'Insurance premium', category: 'Insurance', method: pick(['salary_acct','savings_acct']), insuranceType: pick(['Health','Life']), insuranceFor: pick(['Self','Family']) });
+      for (let i = 0; i < 20; i++) {
+        const dt = dateInLastMonths([randBetween(0, 6), randBetween(0, 6)]);
+        data.push({ id: uid(), type: 'expense', amount: randBetween(500, 12000), date: dt, desc: 'Credit card spend', category: 'Shopping', method: 'credit_card' });
+        if (Math.random() > 0.7) {
+          data.push({ id: uid(), type: 'expense', amount: randBetween(3000, 20000), date: dt, desc: 'Credit card payment', category: 'Credit Card Payment', method: 'credit_card_payment' });
+        }
       }
-    }
-    for (let i = 0; i < 20; i++) {
-      const dt = dateInLastMonths(randBetween(0, 6), randBetween(0, 6));
-      data.push({ id: uid(), type: 'expense', amount: randBetween(500, 12000), date: dt, desc: 'Credit card spend', category: 'Shopping', method: 'credit_card' });
-      if (Math.random() > 0.7) {
-        data.push({ id: uid(), type: 'expense', amount: randBetween(3000, 20000), date: dt, desc: 'Credit card payment', category: 'Credit Card Payment', method: 'credit_card_payment' });
-      }
-    }
-    [
-      { group: 'Real Estate', sub: 'REITs (Real Estate Investment Trusts)', amount: 40000 },
-      { group: 'Mutual Funds', sub: 'Equity MF - ELSS (Tax Saving)', amount: 25000 },
-      { group: 'Fixed Income / Savings Schemes', sub: 'FD (Fixed Deposit)', amount: 60000 },
-    ].forEach(item => {
-      const dt = dateInLastMonths(1,5);
-      data.push({ id: uid(), type: 'expense', amount: item.amount, date: dt, desc: `One-off Investment — ${item.sub}`, category: 'Investments', method: 'savings_acct', investmentGroup: item.group, investmentSub: item.sub });
-    });
-
-    saveAll();
-    renderAll();
-    alert('Sample data loaded.');
+      [
+        { group: 'Real Estate', sub: 'REITs (Real Estate Investment Trusts)', amount: 40000 },
+        { group: 'Mutual Funds', sub: 'Equity MF - ELSS (Tax Saving)', amount: 25000 },
+        { group: 'Fixed Income / Savings Schemes', sub: 'FD (Fixed Deposit)', amount: 60000 },
+      ].forEach(item => {
+        const dt = dateInLastMonths([randBetween(1,5), randBetween(1,5)]);
+        data.push({ id: uid(), type: 'expense', amount: item.amount, date: dt, desc: `One-off Investment — ${item.sub}`, category: 'Investments', method: pick(['salary_acct','savings_acct']), investmentGroup: item.group, investmentSub: item.sub });
+      });
+      saveAll();
+      renderAll();
+      document.getElementById('importModal').classList.remove('open');
+      alert('Sample data loaded.');
   }
 
-  // ---------- CALCULATOR ----------
+  // --- Calculator ---
   function handleCalculatorInput(e) {
     const key = e.target.innerText;
     const display = document.getElementById('calc-display');
@@ -2572,20 +2671,26 @@
       preview.textContent = fmt(Number(result));
     } catch (err) { preview.textContent = ''; }
   }
+
+  // --- Draggable helper ---
   function dragElement(elmnt) {
     if (!elmnt) return;
-    const header = document.getElementById('calc-header');
+    const header = document.getElementById(elmnt.id + "header") || document.getElementById('calc-header');
     let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
     header.onmousedown = dragMouseDown;
     header.ontouchstart = dragTouchStart;
+
     function dragMouseDown(e) {
+      e = e || window.event;
       e.preventDefault();
       pos3 = e.clientX;
       pos4 = e.clientY;
       document.onmouseup = closeDragElement;
       document.onmousemove = elementDrag;
     }
+
     function elementDrag(e) {
+      e = e || window.event;
       e.preventDefault();
       pos1 = pos3 - e.clientX;
       pos2 = pos4 - e.clientY;
@@ -2594,30 +2699,35 @@
       elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
       elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
     }
+
     function closeDragElement() {
       document.onmouseup = null;
       document.onmousemove = null;
     }
+
     function dragTouchStart(e) {
-      const touch = e.touches[0];
-      pos3 = touch.clientX;
-      pos4 = touch.clientY;
-      document.ontouchend = closeDragElement;
-      document.ontouchmove = elementTouchDrag;
+        const touch = e.touches[0];
+        pos3 = touch.clientX;
+        pos4 = touch.clientY;
+        document.ontouchend = closeDragElement;
+        document.ontouchmove = elementTouchDrag;
     }
+
     function elementTouchDrag(e) {
-      e.preventDefault();
-      const touch = e.touches[0];
-      pos1 = pos3 - touch.clientX;
-      pos2 = pos4 - touch.clientY;
-      pos3 = touch.clientX;
-      pos4 = touch.clientY;
-      elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-      elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+        e.preventDefault();
+        const touch = e.touches[0];
+        pos1 = pos3 - touch.clientX;
+        pos2 = pos4 - touch.clientY;
+        pos3 = touch.clientX;
+        pos4 = touch.clientY;
+        elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+        elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
     }
   }
 
-  // ---------- MARKET TICKER ----------
+  // --- Market ticker utils and render ---
+
+  // Add index to settings if not present
   function addIndexToSettings(symbol, name) {
     const exists = settings.trackedMarkets.some(m => m.symbol === symbol);
     if (!exists) {
@@ -2625,6 +2735,8 @@
       saveAll();
     }
   }
+
+  // Map commodities to selected country currency symbols (static mapping; can be enhanced with API)
   function remapCommoditySymbolsByCountry() {
     const country = settings.commodityCountry || '';
     const map = {
@@ -2636,6 +2748,7 @@
       'AE': { gold: 'XAUAED', silver: 'XAGAED', goldName: 'Gold/AED', silverName: 'Silver/AED' }
     };
     const target = map[country] || map[''];
+    // look for existing gold/silver and remap symbols/names, preserving price/change placeholders
     settings.trackedMarkets = settings.trackedMarkets.map(m => {
       if (m.symbol.startsWith('XAU')) return { ...m, symbol: target.gold, name: target.goldName };
       if (m.symbol.startsWith('XAG')) return { ...m, symbol: target.silver, name: target.silverName };
@@ -2643,6 +2756,8 @@
     });
     saveAll();
   }
+
+  // Render tracked markets list in modal
   function renderMarketList() {
     const ul = document.getElementById('marketList');
     if (!ul) return;
@@ -2658,12 +2773,15 @@
     `).join('');
     ul.innerHTML = items || '<li style="color:#64748b">No markets tracked yet.</li>';
   }
+
   function removeMarket(index) {
     settings.trackedMarkets.splice(index, 1);
     saveAll();
     renderMarketList();
     renderMarketTicker();
   }
+
+  // Render ticker strip
   function renderMarketTicker() {
     const wrap = document.getElementById('tickerWrap');
     if (!wrap) return;
@@ -2683,25 +2801,7 @@
     wrap.innerHTML = items || '<div class="ticker-item">No markets tracked</div>';
   }
 
-  let tickerInterval = null;
-  function startTickerRealtimeLoop() {
-    if (tickerInterval) clearInterval(tickerInterval);
-    tickerInterval = setInterval(async () => {
-      try {
-        settings.trackedMarkets = settings.trackedMarkets.map(m => {
-          const drift = (Math.random() - 0.5) * (m.price ? m.price * 0.0008 : 5);
-          const newPrice = Math.max(0, (m.price || 0) + drift);
-          const change = ((newPrice - (m.price || newPrice)) / (m.price || newPrice || 1)) * 100;
-          return { ...m, price: Number(newPrice.toFixed(2)), change: Number(change.toFixed(2)) };
-        });
-        renderMarketTicker();
-      } catch (e) {
-        console.warn('Ticker update error:', e);
-      }
-    }, 5000);
-  }
-
-  // ---------- EXPOSED ----------
+  // Expose functions
   window.loadEdit = loadEdit;
   window.deleteEntry = deleteEntry;
   window.toggleSubMenu = toggleSubMenu;
