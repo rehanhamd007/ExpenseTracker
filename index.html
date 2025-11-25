@@ -58,6 +58,13 @@
     .nav-item { padding: 10px 12px; border-radius: 6px; color: var(--sidebar-text); cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500; margin-bottom: 2px; }
     .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
     .nav-item.active { background: rgba(56, 189, 248, 0.1); color: var(--sidebar-active); }
+
+    /* NEW: Quick index add in sidebar */
+    .nav-helper { padding: 8px 10px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); margin-top: 8px; }
+    .nav-helper label { display:block; font-size:10px; color:#93a4b8; margin-bottom:6px; text-transform: uppercase; letter-spacing:0.5px; }
+    .nav-helper select { width:100%; padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.18); background:#0b1323; color:#e5edf6; font-size:12px; }
+    .nav-helper button { width:100%; margin-top:8px; padding:8px 10px; border-radius:6px; border:none; font-size:12px; font-weight:600; background:var(--primary); color:white; cursor:pointer; }
+
     .sidebar-footer { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
     .sys-stat { font-size: 11px; color: var(--sidebar-text); display: flex; justify-content: space-between; margin-bottom: 4px; }
     .sys-val { color: white; font-weight: 600; }
@@ -242,6 +249,9 @@
       100% { transform: translate(-100%, 0); }
     }
 
+    /* NEW: Clock micro-style */
+    #currentClock { color: #0f172a; font-weight: 600; font-variant-numeric: tabular-nums; }
+
     /* MEDIA QUERIES */
     @media(max-width: 1200px) {
       .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
@@ -271,6 +281,14 @@
       .modal-content { width: 100%; height: 100%; border-radius: 0; max-width: none; }
       .modal-small { height: auto; min-height: 50vh; border-radius: 12px; }
     }
+
+    /* NEW: Market modal select polish */
+    #majorIndexSelect, #commodityCountrySelect {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    #applyCommodityFilter { padding: 8px 12px; font-size: 12px; }
   </style>
 </head>
   <body>
@@ -301,11 +319,29 @@
         <div class="nav-label">Main menu</div>
         <div class="nav-item active">Dashboard</div>
         <div class="nav-item" id="navAnalytics">Advanced analytics</div>
-        <!-- NEW: Market ticker modal trigger -->
+        <!-- Market ticker modal trigger -->
         <a href="#marketSettingsModal" class="nav-item openModal" data-modal-id="marketSettingsModal" style="text-decoration:none;">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"></path><path d="M19 9l-5 5-4-4-3 3"></path></svg>
           <span>Market ticker</span>
         </a>
+        <!-- NEW: Quick add major index directly from sidebar -->
+        <div class="nav-helper">
+          <label>Quick add index</label>
+          <select id="sidebarIndexSelect">
+            <option value="">Choose...</option>
+            <option value="NIFTY_50|Nifty 50">NIFTY 50 (India)</option>
+            <option value="SENSEX|Sensex">SENSEX (India)</option>
+            <option value="NASDAQ|Nasdaq">NASDAQ (US)</option>
+            <option value="DJI|Dow Jones">Dow Jones (US)</option>
+            <option value="SPX|S&P 500">S&P 500 (US)</option>
+            <option value="FTSE_100|FTSE 100">FTSE 100 (UK)</option>
+            <option value="DAX|DAX">DAX (Germany)</option>
+            <option value="CAC_40|CAC 40">CAC 40 (France)</option>
+            <option value="NIKKEI_225|Nikkei 225">Nikkei 225 (Japan)</option>
+            <option value="HSI|Hang Seng">Hang Seng (Hong Kong)</option>
+          </select>
+          <button id="sidebarAddIndexBtn">Add to ticker</button>
+        </div>
       </div>
       <div class="nav-group">
         <div class="nav-label">Configuration</div>
@@ -325,7 +361,7 @@
 </aside>
 
 <main>
-  <!-- NEW: Market ticker strip -->
+  <!-- Market ticker strip -->
   <div id="stockTickerContainer" class="market-ticker-strip">
     <div id="tickerWrap" class="ticker-wrap"></div>
   </div>
@@ -333,7 +369,11 @@
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
     <div>
       <h1 style="margin:0; font-size:24px; font-weight:700">Financial overview</h1>
-      <div style="font-size:13px; color:var(--text-muted); margin-top:4px" id="currentDate"></div>
+      <div style="font-size:13px; color:var(--text-muted); margin-top:4px; display:flex; gap:8px; align-items:center;">
+        <span id="currentDate"></span>
+        <!-- NEW: Live clock -->
+        <span id="currentClock"></span>
+      </div>
     </div>
     <div class="flex-row">
       <button class="btn-outline" id="sampleBtn">Load sample</button>
@@ -755,7 +795,7 @@
   </div>
 </div>
 
-<!-- NEW: Market ticker settings modal -->
+<!-- Market ticker settings modal -->
 <div id="marketSettingsModal" class="modal">
   <div class="modal-content">
     <div class="action-header" style="border-radius:12px 12px 0 0">
@@ -773,20 +813,57 @@
         <ul id="marketList" class="list-unstyled" style="list-style:none; padding-left:0; display:flex; flex-direction:column; gap:8px;"></ul>
       </div>
 
-      <h3 style="margin:8px 0;">Add New Market</h3>
+      <!-- Predefined index selector -->
+      <h3 style="margin:8px 0;">Add Major Index</h3>
       <form id="addMarketForm" class="full-width" style="display:flex; flex-direction:column; gap:10px;">
         <div class="form-row" style="display:flex; gap:10px; flex-wrap:wrap;">
           <div class="form-group" style="flex:1; min-width:220px;">
-            <label for="newMarketSymbol">Symbol (e.g., SENSEX, NASDAQ, XAUUSD):</label>
-            <input type="text" id="newMarketSymbol" required>
-          </div>
-          <div class="form-group" style="flex:1; min-width:220px;">
-            <label for="newMarketName">Name (e.g., Sensex, Nasdaq, Gold/USD):</label>
-            <input type="text" id="newMarketName" required>
+            <label for="majorIndexSelect">Select index:</label>
+            <select id="majorIndexSelect" required>
+              <option value="">Choose...</option>
+              <!-- India -->
+              <option value="NIFTY_50|Nifty 50">NIFTY 50 (India)</option>
+              <option value="SENSEX|Sensex">SENSEX (India)</option>
+              <!-- US -->
+              <option value="NASDAQ|Nasdaq">NASDAQ (US)</option>
+              <option value="DJI|Dow Jones">Dow Jones (US)</option>
+              <option value="SPX|S&P 500">S&P 500 (US)</option>
+              <!-- Europe -->
+              <option value="FTSE_100|FTSE 100">FTSE 100 (UK)</option>
+              <option value="DAX|DAX">DAX (Germany)</option>
+              <option value="CAC_40|CAC 40">CAC 40 (France)</option>
+              <!-- Asia -->
+              <option value="NIKKEI_225|Nikkei 225">Nikkei 225 (Japan)</option>
+              <option value="HSI|Hang Seng">Hang Seng (Hong Kong)</option>
+            </select>
           </div>
         </div>
-        <button type="submit" class="btn-primary">Add Market</button>
+        <button type="submit" class="btn-primary">Add Index</button>
       </form>
+
+      <!-- Commodity country filter -->
+      <div style="margin-top:20px;">
+        <h3 style="margin:8px 0;">Commodity region filter</h3>
+        <div class="form-row" style="display:flex; gap:10px; flex-wrap:wrap;">
+          <div class="form-group" style="flex:1; min-width:220px;">
+            <label for="commodityCountrySelect">Country/Region for Gold/Silver:</label>
+            <select id="commodityCountrySelect">
+              <option value="">Global default</option>
+              <option value="IN">India (INR)</option>
+              <option value="US">United States (USD)</option>
+              <option value="GB">United Kingdom (GBP)</option>
+              <option value="EU">Eurozone (EUR)</option>
+              <option value="AE">United Arab Emirates (AED)</option>
+            </select>
+            <small style="display:block; color:var(--text-muted); margin-top:6px;">
+              This filters commodity symbols in the ticker (e.g., Gold, Silver) to the selected region’s typical currency mapping.
+            </small>
+          </div>
+        </div>
+        <div style="margin-top:10px;">
+          <button id="applyCommodityFilter" class="btn-outline">Apply filter</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -820,6 +897,7 @@
     <button class="calc-equals">=</button>
   </div>
 </div>
+
 <script>
   // Firebase Config
   const firebaseConfig = {
@@ -911,6 +989,17 @@
     if (dateEl) dateEl.value = today;
     dragElement(document.getElementById("calculator"));
 
+    // NEW: Live clock init (IST)
+    const clockEl = document.getElementById('currentClock');
+    function renderClock() {
+      const now = new Date();
+      clockEl.textContent = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    }
+    if (clockEl) {
+      renderClock();
+      setInterval(renderClock, 1000);
+    }
+
     const mobileBtn = document.getElementById('mobileMenuBtn');
     const sidebar = document.getElementById('mainSidebar');
     if (mobileBtn && sidebar) {
@@ -959,7 +1048,7 @@
             data = [];
             methodNames = {...CANONICAL_METHODS};
             incomeSources = ['Salary', 'Freelance', 'Interest'];
-            settings = { ccLimit: DEFAULT_CC_LIMIT, trackedMarkets: settings.trackedMarkets || [] };
+            settings = { ccLimit: DEFAULT_CC_LIMIT, trackedMarkets: settings.trackedMarkets || [], commodityCountry: settings.commodityCountry || '' };
             saveAll();
             window.location.reload();
         }
@@ -970,7 +1059,7 @@
       button.addEventListener('click', handleCalculatorInput);
     });
 
-    // Open any generic modal by data-modal-id (includes marketSettingsModal)
+    // Open generic modals
     document.querySelectorAll('.openModal').forEach(button => {
       button.addEventListener('click', (e) => {
         e.preventDefault();
@@ -1002,9 +1091,52 @@
     setupExpenseMultiSelect();
     setupInvestmentFilters();
 
-    // Attach listener for the Add Market form
-    const addMarketForm = document.getElementById('addMarketForm');
-    if (addMarketForm) addMarketForm.addEventListener('submit', addMarket);
+    // NEW: Market modal listeners (overrides older placeholder)
+    const addMarketFormEl = document.getElementById('addMarketForm');
+    const majorIndexSelect = document.getElementById('majorIndexSelect');
+    const commodityCountrySelect = document.getElementById('commodityCountrySelect');
+    const applyCommodityFilterBtn = document.getElementById('applyCommodityFilter');
+    if (addMarketFormEl && majorIndexSelect) {
+      addMarketFormEl.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const val = majorIndexSelect.value;
+        if (!val) return;
+        const [symbol, name] = val.split('|');
+        addIndexToSettings(symbol, name);
+        majorIndexSelect.value = '';
+        renderMarketList();
+        renderMarketTicker();
+        alert('Index added to ticker.');
+      });
+    }
+    if (applyCommodityFilterBtn && commodityCountrySelect) {
+      applyCommodityFilterBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const country = commodityCountrySelect.value || '';
+        settings.commodityCountry = country;
+        remapCommoditySymbolsByCountry();
+        saveAll();
+        renderMarketList();
+        renderMarketTicker();
+        alert('Commodity region applied.');
+      });
+    }
+
+    // NEW: Sidebar quick add
+    const sidebarIdxSelect = document.getElementById('sidebarIndexSelect');
+    const sidebarAddIndexBtn = document.getElementById('sidebarAddIndexBtn');
+    if (sidebarIdxSelect && sidebarAddIndexBtn) {
+      sidebarAddIndexBtn.addEventListener('click', () => {
+        const val = sidebarIdxSelect.value;
+        if (!val) return;
+        const [symbol, name] = val.split('|');
+        addIndexToSettings(symbol, name);
+        sidebarIdxSelect.value = '';
+        renderMarketList();
+        renderMarketTicker();
+        alert('Index added to ticker.');
+      });
+    }
 
     renderAll();
   });
@@ -1106,8 +1238,8 @@
   let methodNames = {...CANONICAL_METHODS};
   let incomeSources = ['Salary', 'Freelance', 'Interest'];
 
-  // Load settings with market ticker defaults if missing
-  let settings = { ccLimit: DEFAULT_CC_LIMIT, trackedMarkets: [
+  // Settings with market ticker defaults + NEW commodity region
+  let settings = { ccLimit: DEFAULT_CC_LIMIT, commodityCountry: '', trackedMarkets: [
     { symbol: 'SENSEX', name: 'Sensex', price: 72000.00, change: 0.85 },
     { symbol: 'NASDAQ', name: 'Nasdaq', price: 16000.00, change: -1.23 },
     { symbol: 'XAUUSD', name: 'Gold/USD', price: 2350.00, change: 0.15 },
@@ -1196,6 +1328,7 @@
         { symbol: 'XAGUSD', name: 'Silver/USD', price: 28.50, change: -0.55 },
         { symbol: 'BTCUSD', name: 'Bitcoin', price: 68000.00, change: 2.10 }
       ];
+      if (!settings.commodityCountry) settings.commodityCountry = '';
     }
 
     data = data.map(d => ({
@@ -1232,6 +1365,7 @@
             { symbol: 'XAGUSD', name: 'Silver/USD', price: 28.50, change: -0.55 },
             { symbol: 'BTCUSD', name: 'Bitcoin', price: 68000.00, change: 2.10 }
           ];
+          if (!settings.commodityCountry) settings.commodityCountry = '';
         }
       } catch (e) {
         console.error("Firestore read error, using local data:", e);
@@ -1248,7 +1382,8 @@
     renderCharts();
     renderRecentEntries();
     renderSettings();
-    renderMarketTicker(); // NEW
+    remapCommoditySymbolsByCountry(); // ensure commodities follow selected country
+    renderMarketTicker();
   }
 
   function setupDropdowns() {
@@ -1619,7 +1754,7 @@
   function applyDateRangeToInvestments(entries, range) {
     if(!range || range === 'all') return entries;
     const cutoff = new Date();
-    cutoff.setMonth(cutoff.getMonth() - Number(range));
+    cutoff.setMonth(cuttoff.getMonth() - Number(range));
     return entries.filter(e => new Date(e.date) >= cutoff);
   }
 
@@ -2281,34 +2416,34 @@
               importedData = parseCSV(content);
           } else { return alert('Unsupported file type. Please use CSV or JSON.'); }
 
-                       if (!importedData || importedData.length === 0) return alert('No valid data found.');
-              let newEntries = 0;
-              importedData.forEach(item => {
-                  const entry = {
-                      id: uid(),
-                      type: item.type ? item.type.toLowerCase().trim() : 'expense',
-                      amount: Number(item.amount),
-                      date: item.date || new Date().toISOString().slice(0, 10),
-                      desc: item.desc || item.description || '',
-                      category: item.category || 'Misc',
-                      method: item.method ? toKey(item.method) : 'cash',
-                      incomeSource: item.income_source || item.incomeSource || '',
-                      investmentGroup: item.investment_group || item.investmentGroup || '',
-                      investmentSub: item.investment_sub || item.investmentSub || '',
-                      insuranceType: item.insurance_type || item.insuranceType || '',
-                      insuranceFor: item.insurance_for || item.insuranceFor || '',
-                  };
-                  if (entry.amount > 0 && entry.desc) {
-                      data.push(entry);
-                      newEntries++;
-                  }
-              });
-              saveAll();
-              renderAll();
-              document.getElementById('importModal').classList.remove('open');
-              alert(`Successfully imported ${newEntries} new entries.`);
-          };
-          reader.readAsText(file);
+          if (!importedData || importedData.length === 0) return alert('No valid data found.');
+          let newEntries = 0;
+          importedData.forEach(item => {
+              const entry = {
+                  id: uid(),
+                  type: item.type ? item.type.toLowerCase().trim() : 'expense',
+                  amount: Number(item.amount),
+                  date: item.date || new Date().toISOString().slice(0, 10),
+                  desc: item.desc || item.description || '',
+                  category: item.category || 'Misc',
+                  method: item.method ? toKey(item.method) : 'cash',
+                  incomeSource: item.income_source || item.incomeSource || '',
+                  investmentGroup: item.investment_group || item.investmentGroup || '',
+                  investmentSub: item.investment_sub || item.investmentSub || '',
+                  insuranceType: item.insurance_type || item.insuranceType || '',
+                  insuranceFor: item.insurance_for || item.insuranceFor || '',
+              };
+              if (entry.amount > 0 && entry.desc) {
+                  data.push(entry);
+                  newEntries++;
+              }
+          });
+          saveAll();
+          renderAll();
+          document.getElementById('importModal').classList.remove('open');
+          alert(`Successfully imported ${newEntries} new entries.`);
+      };
+      reader.readAsText(file);
   }
 
   function parseCSV(csvText) {
@@ -2444,6 +2579,7 @@
       methodNames = {...CANONICAL_METHODS};
       incomeSources = ['Salary (Primary)', 'Freelance Income', 'Investment Income'];
       settings.ccLimit = 200000;
+      settings.commodityCountry = settings.commodityCountry || '';
       settings.trackedMarkets = settings.trackedMarkets || [
         { symbol: 'SENSEX', name: 'Sensex', price: 72000.00, change: 0.85 },
         { symbol: 'NASDAQ', name: 'Nasdaq', price: 16000.00, change: -1.23 },
@@ -2589,10 +2725,88 @@
     }
   }
 
-  // --- Market ticker (already integrated above) is invoked via renderAll ---
+  // --- Market ticker utils and render ---
+
+  // Add index to settings if not present
+  function addIndexToSettings(symbol, name) {
+    const exists = settings.trackedMarkets.some(m => m.symbol === symbol);
+    if (!exists) {
+      settings.trackedMarkets.push({ symbol, name, price: 0, change: 0 });
+      saveAll();
+    }
+  }
+
+  // Map commodities to selected country currency symbols (static mapping; can be enhanced with API)
+  function remapCommoditySymbolsByCountry() {
+    const country = settings.commodityCountry || '';
+    const map = {
+      '': { gold: 'XAUUSD', silver: 'XAGUSD', goldName: 'Gold/USD', silverName: 'Silver/USD' },
+      'IN': { gold: 'XAUINR', silver: 'XAGINR', goldName: 'Gold/INR', silverName: 'Silver/INR' },
+      'US': { gold: 'XAUUSD', silver: 'XAGUSD', goldName: 'Gold/USD', silverName: 'Silver/USD' },
+      'GB': { gold: 'XAUGBP', silver: 'XAGGBP', goldName: 'Gold/GBP', silverName: 'Silver/GBP' },
+      'EU': { gold: 'XAUEUR', silver: 'XAGEUR', goldName: 'Gold/EUR', silverName: 'Silver/EUR' },
+      'AE': { gold: 'XAUAED', silver: 'XAGAED', goldName: 'Gold/AED', silverName: 'Silver/AED' }
+    };
+    const target = map[country] || map[''];
+    // look for existing gold/silver and remap symbols/names, preserving price/change placeholders
+    settings.trackedMarkets = settings.trackedMarkets.map(m => {
+      if (m.symbol.startsWith('XAU')) return { ...m, symbol: target.gold, name: target.goldName };
+      if (m.symbol.startsWith('XAG')) return { ...m, symbol: target.silver, name: target.silverName };
+      return m;
+    });
+    saveAll();
+  }
+
+  // Render tracked markets list in modal
+  function renderMarketList() {
+    const ul = document.getElementById('marketList');
+    if (!ul) return;
+    const items = settings.trackedMarkets.map((m, idx) => `
+      <li style="display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border); border-radius:8px; padding:8px;">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <strong>${m.name}</strong>
+          <span style="color:#64748b">(${m.symbol})</span>
+          <span style="font-weight:600; color:${(m.change||0)>=0?'#10b981':'#ef4444'}">${(m.change || 0).toFixed(2)}%</span>
+        </div>
+        <button class="btn-outline" style="padding:4px 8px; font-size:11px" onclick="removeMarket(${idx})">Remove</button>
+      </li>
+    `).join('');
+    ul.innerHTML = items || '<li style="color:#64748b">No markets tracked yet.</li>';
+  }
+
+  function removeMarket(index) {
+    settings.trackedMarkets.splice(index, 1);
+    saveAll();
+    renderMarketList();
+    renderMarketTicker();
+  }
+
+  // Render ticker strip
+  function renderMarketTicker() {
+    const wrap = document.getElementById('tickerWrap');
+    if (!wrap) return;
+    const items = settings.trackedMarkets.map(m => {
+      const price = (m.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const change = Number(m.change || 0);
+      const changeClass = change >= 0 ? 'change-up' : 'change-down';
+      const changeText = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+      return `
+        <div class="ticker-item">
+          <span class="symbol">${m.symbol}</span>
+          <span>${price}</span>
+          <span class="${changeClass}" style="margin-left:6px;">${changeText}</span>
+        </div>
+      `;
+    }).join('');
+    wrap.innerHTML = items || '<div class="ticker-item">No markets tracked</div>';
+  }
+
   // Expose functions
   window.loadEdit = loadEdit;
   window.deleteEntry = deleteEntry;
   window.toggleSubMenu = toggleSubMenu;
   window.resetExpenseDrilldown = resetExpenseDrilldown;
+  window.removeMarket = removeMarket;
 </script>
+</body>
+</html>
