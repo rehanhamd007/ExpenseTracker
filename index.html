@@ -75,7 +75,30 @@
     .icon-close { display: none; }
     aside.mobile-open .icon-menu { display: none; }
     aside.mobile-open .icon-close { display: block; }
-
+.cc-slider-wrap {
+  margin-top: 12px;
+}
+.cc-slider-bar {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+.cc-slider-fill {
+  height: 100%;
+  background: linear-gradient(to right, #f97316, #f59e0b);
+  width: 0%;
+  transition: width 0.4s ease;
+}
+.cc-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
     /* AUTH GATE (FIXED) */
     #authGate {
       position: fixed; inset: 0; background: linear-gradient(135deg, #1e293b, #3b82f6);
@@ -399,6 +422,15 @@
     <div class="card kpi-card kpi-cc col-span-1" id="ccCard" style="background:linear-gradient(180deg,#fff7ed 0%,#fffbeb 100%);">
       <div class="card-title" id="ccTitle" style="color:var(--warning)">Credit card due</div>
       <div class="kpi-value" id="kpiCCDue">₹0</div>
+<div class="cc-slider-wrap">
+  <div class="cc-slider-bar">
+    <div id="ccSliderFill" class="cc-slider-fill"></div>
+  </div>
+  <div class="cc-slider-labels">
+    <span>Used</span>
+    <span id="ccSliderPercent">0%</span>
+  </div>
+</div>
       <div class="kpi-sub" style="color:#000; font-weight:700; margin-top: 6px; position:relative;">
         <span id="ccPaymentDate">Next: 10th Dec</span>
         <span style="font-weight:700; margin-left:10px;">Limit: <span id="ccLimitDisplay">₹2L</span></span>
@@ -1699,6 +1731,9 @@
     document.getElementById('kpiNet').innerText = fmt(inc - exp);
     document.getElementById('kpiInvest').innerText = fmt(totalInvested);
     document.getElementById('kpiCCDue').innerText = fmt(creditCardDue);
+    const percentUsed = ccLimit ? Math.min((creditCardDue / ccLimit) * 100, 100) : 0;
+    document.getElementById('ccSliderFill').style.width = `${percentUsed.toFixed(1)}%`;
+    document.getElementById('ccSliderPercent').textContent = `${percentUsed.toFixed(1)}%`;
     document.getElementById('ccLimitDisplay').innerText = fmt(ccLimit);
     document.getElementById('ccPaymentDate').innerText = `Next: ${getNextPaymentDate()}`;
 
