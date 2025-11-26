@@ -63,8 +63,7 @@
     /* NEW: Quick index add in sidebar */
     .nav-helper { padding: 8px 10px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); margin-top: 8px; }
     .nav-helper label { display:block; font-size:10px; color:#93a4b8; margin-bottom:6px; text-transform: uppercase; letter-spacing:0.5px; }
-    /* OVERRIDE: Sidebar dropdown readability — black text, white background */
-    .nav-helper select { width:100%; padding:8px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:#fff; color:#000; font-size:12px; }
+    .nav-helper select { width:100%; padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.18); background:#0b1323; color:#e5edf6; font-size:12px; }
     .nav-helper button { width:100%; margin-top:8px; padding:8px 10px; border-radius:6px; border:none; font-size:12px; font-weight:600; background:var(--primary); color:white; cursor:pointer; }
 
     .sidebar-footer { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
@@ -81,13 +80,11 @@
     #authGate {
       position: fixed; inset: 0; background: linear-gradient(135deg, #1e293b, #3b82f6);
       z-index: 9999;
-      display: none; /* Hidden by default */
+      display: none;
       flex-direction: column; justify-content: center; align-items: center;
       gap: 10px; color: white; text-align: center; padding: 0 24px;
     }
-    #authGate.show {
-      display: flex; /* Only shows when .show class is present */
-    }
+    #authGate.show { display: flex; }
     #authGate .line { margin: 0; }
     #authGate .line-1 { font-size: 22px; font-weight: 600; }
     #authGate .line-2 { font-size: 20px; font-weight: 600; }
@@ -139,7 +136,6 @@
       box-shadow: var(--kpi-inner-shadow);
       pointer-events: none;
     }
-    /* Accent borders by semantic type */
     .kpi-income { border-left: 6px solid var(--success); }
     .kpi-expense { border-left: 6px solid var(--danger); }
     .kpi-cc { border-left: 6px solid var(--warning); }
@@ -227,7 +223,7 @@
     .market-ticker-strip {
       background-color: #1e293b;
       color: #f1f5f9;
-      padding: 10px 0; /* Ensures consistent vertical spacing */
+      padding: 10px 0;
       margin-bottom: 20px;
       box-shadow: var(--shadow-md);
       position: relative;
@@ -236,20 +232,8 @@
       display: flex;
       align-items: center;
     }
-
-    .ticker-wrap {
-      display: flex;
-      width: max-content;
-      animation: marquee 30s linear infinite;
-      padding-left: 100%;
-    }
-    .ticker-item {
-      display: inline-block;
-      padding: 0 20px;
-      white-space: nowrap;
-      font-size: 0.9em;
-      font-weight: 500;
-    }
+    .ticker-wrap { display: flex; width: max-content; animation: marquee 30s linear infinite; padding-left: 100%; }
+    .ticker-item { display: inline-block; padding: 0 20px; white-space: nowrap; font-size: 0.9em; font-weight: 500; }
     .ticker-item .symbol { font-weight: 700; margin-right: 5px; }
     .ticker-item .change-up { color: #10b981; }
     .ticker-item .change-down { color: #ef4444; }
@@ -291,20 +275,19 @@
       .modal-small { height: auto; min-height: 50vh; border-radius: 12px; }
     }
 
-    /* NEW: Market modal select polish + ensure black text for dropdowns */
-    #majorIndexSelect, #commodityCountrySelect, #sidebarIndexSelect {
+    /* NEW: Market modal select polish */
+    #majorIndexSelect, #commodityCountrySelect {
       background: #fff;
       border: 1px solid var(--border);
       border-radius: 6px;
-      color: #000;
     }
     #applyCommodityFilter { padding: 8px 12px; font-size: 12px; }
   </style>
 </head>
   <body>
 
-<!-- FIXED: Removed initial "show" to prevent flicker -->
-<div id="authGate">
+<!-- Added class "show" initially to prevent flash of content -->
+<div id="authGate" class="show">
   <p class="line line-1">Welcome to</p>
   <p class="line line-2">MoneyMirror — Personal Finance Dashboard</p>
   <p class="line line-3">by Rehan Hamdulay</p>
@@ -391,7 +374,7 @@
       <button class="btn-primary" id="importDataBtn">Import data</button>
       <button class="btn-outline" id="exportBtn">Export CSV</button>
       <div id="calc-toggle" title="Toggle calculator">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line><line x1="12" y1="14" x2="12.01" y2="14"></line><line x1="8" y1="10" x2="8.01" y2="10"></line><line x1="16" y1="10" x2="16.01" y2="10"></line></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line><line x1="12" y1="14" x2="12.01" y2="14"></line><line x1="8" y1="10" x2="8.01" y2="10"></line><line x1="16" y1="10" x2="16.01" y2="10"></line></svg>
       </div>
     </div>
   </div>
@@ -517,12 +500,12 @@
           </select>
 
           <div id="expenseFilterContainer" class="multiselect-container hidden" style="flex:1;">
-              <button class="btn-outline" style="font-size:12px; padding:10px; width:100%;" id="expenseFilterBtn">Select Categories 🟰</button>
+              <button class="btn-outline" style="font-size:12px; padding:10px; width:100%;" id="expenseFilterBtn">Select Categories ▾</button>
               <div class="multiselect-dropdown" id="expenseMultiselectDropdown">
                   <div id="expenseCheckboxes" style="max-height:200px; overflow-y:auto;"></div>
                   <div class="ms-actions">
-                      <button class="btn-outline" style="padding:4px 8px; font-size:11px" id="msClear">Clear</button>
-                      <button class="btn-primary" style="padding:4px 8px; font-size:11px" id="msApply">Apply</button>
+                      <button class="btn-outline" style="padding:4px 8px; font-size:11px;" id="msClear">Clear</button>
+                      <button class="btn-primary" style="padding:4px 8px; font-size:11px;" id="msApply">Apply</button>
                   </div>
               </div>
           </div>
@@ -566,15 +549,21 @@
         </div>
         <div class="input-group-large">
           <label>Description</label>
-          <input id="desc" placeholder="What is this for?" />
+          <input id="desc" placeholder="Optional notes..." />
         </div>
-      
+
         <div id="dynamicFieldsContainer" class="full-width" style="border-top:1px solid var(--border); padding-top:15px">
           <div id="regularFields" style="display:flex; gap:20px; flex-wrap:wrap">
             <div id="categoryContainer" class="input-group-small">
               <label>Category</label>
-              <select id="category"></select>
+              <select id="category" onchange="updateSubcategoryDropdown()"></select>
             </div>
+            <!-- NEW: Subcategory dropdown (auto-shows for mapped categories like Food) -->
+            <div id="subcategoryContainer" class="input-group-small hidden">
+              <label>Subcategory</label>
+              <select id="subcategory"></select>
+            </div>
+
             <div class="input-group-small">
               <label>Method</label>
               <select id="method"></select>
@@ -636,18 +625,15 @@
         <div class="card-title">Recent transactions</div>
         <div class="flex-row" style="gap:10px; width:100%;">
              <input type="text" id="recentSearch" placeholder="Search..." style="padding:8px; flex:1;" onkeyup="renderRecentEntries()" />
-             
              <select id="recentSort" onchange="renderRecentEntries()" style="flex:1;">
                  <option value="dateDesc">Newest</option>
                  <option value="dateAsc">Oldest</option>
                  <option value="amtDesc">Amt High</option>
                  <option value="amtAsc">Amt Low</option>
              </select>
-
              <select id="recentCategory" onchange="renderRecentEntries()" style="flex:1;">
                  <option value="">All Cats</option>
              </select>
-
              <select id="entryLimit" onchange="renderRecentEntries()" style="width:60px; flex:0;">
                 <option value="10">10</option>
                 <option value="25">25</option>
@@ -692,6 +678,18 @@
           <button class="btn-primary" id="addMethod">Add</button>
         </div>
       </div>
+
+      <!-- NEW: Category manager -->
+      <div style="margin-bottom:20px">
+        <label style="margin-bottom:8px">Expense categories</label>
+        <div id="categoryEditor" style="border:1px solid var(--border); border-radius:8px; padding:10px; margin-bottom:10px; max-height:150px; overflow-y:auto;"></div>
+        <div class="flex-row">
+          <input id="newCategory" placeholder="New category (e.g. Food)" />
+          <button class="btn-primary" id="addCategoryBtn">Add</button>
+        </div>
+        <small style="display:block; color:var(--text-muted); margin-top:6px;">Tip: Click remove to delete a category. Built-ins like "Investments" and "Credit Card Payment" are protected.</small>
+      </div>
+
       <div style="margin-bottom:20px">
         <label style="margin-bottom:8px">Income sources</label>
         <div class="flex-row" style="margin-bottom:10px;">
@@ -1033,6 +1031,8 @@
     // Modals
     document.getElementById('navSettings').addEventListener('click', () => {
       document.getElementById('settingsModal').classList.add('open');
+      // Ensure category editor renders when opening
+      renderCategoryEditor();
     });
     document.getElementById('closeSettings').addEventListener('click', () => {
       document.getElementById('settingsModal').classList.remove('open');
@@ -1141,16 +1141,16 @@
       });
     }
 
-    // Auth state -> avoid flicker and avoid early render
+    // Auth state -> avoid flicker
     const lastProfile = localStorage.getItem('mm_last_profile');
     if (auth) {
       auth.onAuthStateChanged(user => {
         if (user) {
-          onUserSignedIn(user);      // loadProfileData() -> render after data
+          onUserSignedIn(user);
         } else if (lastProfile === 'Guest') {
-          startGuestMode();          // loadProfileData() -> render after data
+          startGuestMode();
         } else {
-          showAuthGate();            // only show gate when unauthenticated and no guest
+          showAuthGate();
         }
       });
     } else {
@@ -1161,12 +1161,13 @@
       }
     }
 
-    // INIT UI scaffolding that doesn't depend on data
     setupExpenseMultiSelect();
     setupInvestmentFilters();
 
-    // IMPORTANT: No early renderAll(); Defer rendering until loadProfileData() completes.
-    // Also no early startTickerRealtimeLoop(); it will start after loadProfileData().
+    renderAll();
+
+    // Start ticker refresh loop (realtime stub; replace fetch with your API)
+    startTickerRealtimeLoop();
   });
 
   // ---------- STATE ----------
@@ -1178,7 +1179,10 @@
     'credit_card': 'Credit Card',
     'digital_wallet': 'Digital Wallet'
   };
-  const BASE_CATS = ['Food', 'Rent', 'Utilities', 'Shopping', 'Entertainment', 'Travel', 'Health', 'Investments', 'Insurance', 'Credit Card Payment', 'Misc'];
+
+  // Make categories persist under settings.expenseCategories, with protected items
+  const PROTECTED_CATS = ['Investments', 'Insurance', 'Credit Card Payment'];
+  const DEFAULT_EXPENSE_CATEGORIES = ['Food', 'Rent', 'Utilities', 'Shopping', 'Entertainment', 'Travel', 'Health', 'Investments', 'Insurance', 'Credit Card Payment', 'Misc'];
 
   const DEFAULT_SETTINGS = {
     ccLimit: DEFAULT_CC_LIMIT,
@@ -1190,91 +1194,14 @@
       { symbol: 'XAUUSD', name: 'Gold/USD', price: 2350.00, change: 0.15 },
       { symbol: 'XAGUSD', name: 'Silver/USD', price: 28.50, change: -0.55 },
       { symbol: 'BTCUSD', name: 'Bitcoin', price: 68000.00, change: 2.10 }
-    ]
+    ],
+    // Persisted customizable categories
+    expenseCategories: DEFAULT_EXPENSE_CATEGORIES.slice()
   };
 
-  const INVESTMENT_STRUCTURE = {
-    'Equity (Stocks)': {
-      'India - Large Cap/Mid Cap/Small Cap': 'Equity (Stocks)',
-      'India - Index Stocks/Preferred Stock': 'Equity (Stocks)',
-      'India - Derivatives (Options/Futures)': 'Equity (Stocks)',
-      'US - Stocks': 'Equity (Stocks)',
-      'International - Other': 'Equity (Stocks)',
-    },
-    'Mutual Funds': {
-      'Equity MF - Large Cap/Mid Cap/Small Cap': 'Mutual Funds',
-      'Equity MF - Multi-cap': 'Mutual Funds',
-      'Equity MF - ELSS (Tax Saving)': 'Mutual Funds',
-      'Debt MF - Overnight/Liquid/Ultra Short Term': 'Mutual Funds',
-      'Debt MF - Corporate/Dynamic Bond': 'Mutual Funds',
-      'Hybrid/Balanced MF': 'Mutual Funds',
-      'International/Global Index MF': 'Mutual Funds',
-      'Gold/Sectoral/Thematic MF': 'Mutual Funds',
-    },
-    'ETFs': {
-      'Equity ETF': 'ETFs',
-      'Debt ETF': 'ETFs',
-      'Gold ETF': 'ETFs',
-      'Index ETF': 'ETFs',
-      'Thematic ETF': 'ETFs',
-    },
-    'Bonds & Debt Instruments': {
-      'Government Bonds': 'Bonds & Debt Instruments',
-      'Corporate Bonds': 'Bonds & Debt Instruments',
-      'Treasury Bills': 'Bonds & Debt Instruments',
-      'Tax-Free Bonds': 'Bonds & Debt Instruments',
-      'Sovereign Gold Bonds (SGB)': 'Bonds & Debt Instruments',
-    },
-    'Commodities': {
-      'Gold (Physical/Digital)': 'Commodities',
-      'Silver': 'Commodities',
-      'Crude Oil/Natural Gas': 'Commodities',
-      'Other Metals (Copper/Nickel)': 'Commodities',
-    },
-    'Crypto & Digital Assets': {
-      'Bitcoin (BTC)': 'Crypto & Digital Assets',
-      'Ethereum (ETH)': 'Crypto & Digital Assets',
-      'Stablecoins': 'Crypto & Digital Assets',
-      'Altcoins': 'Crypto & Digital Assets',
-      'NFTs / Web3 Assets': 'Crypto & Digital Assets',
-    },
-    'Real Estate': {
-      'Residential Property': 'Real Estate',
-      'Commercial Property': 'Real Estate',
-      'Land': 'Real Estate',
-      'REITs (Real Estate Investment Trusts)': 'Real Estate',
-    },
-    'Fixed Income / Savings Schemes': {
-      'FD (Fixed Deposit)': 'Fixed Income / Savings Schemes',
-      'RD (Recurring Deposit)': 'Fixed Income / Savings Schemes',
-      'PPF': 'Fixed Income / Savings Schemes',
-      'NSC/KVP/Postal MIS': 'Fixed Income / Savings Schemes',
-      'High-Interest Savings Account': 'Fixed Income / Savings Schemes',
-    },
-    'Retirement Funds': {
-      'NPS Tier 1/Tier 2': 'Retirement Funds',
-      'EPF (Employees’ Provident Fund)': 'Retirement Funds',
-      'IRA/401k (USA users)': 'Retirement Funds',
-      'Other Pension Schemes': 'Retirement Funds',
-    },
-    'Other Investments': {
-      'Angel Investing / Startup Equity': 'Other Investments',
-      'Peer-to-Peer Lending': 'Other Investments',
-      'Private Funds / AIFs': 'Other Investments',
-      'Alternative Assets': 'Other Investments',
-    }
-  };
-  const MAJOR_BUCKETS = {
-    'Equity (Stocks)': 'Equity',
-    'Mutual Funds': 'Mutual Funds',
-    'ETFs': 'ETFs',
-    'Bonds & Debt Instruments': 'Debt',
-    'Fixed Income / Savings Schemes': 'Debt',
-    'Retirement Funds': 'Retirement',
-    'Real Estate': 'Real Estate',
-    'Commodities': 'Commodities',
-    'Crypto & Digital Assets': 'Crypto',
-    'Other Investments': 'Other'
+  // Subcategory map (editable in code; UI: appears when category selected)
+  const SUBCATEGORY_MAP = {
+    Food: ['Veg', 'Non Veg', 'Eggs']
   };
 
   let data = [];
@@ -1321,6 +1248,11 @@
       settings = { ...DEFAULT_SETTINGS, ...storedSettings };
       if (!settings.trackedMarkets) settings.trackedMarkets = DEFAULT_SETTINGS.trackedMarkets.slice();
       if (!settings.api) settings.api = { provider: 'none', key: '' };
+      if (!Array.isArray(settings.expenseCategories) || settings.expenseCategories.length === 0) {
+        settings.expenseCategories = DEFAULT_EXPENSE_CATEGORIES.slice();
+      }
+    } else {
+      settings = { ...DEFAULT_SETTINGS };
     }
     // normalize data
     data = data.map(d => ({
@@ -1336,17 +1268,13 @@
       investmentSub: d.investmentSub || '',
       insuranceType: d.insuranceType || '',
       insuranceFor: d.insuranceFor || '',
+      // optional subcategory
+      subcategory: d.subcategory || ''
     }));
   }
 
   async function loadProfileData() {
-    // Load cached first
     loadLocal();
-
-    // Optimistically render tickers from cached prices immediately
-    renderMarketTicker();
-
-    // Then, merge from Firestore if available
     if (USE_FIRESTORE && db && currentProfile) {
       try {
         const doc = await db.collection(FIRESTORE_COLLECTION_NAME).doc(toKey(currentProfile)).get();
@@ -1355,18 +1283,18 @@
           data = server.data || data;
           methodNames = server.methodNames || methodNames;
           incomeSources = server.incomeSources || incomeSources;
-          settings = { ...DEFAULT_SETTINGS, ...(server.settings || {}) };
+          const incoming = server.settings || {};
+          settings = { ...DEFAULT_SETTINGS, ...incoming };
+          // guard settings.expenseCategories
+          if (!Array.isArray(settings.expenseCategories) || settings.expenseCategories.length === 0) {
+            settings.expenseCategories = DEFAULT_EXPENSE_CATEGORIES.slice();
+          }
         }
       } catch (e) {
         console.error("Firestore read error:", e);
       }
     }
-
-    // Now render everything once (no double-render)
     renderAll();
-
-    // Start ticker loop after initial render, with bootstrap cadence
-    startTickerRealtimeLoop();
   }
 
   // ---------- RENDER ----------
@@ -1388,24 +1316,25 @@
       .map(key => `<option value="${key}">${methodNames[key]}</option>`).join('');
     // Income sources
     formEls.incomeSource.innerHTML = '<option value="">Select Source</option>' + incomeSources.map(s => `<option value="${s}">${s}</option>`).join('');
-    // Categories
-    formEls.category.innerHTML = BASE_CATS.map(c => `<option value="${c}">${c}</option>`).join('');
+    // Categories from settings
+    formEls.category.innerHTML = settings.expenseCategories.map(c => `<option value="${c}">${c}</option>`).join('');
     // Recent filter
     const recentCat = document.getElementById('recentCategory');
     if (recentCat) {
-      const allCats = Array.from(new Set([...BASE_CATS, 'Income', 'Opening Balance']));
+      const allCats = Array.from(new Set([...settings.expenseCategories, 'Income', 'Opening Balance']));
       recentCat.innerHTML = '<option value="">All Cats</option>' + allCats.map(c => `<option value="${c}">${c}</option>`).join('');
     }
 
     // Listeners
     formEls.type.onchange = updateTransactionFormFields;
-    formEls.category.onchange = updateTransactionFormFields;
+    formEls.category.onchange = () => { updateTransactionFormFields(); updateSubcategoryDropdown(); };
     formEls.openingType.onchange = updateTransactionFormFields;
     formEls.invGroup.onchange = () => updateInvestmentSubDropdown(formEls.invGroup, formEls.invSub);
     formEls.openingGroup.onchange = () => updateInvestmentSubDropdown(formEls.openingGroup, formEls.openingSub);
 
     populateInvestmentGroupDropdowns();
     updateTransactionFormFields();
+    updateSubcategoryDropdown();
   }
 
   const formEls = {
@@ -1431,6 +1360,8 @@
     insRow: document.getElementById('insuranceRow'),
     openingBalanceRow: document.getElementById('openingBalanceRow'),
     regularFieldsDiv: document.getElementById('regularFields'),
+    subcategoryContainer: document.getElementById('subcategoryContainer'),
+    subcategorySelect: document.getElementById('subcategory')
   };
 
   function populateInvestmentGroupDropdowns() {
@@ -1447,6 +1378,7 @@
     }
     subEl.innerHTML = optionsHtml;
   }
+
   function updateTransactionFormFields(editEntry = null){
     const entryType = formEls.type.value;
     const cat = formEls.category.value;
@@ -1489,9 +1421,11 @@
     } else if (entryType === 'income') {
       formEls.incomeRow.classList.remove('hidden');
       formEls.categoryContainer.classList.add('hidden');
+      formEls.subcategoryContainer.classList.add('hidden');
     } else if (entryType === 'expense') {
       if(cat === 'Investments') {
         formEls.invRow.classList.remove('hidden');
+        formEls.subcategoryContainer.classList.add('hidden'); // subcategories only for normal expense categories
         if (editEntry) {
           formEls.invGroup.value = editEntry.investmentGroup || '';
           updateInvestmentSubDropdown(formEls.invGroup, formEls.invSub, editEntry.investmentSub);
@@ -1500,7 +1434,24 @@
         }
       } else if(cat === 'Insurance') {
         formEls.insRow.classList.remove('hidden');
+        formEls.subcategoryContainer.classList.add('hidden');
+      } else {
+        // Regular expense categories may have subcategories (e.g., Food)
+        updateSubcategoryDropdown();
       }
+    }
+  }
+
+  // ---------- SUBCATEGORY DROPDOWN FOR EXPENSES ----------
+  function updateSubcategoryDropdown() {
+    const cat = formEls.category.value;
+    const list = SUBCATEGORY_MAP[cat];
+    if (list && list.length > 0 && formEls.type.value === 'expense') {
+      formEls.subcategoryContainer.classList.remove('hidden');
+      formEls.subcategorySelect.innerHTML = list.map(s => `<option value="${s}">${s}</option>`).join('');
+    } else {
+      formEls.subcategoryContainer.classList.add('hidden');
+      formEls.subcategorySelect.innerHTML = '';
     }
   }
 
@@ -1512,14 +1463,29 @@
     const type = formEls.type.value;
     const amount = Number(formEls.amount.value);
     const date = formEls.date.value;
-    const desc = formEls.desc.value;
+    const desc = formEls.desc.value; // optional now
     const method = formEls.method.value;
 
     if(amount <= 0 || isNaN(amount)) return alert('Enter a valid amount.');
     if(!date) return alert('Select a date.');
-    if(!desc) return alert('Enter a description.');
+    // Description is optional — removed required validation
 
-    const entry = { id: e ? e.id : uid(), type, amount, date, desc, category: '', method: method, incomeSource: '', investmentGroup: '', investmentSub: '', insuranceType: '', insuranceFor: '' };
+    const entry = {
+      id: e ? e.id : uid(),
+      type,
+      amount,
+      date,
+      desc,
+      category: '',
+      method: method,
+      incomeSource: '',
+      investmentGroup: '',
+      investmentSub: '',
+      insuranceType: '',
+      insuranceFor: '',
+      subcategory: ''
+    };
+
     if(type === 'income') {
       entry.incomeSource = formEls.incomeSource.value || (e ? e.incomeSource : '');
       entry.category = 'N/A';
@@ -1543,6 +1509,10 @@
       entry.category = formEls.category.value || (e ? e.category : '');
       if(!entry.category && !isImportOrEdit) return alert('Select a Category.');
       if(!entry.method && !isImportOrEdit && entry.category !== 'Credit Card Payment') return alert('Select a Payment Method.');
+
+      // Attach optional subcategory if shown
+      entry.subcategory = formEls.subcategorySelect?.value || '';
+
       if(entry.category === 'Investments') {
         entry.investmentGroup = formEls.invGroup.value || (e ? e.investmentGroup : '');
         entry.investmentSub = formEls.invSub.value || (e ? e.investmentSub : '');
@@ -1612,6 +1582,10 @@
     }
 
     updateTransactionFormFields(e);
+    updateSubcategoryDropdown();
+    if (e.type === 'expense' && e.subcategory) {
+      formEls.subcategorySelect.value = e.subcategory;
+    }
 
     if (e.type === 'opening_balance') {
       if (formEls.openingType.value === 'Investment') {
@@ -1643,7 +1617,7 @@
     formEls.desc.value='';
     formEls.date.value=new Date().toISOString().slice(0,10);
     formEls.type.value='expense';
-    formEls.category.value='Food';
+    formEls.category.value=settings.expenseCategories.includes('Food') ? 'Food' : settings.expenseCategories[0] || '';
     formEls.method.value='cash';
     formEls.incomeSource.value='';
     formEls.invGroup.value='';
@@ -1653,6 +1627,8 @@
     formEls.openingSub.value='';
     formEls.insType.value='';
     formEls.insFor.value='';
+    formEls.subcategorySelect.innerHTML = '';
+    formEls.subcategoryContainer.classList.add('hidden');
     updateTransactionFormFields();
   }
 
@@ -2007,7 +1983,7 @@
     const clearBtn = document.getElementById('msClear');
     const applyBtn = document.getElementById('msApply');
 
-    const categories = BASE_CATS.filter(c => !['Investments','Credit Card Payment'].includes(c));
+    const categories = (settings.expenseCategories || DEFAULT_EXPENSE_CATEGORIES).filter(c => !['Investments','Credit Card Payment'].includes(c));
     list.innerHTML = categories.map(cat => `
       <div class="ms-item">
         <input type="checkbox" id="chk_${cat}" value="${cat}" class="expense-chk">
@@ -2090,7 +2066,7 @@
       });
       const title = selectedExpenseCategories.length > 0 ? `Selected Categories Breakdown` : 'All expenses (Top 10 categories)';
       const expenseMap = filteredData.reduce((acc, curr) => {
-        const key = selectedExpenseCategories.length === 1 ? curr.desc.substring(0, 30) : curr.category;
+        const key = selectedExpenseCategories.length === 1 ? (curr.subcategory || curr.desc?.substring(0, 30) || curr.category) : curr.category;
         acc[key] = (acc[key] || 0) + Number(curr.amount);
         return acc;
       }, {});
@@ -2125,6 +2101,90 @@
   }
 
   // ---------- ADVANCED ANALYTICS ----------
+  const INVESTMENT_STRUCTURE = {
+    'Equity (Stocks)': {
+      'India - Large Cap/Mid Cap/Small Cap': 'Equity (Stocks)',
+      'India - Index Stocks/Preferred Stock': 'Equity (Stocks)',
+      'India - Derivatives (Options/Futures)': 'Equity (Stocks)',
+      'US - Stocks': 'Equity (Stocks)',
+      'International - Other': 'Equity (Stocks)',
+    },
+    'Mutual Funds': {
+      'Equity MF - Large Cap/Mid Cap/Small Cap': 'Mutual Funds',
+      'Equity MF - Multi-cap': 'Mutual Funds',
+      'Equity MF - ELSS (Tax Saving)': 'Mutual Funds',
+      'Debt MF - Overnight/Liquid/Ultra Short Term': 'Mutual Funds',
+      'Debt MF - Corporate/Dynamic Bond': 'Mutual Funds',
+      'Hybrid/Balanced MF': 'Mutual Funds',
+      'International/Global Index MF': 'Mutual Funds',
+      'Gold/Sectoral/Thematic MF': 'Mutual Funds',
+    },
+    'ETFs': {
+      'Equity ETF': 'ETFs',
+      'Debt ETF': 'ETFs',
+      'Gold ETF': 'ETFs',
+      'Index ETF': 'ETFs',
+      'Thematic ETF': 'ETFs',
+    },
+    'Bonds & Debt Instruments': {
+      'Government Bonds': 'Bonds & Debt Instruments',
+      'Corporate Bonds': 'Bonds & Debt Instruments',
+      'Treasury Bills': 'Bonds & Debt Instruments',
+      'Tax-Free Bonds': 'Bonds & Debt Instruments',
+      'Sovereign Gold Bonds (SGB)': 'Bonds & Debt Instruments',
+    },
+    'Commodities': {
+      'Gold (Physical/Digital)': 'Commodities',
+      'Silver': 'Commodities',
+      'Crude Oil/Natural Gas': 'Commodities',
+      'Other Metals (Copper/Nickel)': 'Commodities',
+    },
+    'Crypto & Digital Assets': {
+      'Bitcoin (BTC)': 'Crypto & Digital Assets',
+      'Ethereum (ETH)': 'Crypto & Digital Assets',
+      'Stablecoins': 'Crypto & Digital Assets',
+      'Altcoins': 'Crypto & Digital Assets',
+      'NFTs / Web3 Assets': 'Crypto & Digital Assets',
+    },
+    'Real Estate': {
+      'Residential Property': 'Real Estate',
+      'Commercial Property': 'Real Estate',
+      'Land': 'Real Estate',
+      'REITs (Real Estate Investment Trusts)': 'Real Estate',
+    },
+    'Fixed Income / Savings Schemes': {
+      'FD (Fixed Deposit)': 'Fixed Income / Savings Schemes',
+      'RD (Recurring Deposit)': 'Fixed Income / Savings Schemes',
+      'PPF': 'Fixed Income / Savings Schemes',
+      'NSC/KVP/Postal MIS': 'Fixed Income / Savings Schemes',
+      'High-Interest Savings Account': 'Fixed Income / Savings Schemes',
+    },
+    'Retirement Funds': {
+      'NPS Tier 1/Tier 2': 'Retirement Funds',
+      'EPF (Employees’ Provident Fund)': 'Retirement Funds',
+      'IRA/401k (USA users)': 'Retirement Funds',
+      'Other Pension Schemes': 'Retirement Funds',
+    },
+    'Other Investments': {
+      'Angel Investing / Startup Equity': 'Other Investments',
+      'Peer-to-Peer Lending': 'Other Investments',
+      'Private Funds / AIFs': 'Other Investments',
+      'Alternative Assets': 'Other Investments',
+    }
+  };
+  const MAJOR_BUCKETS = {
+    'Equity (Stocks)': 'Equity',
+    'Mutual Funds': 'Mutual Funds',
+    'ETFs': 'ETFs',
+    'Bonds & Debt Instruments': 'Debt',
+    'Fixed Income / Savings Schemes': 'Debt',
+    'Retirement Funds': 'Retirement',
+    'Real Estate': 'Real Estate',
+    'Commodities': 'Commodities',
+    'Crypto & Digital Assets': 'Crypto',
+    'Other Investments': 'Other'
+  };
+
   function populateAnalyticsDropdowns() {
     const groupSelect = document.getElementById('anlInvGroup');
     const options = Object.keys(INVESTMENT_STRUCTURE).map(group => `<option value="${group}">${group}</option>`).join('');
@@ -2207,8 +2267,9 @@
     }
   }
 
-  // ---------- SETTINGS ----------
+  // ---------- SETTINGS (METHODS, INCOME, CATEGORIES, CC LIMIT) ----------
   function renderSettings() {
+    // Methods
     const methodContainer = document.getElementById('methodEditor');
     methodContainer.innerHTML = Object.entries(methodNames).map(([key, name]) => `
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:8px; background:#f8fafc; border:1px solid var(--border); border-radius:6px;">
@@ -2216,6 +2277,8 @@
         <button class="btn-danger" style="padding:4px 8px; font-size:11px" onclick="deleteMethod('${key}')">Remove</button>
       </div>
     `).join('');
+
+    // Income
     const incomeContainer = document.getElementById('incomeList');
     incomeContainer.innerHTML = incomeSources.map(source => `
       <span style="border:1px solid var(--border); padding:6px 10px; border-radius:6px; font-size:12px; display:inline-flex; align-items:center; background:#f8fafc; margin-bottom:4px;">
@@ -2223,8 +2286,65 @@
         <button style="background:none; border:none; color:var(--danger); margin-left:8px; padding:0; line-height:1; cursor:pointer; font-weight:bold;" onclick="deleteIncome('${source}')">×</button>
       </span>
     `).join('');
+
+    // Categories
+    renderCategoryEditor();
+
+    // CC Limit
     document.getElementById('ccLimitInput').value = settings.ccLimit;
   }
+
+  function renderCategoryEditor() {
+    const container = document.getElementById('categoryEditor');
+    if (!container) return;
+    const cats = settings.expenseCategories || DEFAULT_EXPENSE_CATEGORIES;
+    container.innerHTML = cats.map(cat => `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding:8px; background:#f8fafc; border:1px solid var(--border); border-radius:6px;">
+        <span>${cat}</span>
+        <button class="btn-danger" style="padding:4px 8px; font-size:11px" onclick="deleteCategory('${cat}')">Remove</button>
+      </div>
+    `).join('');
+    // Bind add button once
+    const addBtn = document.getElementById('addCategoryBtn');
+    if (addBtn && !addBtn._bound) {
+      addBtn.addEventListener('click', addCategory);
+      addBtn._bound = true;
+    }
+  }
+
+  function deleteCategory(cat) {
+    if (PROTECTED_CATS.includes(cat)) {
+      alert(`"${cat}" is a protected category and cannot be removed.`);
+      return;
+    }
+    if (confirm(`Remove category "${cat}"?`)) {
+      settings.expenseCategories = (settings.expenseCategories || DEFAULT_EXPENSE_CATEGORIES).filter(c => c !== cat);
+      // If current selection removed, reset form category
+      if (!settings.expenseCategories.includes(formEls.category.value)) {
+        formEls.category.value = settings.expenseCategories[0] || '';
+        updateSubcategoryDropdown();
+      }
+      saveAll();
+      renderAll();
+    }
+  }
+
+  function addCategory() {
+    const input = document.getElementById('newCategory');
+    const cat = (input.value || '').trim();
+    if (!cat) return;
+    const exists = (settings.expenseCategories || DEFAULT_EXPENSE_CATEGORIES).includes(cat);
+    if (exists) {
+      alert('Category already exists.');
+      return;
+    }
+    settings.expenseCategories = [...(settings.expenseCategories || DEFAULT_EXPENSE_CATEGORIES), cat];
+    input.value = '';
+    saveAll();
+    renderAll();
+    // If subcategories desired for new cat, add to SUBCATEGORY_MAP manually in code
+  }
+
   document.getElementById('addMethod').addEventListener('click', addMethod);
   document.getElementById('addIncomeBtn').addEventListener('click', addIncome);
   document.getElementById('saveCCLimit').addEventListener('click', () => {
@@ -2289,9 +2409,9 @@
     }
   }
 
-  // ---------- CSV/JSON IMPORT ----------
+  // ---------- CSV/JSON IMPORT (description optional) ----------
   function convertToCSV(data) {
-    const headers = ['id', 'type', 'amount', 'date', 'desc', 'category', 'method', 'incomeSource', 'investmentGroup', 'investmentSub', 'insuranceType', 'insuranceFor'];
+    const headers = ['id', 'type', 'amount', 'date', 'desc', 'category', 'method', 'incomeSource', 'investmentGroup', 'investmentSub', 'insuranceType', 'insuranceFor', 'subcategory'];
     const rows = data.map(obj => headers.map(header => {
       let value = obj[header] ?? '';
       if (typeof value === 'string' && value.includes(',')) {
@@ -2334,11 +2454,11 @@
       if (!Array.isArray(importedData) || importedData.length === 0) return alert('No valid data found.');
       let newEntries = 0;
       importedData.forEach(item => {
-        const type = String(item.type || '').toLowerCase();
-        const validType = ['income','expense','opening_balance'].includes(type) ? type : 'expense';
+        const typeRaw = String(item.type || '').toLowerCase();
+        const validType = ['income','expense','opening_balance'].includes(typeRaw) ? typeRaw : 'expense';
         const amt = Number(item.amount);
-        const desc = item.desc || item.description || '';
-        if (!amt || amt <= 0 || !desc) return;
+        const desc = item.desc || item.description || ''; // optional
+        if (!amt || amt <= 0) return;
         const entry = {
           id: item.id || uid(),
           type: validType,
@@ -2352,6 +2472,7 @@
           investmentSub: item.investmentSub || item.investment_sub || '',
           insuranceType: item.insuranceType || item.insurance_type || '',
           insuranceFor: item.insuranceFor || item.insurance_for || '',
+          subcategory: item.subcategory || ''
         };
         data.push(entry);
         newEntries++;
@@ -2384,7 +2505,7 @@
         type: entry.type,
         amount: entry.amount,
         date: entry.date,
-        desc: entry.desc || entry.description,
+        desc: entry.desc || entry.description || '',
         category: entry.category,
         method: entry.method,
         incomeSource: entry.incomesource || entry.income_source,
@@ -2392,6 +2513,7 @@
         investmentSub: entry.investmentsub || entry.investment_sub,
         insuranceType: entry.insurancetype || entry.insurance_type,
         insuranceFor: entry.insurancefor || entry.insurance_for,
+        subcategory: entry.subcategory || ''
       });
     }
     return dataRows;
@@ -2422,8 +2544,9 @@
       let filtered = data.filter(e => {
         const desc = (e.desc || '').toLowerCase();
         const cat = (e.category || '').toLowerCase();
+        const subcat = (e.subcategory || '').toLowerCase();
         const amt = String(e.amount || 0);
-        const matchesSearch = !searchText || desc.includes(searchText) || cat.includes(searchText) || amt.includes(searchText);
+        const matchesSearch = !searchText || desc.includes(searchText) || cat.includes(searchText) || subcat.includes(searchText) || amt.includes(searchText);
         const matchesCat = categoryFilter ? e.category === categoryFilter : true;
         return matchesSearch && matchesCat;
       });
@@ -2457,16 +2580,17 @@
         } else {
           methodDisplay = methodNames[e.method] || e.method || '--';
         }
-        let categoryDisplay = e.category === 'Investments' ? e.investmentSub :
-                              e.category === 'Insurance' ? `${e.insuranceType} (${e.insuranceFor})` :
-                              e.type === 'expense' ? e.category : '--';
+        const catBase = e.category === 'Investments' ? e.investmentSub :
+                        e.category === 'Insurance' ? `${e.insuranceType} (${e.insuranceFor})` :
+                        e.type === 'expense' ? e.category : '--';
+        const catWithSub = e.subcategory ? `${catBase} → ${e.subcategory}` : catBase;
         return `
           <tr>
             <td>${getBadge(e)}</td>
             <td>${e.date}</td>
             <td style="font-weight:600; text-align:right">${amountDisplay}</td>
-            <td>${e.desc}</td>
-            <td>${categoryDisplay}</td>
+            <td>${e.desc || ''}</td>
+            <td>${catWithSub}</td>
             <td>${methodDisplay}</td>
             <td class="flex-row">
               <button onclick="loadEdit('${e.id}')" style="background:none; border:none; color:var(--primary); cursor:pointer; padding:4px" title="Edit">✎</button>
@@ -2497,7 +2621,8 @@
     data = [];
     methodNames = {...CANONICAL_METHODS};
     incomeSources = ['Salary (Primary)', 'Freelance Income', 'Investment Income'];
-    settings = { ...settings, ccLimit: 200000, commodityCountry: settings.commodityCountry || '', trackedMarkets: settings.trackedMarkets || DEFAULT_SETTINGS.trackedMarkets.slice() };
+    // Preserve user categories if present, else defaults
+    settings = { ...settings, expenseCategories: settings.expenseCategories?.length ? settings.expenseCategories : DEFAULT_EXPENSE_CATEGORIES.slice(), ccLimit: settings.ccLimit || 200000, commodityCountry: settings.commodityCountry || '', trackedMarkets: settings.trackedMarkets || DEFAULT_SETTINGS.trackedMarkets.slice() };
 
     // Opening cash balances
     data.push({id:uid(), type:'opening_balance', amount: 50000, date: dateInLastMonths(6,6), desc:'Initial Salary Account Balance', investmentGroup:'Cash', investmentSub:'Bank Account (Salary)', method:'salary_acct', category:'N/A'});
@@ -2519,14 +2644,15 @@
         data.push({id:uid(), type:'income', amount: randBetween(8000, 18000), date: freeDate, desc:`Freelance project (${freeDate})`, category:'N/A', method:'salary_acct', incomeSource:'Freelance Income'});
       }
     }
-    const expenseCategories = ['Food','Rent','Utilities','Shopping','Entertainment','Travel','Health','Misc'];
+    const expenseCategories = (settings.expenseCategories || DEFAULT_EXPENSE_CATEGORIES).filter(c => !['Investments','Insurance','Credit Card Payment'].includes(c));
     const methodsPool = ['salary_acct','savings_acct','cash','digital_wallet','credit_card'];
     for (let i = 0; i < 90; i++) {
       const dt = dateInLastMonths(randBetween(0, 6), randBetween(0, 6));
       const cat = pick(expenseCategories);
       const amt = randBetween(300, 9000);
       const method = pick(methodsPool);
-      data.push({ id: uid(), type: 'expense', amount: amt, date: dt, desc: `${cat} expense`, category: cat, method });
+      const subcat = SUBCATEGORY_MAP[cat] ? pick(SUBCATEGORY_MAP[cat]) : '';
+      data.push({ id: uid(), type: 'expense', amount: amt, date: dt, desc: `${cat} expense`, category: cat, subcategory: subcat, method });
       if (Math.random() > 0.75) {
         const invGroup = pick(Object.keys(INVESTMENT_STRUCTURE));
         const invSub = pick(Object.keys(INVESTMENT_STRUCTURE[invGroup]));
@@ -2567,7 +2693,7 @@
     if (key === '±' || key === '%') return;
     if (key === '=') {
       try {
-        const expr = display.textContent.replace(/\×/g,'*').replace(/\÷/g,'/').replace(/-/g,'-');
+        const expr = display.textContent.replace(/×/g,'*').replace(/÷/g,'/').replace(/-/g,'-');
         const result = Function('"use strict";return ('+expr+')')();
         display.textContent = String(result);
         preview.textContent = fmt(Number(result));
@@ -2577,7 +2703,7 @@
     const mapped = key === '×' ? '*' : key === '÷' ? '/' : key === '-' ? '-' : key;
     display.textContent = display.textContent === '0' ? mapped : display.textContent + mapped;
     try {
-      const expr = display.textContent.replace(/\×/g,'*').replace(/\÷/g,'/').replace(/-/g,'-');
+      const expr = display.textContent.replace(/×/g,'*').replace(/÷/g,'/').replace(/-/g,'-');
       const result = Function('"use strict";return ('+expr+')')();
       preview.textContent = fmt(Number(result));
     } catch (err) { preview.textContent = ''; }
@@ -2638,7 +2764,7 @@
   function remapCommoditySymbolsByCountry() {
     const country = settings.commodityCountry || '';
     const map = {
-      '':   { gold: 'XAUUSD', silver: 'XAGUSD', goldName: 'Gold/USD', silverName: 'Silver/USD' },
+      '': { gold: 'XAUUSD', silver: 'XAGUSD', goldName: 'Gold/USD', silverName: 'Silver/USD' },
       'IN': { gold: 'XAUINR', silver: 'XAGINR', goldName: 'Gold/INR', silverName: 'Silver/INR' },
       'US': { gold: 'XAUUSD', silver: 'XAGUSD', goldName: 'Gold/USD', silverName: 'Silver/USD' },
       'GB': { gold: 'XAUGBP', silver: 'XAGGBP', goldName: 'Gold/GBP', silverName: 'Silver/GBP' },
@@ -2693,8 +2819,9 @@
     wrap.innerHTML = items || '<div class="ticker-item">No markets tracked</div>';
   }
 
-  // Real-time data mapping
+  // Real-time via Yahoo Finance (proxied)
   const YAHOO_SYMBOL_MAP = {
+    // Indices
     'NIFTY_50': '^NSEI',
     'SENSEX': '^BSESN',
     'NASDAQ': '^IXIC',
@@ -2705,7 +2832,7 @@
     'CAC_40': '^FCHI',
     'NIKKEI_225': '^N225',
     'HSI': '^HSI',
-    // Commodities via futures
+    // Commodities
     'XAUUSD': 'GC=F',
     'XAGUSD': 'SI=F',
     'XAUINR': 'GC=F',
@@ -2714,20 +2841,21 @@
     'BTCUSD': 'BTC-USD'
   };
 
-  // Exponential backoff fetch helper
   function exponentialBackoffFetch(url, maxRetries = 3, delay = 1000) {
     return new Promise((resolve, reject) => {
       const attemptFetch = async (attempt) => {
         try {
           const response = await fetch(url);
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
           resolve(response);
         } catch (error) {
           if (attempt < maxRetries) {
             setTimeout(() => attemptFetch(attempt + 1), delay);
             delay *= 2;
           } else {
-            reject(new Error(`Failed after ${maxRetries} attempts: ${error.message}`));
+            reject(new Error(`Failed to fetch ${url} after ${maxRetries} attempts. Last error: ${error.message}`));
           }
         }
       };
@@ -2744,12 +2872,15 @@
         console.warn(`[Ticker] Skipping unknown symbol: ${market.symbol}`);
         return market;
       }
+
       try {
         const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooTicker}?interval=1d&range=1d`;
         const proxyUrl = `https://api.allorigins.win/raw?url=` + encodeURIComponent(targetUrl);
+
         const response = await exponentialBackoffFetch(proxyUrl);
         const data = await response.json();
-        const result = data.chart?.result?.[0];
+        const result = data.chart.result?.[0];
+
         if (result && result.meta) {
           const price = result.meta.regularMarketPrice;
           const prevClose = result.meta.chartPreviousClose;
@@ -2757,38 +2888,29 @@
           if (prevClose && price !== prevClose) {
             change = ((price - prevClose) / prevClose) * 100;
           }
-          const updated = {
+          return {
             ...market,
-            price: Number((price || 0).toFixed(2)),
-            change: Number((change || 0).toFixed(2))
+            price: Number(price.toFixed(2)),
+            change: Number(change.toFixed(2))
           };
-          return updated;
         } else {
-          console.warn(`[Ticker] No market data for ${market.symbol} (${yahooTicker}).`);
+          console.warn(`[Ticker] No market data found for ${market.symbol} (${yahooTicker}) in API response.`);
         }
       } catch (error) {
-        console.error(`[Ticker] Fetch fail for ${market.symbol} (${yahooTicker}):`, error.message);
+        console.error(`[Ticker] CRITICAL FETCH FAIL for ${market.symbol} (${yahooTicker}):`, error.message);
       }
+
       return market;
     }));
 
     settings.trackedMarkets = updatedMarkets;
     renderMarketTicker();
-    saveAll(); // persist latest prices for optimistic render on next load
   }
 
-  // Bootstrap loop: immediate + quick retries + settle
   let tickerInterval = null;
   function startTickerRealtimeLoop() {
     if (tickerInterval) clearInterval(tickerInterval);
-
-    // Immediate fetch
     fetchRealMarketData();
-    // Quick retries to reduce stale feel post-login
-    setTimeout(fetchRealMarketData, 5000);
-    setTimeout(fetchRealMarketData, 15000);
-
-    // Settle into 60s cadence
     tickerInterval = setInterval(fetchRealMarketData, 60000);
   }
 
@@ -2798,6 +2920,7 @@
   window.toggleSubMenu = toggleSubMenu;
   window.resetExpenseDrilldown = resetExpenseDrilldown;
   window.removeMarket = removeMarket;
+  window.deleteCategory = deleteCategory;
 </script>
 </body>
 </html>
