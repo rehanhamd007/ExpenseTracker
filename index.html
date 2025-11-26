@@ -99,6 +99,89 @@
   color: var(--text-muted);
   margin-top: 4px;
 }
+
+/* --- ICON LIBRARY REQUIRED --- */
+/* If you don't have icons, add this CDN link to your <head> tag: */
+/* <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" /> */
+
+/* --- ENHANCED CARD BASE STYLES --- */
+.kpi-card {
+    /* Keep existing styles, but add these visual enhancements */
+    transition: all 0.2s ease-in-out;
+    border-left: 4px solid var(--sidebar-active); /* Subtle accent */
+    position: relative;
+    overflow: hidden; 
+}
+.kpi-card:hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    transform: translateY(-2px); /* Lift effect on hover */
+}
+
+/* --- HIERARCHY & STRUCTURE --- */
+.kpi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+.kpi-icon {
+    font-size: 1.25rem;
+    color: var(--sidebar-active);
+}
+.kpi-value {
+    font-size: 2rem; /* Significantly larger main metric */
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+    color: var(--text-main);
+}
+.kpi-change-section {
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    margin-top: 0.75rem;
+}
+
+/* --- COLOR CODING (Status Indicators) --- */
+.kpi-change-text {
+    font-weight: 600;
+    margin-left: 0.5rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 0.25rem;
+    white-space: nowrap; /* Keep percentage together */
+}
+
+.kpi-positive {
+    color: #10b981; /* Green */
+    background-color: #d1fae5;
+}
+.kpi-negative {
+    color: #ef4444; /* Red */
+    background-color: #fee2e2;
+}
+.kpi-neutral {
+    color: #4b5563; /* Gray/Neutral */
+    background-color: #e5e7eb;
+}
+
+/* --- TOTAL INVESTMENT CARD SPECIFIC STYLES --- */
+#total-investment-card {
+    border-left: 4px solid #f97316; /* Differentiating accent color */
+}
+.breakdown-link {
+    text-align: right;
+    margin-top: 1rem;
+}
+.breakdown-link button {
+    background: none;
+    border: none;
+    color: var(--sidebar-active);
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: 0.9rem;
+}
+
     /* AUTH GATE (FIXED) */
     #authGate {
       position: fixed; inset: 0; background: linear-gradient(135deg, #1e293b, #3b82f6);
