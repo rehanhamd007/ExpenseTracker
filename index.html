@@ -63,7 +63,8 @@
     /* NEW: Quick index add in sidebar */
     .nav-helper { padding: 8px 10px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); margin-top: 8px; }
     .nav-helper label { display:block; font-size:10px; color:#93a4b8; margin-bottom:6px; text-transform: uppercase; letter-spacing:0.5px; }
-    .nav-helper select { width:100%; padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.18); background:#0b1323; color:#e5edf6; font-size:12px; }
+    /* OVERRIDE: Sidebar dropdown readability — black text, white background */
+    .nav-helper select { width:100%; padding:8px; border-radius:6px; border:1px solid rgba(0,0,0,0.15); background:#fff; color:#000; font-size:12px; }
     .nav-helper button { width:100%; margin-top:8px; padding:8px 10px; border-radius:6px; border:none; font-size:12px; font-weight:600; background:var(--primary); color:white; cursor:pointer; }
 
     .sidebar-footer { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
@@ -79,13 +80,13 @@
     /* AUTH GATE (FIXED) */
     #authGate {
       position: fixed; inset: 0; background: linear-gradient(135deg, #1e293b, #3b82f6);
-      z-index: 9999; 
-      display: none; /* CHANGED: Hidden by default */
+      z-index: 9999;
+      display: none; /* Hidden by default */
       flex-direction: column; justify-content: center; align-items: center;
       gap: 10px; color: white; text-align: center; padding: 0 24px;
     }
     #authGate.show {
-      display: flex; /* CHANGED: Only shows when .show class is present */
+      display: flex; /* Only shows when .show class is present */
     }
     #authGate .line { margin: 0; }
     #authGate .line-1 { font-size: 22px; font-weight: 600; }
@@ -233,9 +234,9 @@
       overflow: hidden;
       border-radius: 8px;
       display: flex;
-      align-items: center; 
+      align-items: center;
     }
-    
+
     .ticker-wrap {
       display: flex;
       width: max-content;
@@ -290,19 +291,20 @@
       .modal-small { height: auto; min-height: 50vh; border-radius: 12px; }
     }
 
-    /* NEW: Market modal select polish */
-    #majorIndexSelect, #commodityCountrySelect {
+    /* NEW: Market modal select polish + ensure black text for dropdowns */
+    #majorIndexSelect, #commodityCountrySelect, #sidebarIndexSelect {
       background: #fff;
       border: 1px solid var(--border);
       border-radius: 6px;
+      color: #000;
     }
     #applyCommodityFilter { padding: 8px 12px; font-size: 12px; }
   </style>
 </head>
   <body>
 
-<!-- Added class "show" initially to prevent flash of content -->
-<div id="authGate" class="show">
+<!-- FIXED: Removed initial "show" to prevent flicker -->
+<div id="authGate">
   <p class="line line-1">Welcome to</p>
   <p class="line line-2">MoneyMirror — Personal Finance Dashboard</p>
   <p class="line line-3">by Rehan Hamdulay</p>
@@ -397,20 +399,20 @@
   <div class="dashboard-grid">
     <div class="card kpi-card kpi-income col-span-1">
       <div class="card-title" style="color:var(--success)">Monthly income</div>
-      <div class="kpi-value" id="kpiIncome">?0</div>
+      <div class="kpi-value" id="kpiIncome">₹0</div>
       <div class="kpi-sub" id="momIncome"></div>
     </div>
     <div class="card kpi-card kpi-expense col-span-1">
       <div class="card-title" style="color:var(--danger)">Monthly expenses</div>
-      <div class="kpi-value" id="kpiExpense">?0</div>
+      <div class="kpi-value" id="kpiExpense">₹0</div>
       <div class="kpi-sub" id="momExpense"></div>
     </div>
     <div class="card kpi-card kpi-cc col-span-1" id="ccCard" style="background:linear-gradient(180deg,#fff7ed 0%,#fffbeb 100%);">
       <div class="card-title" id="ccTitle" style="color:var(--warning)">Credit card due</div>
-      <div class="kpi-value" id="kpiCCDue">?0</div>
+      <div class="kpi-value" id="kpiCCDue">₹0</div>
       <div class="kpi-sub" style="color:#000; font-weight:700; margin-top: 6px; position:relative;">
         <span id="ccPaymentDate">Next: 10th Dec</span>
-        <span style="font-weight:700; margin-left:10px;">Limit: <span id="ccLimitDisplay">?2L</span></span>
+        <span style="font-weight:700; margin-left:10px;">Limit: <span id="ccLimitDisplay">₹2L</span></span>
         <div id="ccAlert" class="hidden" style="position:absolute; right:0; top:0; color:var(--danger)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
         </div>
@@ -419,7 +421,7 @@
 
     <div class="card kpi-card kpi-net col-span-1">
       <div class="card-title" style="color:var(--primary)">Net liquidity</div>
-      <div class="kpi-value" id="kpiNet">?0</div>
+      <div class="kpi-value" id="kpiNet">₹0</div>
       <div class="kpi-sub">Total available cash</div>
       <div class="account-list" id="netLiquidityBreakdown"></div>
     </div>
@@ -433,7 +435,7 @@
         </div>
       </div>
       <div class="card-body" style="padding-top:6px;">
-        <div class="kpi-value" id="kpiInvest">?0</div>
+        <div class="kpi-value" id="kpiInvest">₹0</div>
         <div class="kpi-sub" id="momInvest" style="color:#075985">Historical cost total</div>
 
         <div id="invBreakdownPanel" class="hidden" style="margin-top:12px; border-top:1px solid var(--border); padding-top:12px;">
@@ -515,12 +517,12 @@
           </select>
 
           <div id="expenseFilterContainer" class="multiselect-container hidden" style="flex:1;">
-              <button class="btn-outline" style="font-size:12px; padding:10px; width:100%;" id="expenseFilterBtn">Select Categories ?</button>
+              <button class="btn-outline" style="font-size:12px; padding:10px; width:100%;" id="expenseFilterBtn">Select Categories 🟰</button>
               <div class="multiselect-dropdown" id="expenseMultiselectDropdown">
                   <div id="expenseCheckboxes" style="max-height:200px; overflow-y:auto;"></div>
                   <div class="ms-actions">
-                      <button class="btn-outline" style="padding:4px 8px; font-size:11px;" id="msClear">Clear</button>
-                      <button class="btn-primary" style="padding:4px 8px; font-size:11px;" id="msApply">Apply</button>
+                      <button class="btn-outline" style="padding:4px 8px; font-size:11px" id="msClear">Clear</button>
+                      <button class="btn-primary" style="padding:4px 8px; font-size:11px" id="msApply">Apply</button>
                   </div>
               </div>
           </div>
@@ -555,7 +557,7 @@
           </select>
         </div>
         <div class="input-group-small">
-          <label>Amount (?)</label>
+          <label>Amount (₹)</label>
           <input id="amount" type="number" placeholder="0.00" style="font-weight:700; font-size:16px" step="any" />
         </div>
         <div class="input-group-small">
@@ -906,8 +908,6 @@
     <button class="calc-equals">=</button>
   </div>
 </div>
-
-
 <script>
   // ---------- CONFIG ----------
   const firebaseConfig = {
@@ -927,7 +927,6 @@
   let currentProfile = null;
 
   // ---------- AUTH & BOOT ----------
-  // Fixed: CSS class logic for showing/hiding auth gate
   function showAuthGate() {
     const gate = document.getElementById('authGate');
     gate.classList.add('show');
@@ -1142,16 +1141,16 @@
       });
     }
 
-    // Auth state -> avoid flicker
+    // Auth state -> avoid flicker and avoid early render
     const lastProfile = localStorage.getItem('mm_last_profile');
     if (auth) {
       auth.onAuthStateChanged(user => {
         if (user) {
-          onUserSignedIn(user);
+          onUserSignedIn(user);      // loadProfileData() -> render after data
         } else if (lastProfile === 'Guest') {
-          startGuestMode();
+          startGuestMode();          // loadProfileData() -> render after data
         } else {
-          showAuthGate();
+          showAuthGate();            // only show gate when unauthenticated and no guest
         }
       });
     } else {
@@ -1162,13 +1161,12 @@
       }
     }
 
+    // INIT UI scaffolding that doesn't depend on data
     setupExpenseMultiSelect();
     setupInvestmentFilters();
 
-    renderAll();
-
-    // Start ticker refresh loop (realtime stub; replace fetch with your API)
-    startTickerRealtimeLoop();
+    // IMPORTANT: No early renderAll(); Defer rendering until loadProfileData() completes.
+    // Also no early startTickerRealtimeLoop(); it will start after loadProfileData().
   });
 
   // ---------- STATE ----------
@@ -1185,10 +1183,7 @@
   const DEFAULT_SETTINGS = {
     ccLimit: DEFAULT_CC_LIMIT,
     commodityCountry: '',
-    api: { // add your keys here if needed
-      provider: 'none',
-      key: ''
-    },
+    api: { provider: 'none', key: '' },
     trackedMarkets: [
       { symbol: 'SENSEX', name: 'Sensex', price: 72000.00, change: 0.85 },
       { symbol: 'NASDAQ', name: 'Nasdaq', price: 16000.00, change: -1.23 },
@@ -1345,7 +1340,13 @@
   }
 
   async function loadProfileData() {
+    // Load cached first
     loadLocal();
+
+    // Optimistically render tickers from cached prices immediately
+    renderMarketTicker();
+
+    // Then, merge from Firestore if available
     if (USE_FIRESTORE && db && currentProfile) {
       try {
         const doc = await db.collection(FIRESTORE_COLLECTION_NAME).doc(toKey(currentProfile)).get();
@@ -1360,7 +1361,12 @@
         console.error("Firestore read error:", e);
       }
     }
+
+    // Now render everything once (no double-render)
     renderAll();
+
+    // Start ticker loop after initial render, with bootstrap cadence
+    startTickerRealtimeLoop();
   }
 
   // ---------- RENDER ----------
@@ -1500,7 +1506,7 @@
 
   // ---------- CRUD ----------
   function uid() { return 'id' + Date.now() + Math.random().toString(16).slice(2); }
-  function requireSignedIn() { return true; } // allow offline entry; persistence handled by local or firestore
+  function requireSignedIn() { return true; }
 
   function submitForm(e, isImportOrEdit=false){
     const type = formEls.type.value;
@@ -1554,18 +1560,15 @@
       }
     }
 
-   if (editId) {
-  // If editing an existing entry, update it in place
-  data = data.map(t => t.id === editId ? entry : t);
-  editId = null; // Clear the edit state
-  // Restore Add button state
-  formEls.addBtn.classList.remove('hidden');
-  formEls.saveBtn.classList.add('hidden');
-  formEls.cancelBtn.classList.add('hidden');
-} else {
-  // If adding a new entry, use unshift() to place it at the beginning of the array.
-  data.unshift(entry);
-}
+    if (editId) {
+      data = data.map(t => t.id === editId ? entry : t);
+      editId = null;
+      formEls.addBtn.classList.remove('hidden');
+      formEls.saveBtn.classList.add('hidden');
+      formEls.cancelBtn.classList.add('hidden');
+    } else {
+      data.unshift(entry);
+    }
 
     saveAll();
     renderAll();
@@ -1830,7 +1833,7 @@
           </div>
           <div class="sub-dropdown-container">
             <button class="btn-outline" style="padding:6px 10px; font-size:12px; width:100%; text-align:left;"
-                    onclick="toggleSubMenu(this)">View subcategories ?</button>
+                    onclick="toggleSubMenu(this)">View subcategories ▾</button>
             <div class="sub-dropdown-menu">
               ${dropdownHtml}
             </div>
@@ -1883,7 +1886,7 @@
           maintainAspectRatio: false,
           responsive: true,
           plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c)=>`${c.label}: ${fmt(c.parsed.y)}` } } },
-          scales: { y: { beginAtZero: true, ticks: { callback: (v)=>fmt(v).replace('?','? ') }, grid:{color:'#eef2ff'} }, x:{grid:{display:false}} }
+          scales: { y: { beginAtZero: true, ticks: { callback: (v)=>fmt(v).replace('₹','₹ ') }, grid:{color:'#eef2ff'} }, x:{grid:{display:false}} }
         }
       });
     }
@@ -1979,7 +1982,7 @@
         interaction: { mode: 'index', intersect: false },
         scales: {
           x: { stacked: true },
-          y: { stacked: true, ticks: { callback: function(value) { return fmt(Math.abs(value)).replace('?', '? '); } } }
+          y: { stacked: true, ticks: { callback: function(value) { return fmt(Math.abs(value)).replace('₹', '₹ '); } } }
         },
         plugins: {
           tooltip: { callbacks: { label: function(context) {
@@ -2021,7 +2024,7 @@
       selectedExpenseCategories = [];
       checkboxes.forEach(chk => { if (chk.checked) selectedExpenseCategories.push(chk.value); });
       dropdown.classList.remove('show');
-      btn.textContent = selectedExpenseCategories.length > 0 ? `${selectedExpenseCategories.length} selected ?` : 'Select Categories ?';
+      btn.textContent = selectedExpenseCategories.length > 0 ? `${selectedExpenseCategories.length} selected ▾` : 'Select Categories ▾';
       renderWalletUnified();
       document.getElementById('resetExpenseDrilldown').classList.remove('hidden');
     };
@@ -2029,7 +2032,7 @@
       document.querySelectorAll('.expense-chk').forEach(chk => chk.checked = false);
       selectedExpenseCategories = [];
       dropdown.classList.remove('show');
-      btn.textContent = 'Select Categories ?';
+      btn.textContent = 'Select Categories ▾';
       renderWalletUnified();
       document.getElementById('resetExpenseDrilldown').classList.add('hidden');
     };
@@ -2116,7 +2119,7 @@
   function resetExpenseDrilldown() {
     selectedExpenseCategories = [];
     document.querySelectorAll('.expense-chk').forEach(c => c.checked = false);
-    document.getElementById('expenseFilterBtn').textContent = 'Select Categories ?';
+    document.getElementById('expenseFilterBtn').textContent = 'Select Categories ▾';
     document.getElementById('resetExpenseDrilldown').classList.add('hidden');
     renderWalletUnified();
   }
@@ -2173,7 +2176,7 @@
     chartNetWorth = new Chart(ctxNetWorth, {
       type: chartType,
       data: { labels, datasets: [{ label: (invGroup || invSub) ? 'Cumulative Value (Filtered)' : 'Cumulative Net Worth', data: valueData, backgroundColor: 'rgba(59, 130, 246, 0.2)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 2, fill: chartType === 'line' ? 'start' : false, tension: 0.3 }] },
-      options: { maintainAspectRatio: false, responsive: true, scales: { y: { beginAtZero: false, ticks: { callback: (v)=>fmt(v).replace('?','? ') } } } }
+      options: { maintainAspectRatio: false, responsive: true, scales: { y: { beginAtZero: false, ticks: { callback: (v)=>fmt(v).replace('₹','₹ ') } } } }
     });
     renderInvestmentAnalytics('modal', relevantData);
   }
@@ -2200,7 +2203,7 @@
     const ctxGrowth = document.getElementById('chartInvGrowthModal')?.getContext('2d');
     if (ctxGrowth) {
       if (chartInvGrowthModal) chartInvGrowthModal.destroy();
-      chartInvGrowthModal = new Chart(ctxGrowth, { type: 'line', data: { labels: growthLabels, datasets: [{ label: 'Invested Amount', data: growthValues, borderColor: '#10b981', tension: 0.3, borderWidth:2, pointRadius:0 }] }, options: { maintainAspectRatio: false, plugins: { legend: { display:false } }, scales: { y: { beginAtZero: false, ticks: { callback: (v)=>fmt(v).replace('?','') } }, x:{ display:false } } } });
+      chartInvGrowthModal = new Chart(ctxGrowth, { type: 'line', data: { labels: growthLabels, datasets: [{ label: 'Invested Amount', data: growthValues, borderColor: '#10b981', tension: 0.3, borderWidth:2, pointRadius:0 }] }, options: { maintainAspectRatio: false, plugins: { legend: { display:false } }, scales: { y: { beginAtZero: false, ticks: { callback: (v)=>fmt(v).replace('₹','') } }, x:{ display:false } } } });
     }
   }
 
@@ -2286,7 +2289,7 @@
     }
   }
 
-  // ---------- CSV/JSON IMPORT (fixed) ----------
+  // ---------- CSV/JSON IMPORT ----------
   function convertToCSV(data) {
     const headers = ['id', 'type', 'amount', 'date', 'desc', 'category', 'method', 'incomeSource', 'investmentGroup', 'investmentSub', 'insuranceType', 'insuranceFor'];
     const rows = data.map(obj => headers.map(header => {
@@ -2394,7 +2397,7 @@
     return dataRows;
   }
 
-  // ---------- RECENT ENTRIES (synced) ----------
+  // ---------- RECENT ENTRIES ----------
   function getBadge(entry) {
     if (entry.type === 'income') return '<span class="badge badge-income">Income</span>';
     if (entry.type === 'opening_balance') return '<span class="badge badge-opening">Opening</span>';
@@ -2477,7 +2480,7 @@
     }
   }
 
-  // ---------- SAMPLE DATA (synced) ----------
+  // ---------- SAMPLE DATA ----------
   function loadSampleData() {
     if (!confirm("Overwrite existing data with sample?")) return;
     function randBetween(min, max) { return Math.floor(Math.random() * (max - min + 1) + min); }
@@ -2564,7 +2567,7 @@
     if (key === '±' || key === '%') return;
     if (key === '=') {
       try {
-        const expr = display.textContent.replace(/×/g,'*').replace(/÷/g,'/').replace(/-/g,'-');
+        const expr = display.textContent.replace(/\×/g,'*').replace(/\÷/g,'/').replace(/-/g,'-');
         const result = Function('"use strict";return ('+expr+')')();
         display.textContent = String(result);
         preview.textContent = fmt(Number(result));
@@ -2574,7 +2577,7 @@
     const mapped = key === '×' ? '*' : key === '÷' ? '/' : key === '-' ? '-' : key;
     display.textContent = display.textContent === '0' ? mapped : display.textContent + mapped;
     try {
-      const expr = display.textContent.replace(/×/g,'*').replace(/÷/g,'/').replace(/-/g,'-');
+      const expr = display.textContent.replace(/\×/g,'*').replace(/\÷/g,'/').replace(/-/g,'-');
       const result = Function('"use strict";return ('+expr+')')();
       preview.textContent = fmt(Number(result));
     } catch (err) { preview.textContent = ''; }
@@ -2635,7 +2638,7 @@
   function remapCommoditySymbolsByCountry() {
     const country = settings.commodityCountry || '';
     const map = {
-      '': { gold: 'XAUUSD', silver: 'XAGUSD', goldName: 'Gold/USD', silverName: 'Silver/USD' },
+      '':   { gold: 'XAUUSD', silver: 'XAGUSD', goldName: 'Gold/USD', silverName: 'Silver/USD' },
       'IN': { gold: 'XAUINR', silver: 'XAGINR', goldName: 'Gold/INR', silverName: 'Silver/INR' },
       'US': { gold: 'XAUUSD', silver: 'XAGUSD', goldName: 'Gold/USD', silverName: 'Silver/USD' },
       'GB': { gold: 'XAUGBP', silver: 'XAGGBP', goldName: 'Gold/GBP', silverName: 'Silver/GBP' },
@@ -2690,130 +2693,106 @@
     wrap.innerHTML = items || '<div class="ticker-item">No markets tracked</div>';
   }
 
- // ---------------------------------------------------------
-// REPLACEMENT CODE: Real-Time Data via Yahoo Finance API
-// ---------------------------------------------------------
+  // Real-time data mapping
+  const YAHOO_SYMBOL_MAP = {
+    'NIFTY_50': '^NSEI',
+    'SENSEX': '^BSESN',
+    'NASDAQ': '^IXIC',
+    'DJI': '^DJI',
+    'SPX': '^GSPC',
+    'FTSE_100': '^FTSE',
+    'DAX': '^GDAXI',
+    'CAC_40': '^FCHI',
+    'NIKKEI_225': '^N225',
+    'HSI': '^HSI',
+    // Commodities via futures
+    'XAUUSD': 'GC=F',
+    'XAGUSD': 'SI=F',
+    'XAUINR': 'GC=F',
+    'XAGINR': 'SI=F',
+    // Crypto
+    'BTCUSD': 'BTC-USD'
+  };
 
-// Mapping internal symbols to Yahoo Finance Tickers
-const YAHOO_SYMBOL_MAP = {
-  // Indices
-  'NIFTY_50': '^NSEI',     // Nifty 50
-  'SENSEX': '^BSESN',      // Sensex
-  'NASDAQ': '^IXIC',       // Nasdaq Composite
-  'DJI': '^DJI',           // Dow Jones Industrial Average
-  'SPX': '^GSPC',          // S&P 500
-  'FTSE_100': '^FTSE',     // FTSE 100
-  'DAX': '^GDAXI',         // DAX Performance-Index
-  'CAC_40': '^FCHI',       // CAC 40
-  'NIKKEI_225': '^N225',   // Nikkei 225
-  'HSI': '^HSI',           // Hang Seng Index
-  
-  // Commodities (Futures)
-  'XAUUSD': 'GC=F',        // Gold Futures
-  'XAGUSD': 'SI=F',        // Silver Futures
-  // Note: Yahoo doesn't provide free spot INR pairs easily, defaulting to Global Futures
-  'XAUINR': 'GC=F',        
-  'XAGINR': 'SI=F',
-  
-  // Crypto
-  'BTCUSD': 'BTC-USD'
-};
-
-// Function to handle exponential backoff for retries (prevents failures due to transient network issues)
-function exponentialBackoffFetch(url, maxRetries = 3, delay = 1000) {
-  return new Promise((resolve, reject) => {
-    const attemptFetch = async (attempt) => {
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+  // Exponential backoff fetch helper
+  function exponentialBackoffFetch(url, maxRetries = 3, delay = 1000) {
+    return new Promise((resolve, reject) => {
+      const attemptFetch = async (attempt) => {
+        try {
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          resolve(response);
+        } catch (error) {
+          if (attempt < maxRetries) {
+            setTimeout(() => attemptFetch(attempt + 1), delay);
+            delay *= 2;
+          } else {
+            reject(new Error(`Failed after ${maxRetries} attempts: ${error.message}`));
+          }
         }
-        resolve(response);
-      } catch (error) {
-        if (attempt < maxRetries) {
-          setTimeout(() => attemptFetch(attempt + 1), delay);
-          delay *= 2; // Exponentially increase delay
-        } else {
-          // Reject after max retries
-          reject(new Error(`Failed to fetch ${url} after ${maxRetries} attempts. Last error: ${error.message}`));
-        }
-      }
-    };
-    attemptFetch(0);
-  });
-}
+      };
+      attemptFetch(0);
+    });
+  }
 
-async function fetchRealMarketData() {
-  if (!settings.trackedMarkets || settings.trackedMarkets.length === 0) return;
+  async function fetchRealMarketData() {
+    if (!settings.trackedMarkets || settings.trackedMarkets.length === 0) return;
 
-  // We use Promise.all to fetch all tickers in parallel
-  const updatedMarkets = await Promise.all(settings.trackedMarkets.map(async (market) => {
-    // 1. Determine the correct Yahoo Ticker
-    const yahooTicker = YAHOO_SYMBOL_MAP[market.symbol] || market.symbol;
-    
-    // Safety check for unknown symbols
-    if (!yahooTicker) {
+    const updatedMarkets = await Promise.all(settings.trackedMarkets.map(async (market) => {
+      const yahooTicker = YAHOO_SYMBOL_MAP[market.symbol] || market.symbol;
+      if (!yahooTicker) {
         console.warn(`[Ticker] Skipping unknown symbol: ${market.symbol}`);
         return market;
-    }
-
-    try {
-      // 2. Fetch data via a robust CORS Proxy to bypass browser restrictions
-      // Changed CORS proxy for better stability and reliability
-      const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooTicker}?interval=1d&range=1d`;
-      const proxyUrl = `https://api.allorigins.win/raw?url=` + encodeURIComponent(targetUrl);
-      
-      const response = await exponentialBackoffFetch(proxyUrl);
-      
-      const data = await response.json();
-      const result = data.chart.result?.[0];
-      
-      if (result && result.meta) {
-        const price = result.meta.regularMarketPrice;
-        const prevClose = result.meta.chartPreviousClose;
-        
-        // 3. Calculate live percentage change (Handle potential division by zero if prevClose is 0)
-        let change = 0;
-        if (prevClose && price !== prevClose) {
-            change = ((price - prevClose) / prevClose) * 100;
-        }
-
-        // Return updated market object
-        return {
-          ...market,
-          price: Number(price.toFixed(2)),
-          change: Number(change.toFixed(2))
-        };
-      } else {
-          console.warn(`[Ticker] No market data found for ${market.symbol} (${yahooTicker}) in API response.`);
       }
-    } catch (error) {
-      console.error(`[Ticker] CRITICAL FETCH FAIL for ${market.symbol} (${yahooTicker}):`, error.message);
-    }
-    
-    // If fetch fails, return the old data so the UI doesn't break
-    return market; 
-  }));
+      try {
+        const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooTicker}?interval=1d&range=1d`;
+        const proxyUrl = `https://api.allorigins.win/raw?url=` + encodeURIComponent(targetUrl);
+        const response = await exponentialBackoffFetch(proxyUrl);
+        const data = await response.json();
+        const result = data.chart?.result?.[0];
+        if (result && result.meta) {
+          const price = result.meta.regularMarketPrice;
+          const prevClose = result.meta.chartPreviousClose;
+          let change = 0;
+          if (prevClose && price !== prevClose) {
+            change = ((price - prevClose) / prevClose) * 100;
+          }
+          const updated = {
+            ...market,
+            price: Number((price || 0).toFixed(2)),
+            change: Number((change || 0).toFixed(2))
+          };
+          return updated;
+        } else {
+          console.warn(`[Ticker] No market data for ${market.symbol} (${yahooTicker}).`);
+        }
+      } catch (error) {
+        console.error(`[Ticker] Fetch fail for ${market.symbol} (${yahooTicker}):`, error.message);
+      }
+      return market;
+    }));
 
-  // 4. Update the settings object and re-render the ticker
-  settings.trackedMarkets = updatedMarkets;
-  renderMarketTicker();
-}
+    settings.trackedMarkets = updatedMarkets;
+    renderMarketTicker();
+    saveAll(); // persist latest prices for optimistic render on next load
+  }
 
-let tickerInterval = null;
-function startTickerRealtimeLoop() {
-  if (tickerInterval) clearInterval(tickerInterval);
+  // Bootstrap loop: immediate + quick retries + settle
+  let tickerInterval = null;
+  function startTickerRealtimeLoop() {
+    if (tickerInterval) clearInterval(tickerInterval);
 
-  // 1. Fetch immediately upon load
-  fetchRealMarketData();
+    // Immediate fetch
+    fetchRealMarketData();
+    // Quick retries to reduce stale feel post-login
+    setTimeout(fetchRealMarketData, 5000);
+    setTimeout(fetchRealMarketData, 15000);
 
-  // 2. Schedule updates every 60 seconds 
-  // (We use 60s to be polite to the free API and avoid rate limits)
-  tickerInterval = setInterval(fetchRealMarketData, 60000);
-}
- 
+    // Settle into 60s cadence
+    tickerInterval = setInterval(fetchRealMarketData, 60000);
+  }
+
   // ---------- EXPOSED ----------
-  // These make functions available to buttons/onclick events in the HTML
   window.loadEdit = loadEdit;
   window.deleteEntry = deleteEntry;
   window.toggleSubMenu = toggleSubMenu;
