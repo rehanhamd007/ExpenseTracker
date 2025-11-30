@@ -1,12 +1,17 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <!-- Add Chart.js core BEFORE any Chart.js plugin -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Then the treemap plugin (already present in your file) -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@4.2.3/dist/chartjs-chart-treemap.min.js"></script>
+
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <title>MoneyMirror — v5.0.9 (Fixed Stable)</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@1,400&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@4.2.3/dist/chartjs-chart-treemap.min.js"></script>
 
   <!-- Firebase Compat Libraries -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -875,54 +880,53 @@
       </div>
 
       <div style="display:flex; flex-direction:column; gap:20px; height:100%;">
-          <div class="card" style="flex: 0 0 auto;">
+
+    <!-- TOP GRID: Cumulative Growth (left) + Heatmap (right) -->
+    <div class="dashboard-grid" style="flex: 0 0 auto;">
+
+        <div class="card col-span-2">
             <div class="card-header"><div class="card-title">Cumulative Growth</div></div>
             <div class="card-body" style="padding-top:10px;">
-              <div style="height:260px; width:100%; position:relative">
-                <canvas id="chartNetWorth"></canvas>
-              </div>
+                <div style="height:260px; width:100%; position:relative">
+                    <canvas id="chartNetWorth"></canvas>
+                </div>
             </div>
-          </div>
+        </div>
 
-          <div class="dashboard-grid" style="flex:1;">
-             <div class="card col-span-2">
-                <div class="card-header"><div class="card-title">Distribution</div></div>
-                <div class="card-body" style="padding-top:10px;">
-                    <div style="height:100%; min-height:250px; position:relative;">
-                        <canvas id="chartInvTypesModal"></canvas>
-                    </div>
+        <div class="card col-span-2">
+            <div class="card-header"><div class="card-title">Category Heatmap</div></div>
+            <div class="card-body" style="padding-top:10px;">
+                <div style="height:260px; width:100%; position:relative">
+                    <canvas id="chartHeatmap"></canvas>
                 </div>
-             </div>
-             <div class="card col-span-2">
-                <div class="card-header"><div class="card-title">Growth Trend</div></div>
-                <div class="card-body" style="padding-top:10px;">
-                    <div style="height:100%; min-height:250px; position:relative;">
-                        <canvas id="chartInvGrowthModal"></canvas>
-                    </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- BOTTOM GRID: Distribution + Growth Trend -->
+    <div class="dashboard-grid" style="flex:1;">
+
+        <div class="card col-span-2">
+            <div class="card-header"><div class="card-title">Distribution</div></div>
+            <div class="card-body" style="padding-top:10px;">
+                <div style="height:100%; min-height:250px; position:relative;">
+                    <canvas id="chartInvTypesModal"></canvas>
                 </div>
-             </div>
-          </div>
-      </div>
+            </div>
+        </div>
+
+        <div class="card col-span-2">
+            <div class="card-header"><div class="card-title">Growth Trend</div></div>
+            <div class="card-body" style="padding-top:10px;">
+                <div style="height:100%; min-height:250px; position:relative;">
+                    <canvas id="chartInvGrowthModal"></canvas>
+                </div>
+            </div>
+        </div>
 
     </div>
-  </div>
-</div>
 
-<div id="importModal" class="modal">
-  <div class="modal-content modal-small">
-    <div class="action-header" style="border-radius:12px 12px 0 0">
-      <div class="card-title" style="color:white">Import data</div>
-      <button class="btn-outline" id="closeImport" style="background:transparent; color:white; border-color:white; padding:4px 10px">Close</button>
-    </div>
-    <div class="modal-pad">
-      <h4 style="margin-top:0;">Import from CSV/JSON</h4>
-      <p style="font-size:13px; color:var(--text-muted);">
-        CSV columns: type, amount, date, desc, category, method. Optional: income_source, investment_group, investment_sub, insurance_type, insurance_for.
-      </p>
-      <input type="file" id="importFile" accept=".csv,.json" style="width:100%; margin:10px 0 20px 0;" />
-      <button class="btn-primary full-width" id="processImportBtn">Process file</button>
-    </div>
-  </div>
 </div>
 
 <!-- Market ticker settings modal -->
@@ -2365,7 +2369,14 @@
     renderInvestmentAnalytics('modal', relevantData);
   }
   function renderInvestmentAnalytics(scope, dataset) {
-    if (typeof Chart === 'undefined') return;
+   if (typeof renderInvestmentHeatmapChart === "function") {
+    const treemapData = dataset.map(d => ({
+        g: d.investmentGroup,
+        r: d.investmentSub,
+        v: Number(d.amount)
+    }));
+    renderInvestmentHeatmapChart(treemapData);
+} if (typeof Chart === 'undefined') return;
     const invs = dataset.filter(d => (d.type === 'opening_balance' && d.investmentGroup && d.investmentGroup !== 'Cash') || (d.type === 'expense' && d.category === 'Investments' ));
     const byType = invs.reduce((acc,curr) => {
       const key = curr.investmentSub || curr.investmentGroup || 'Uncategorized';
@@ -2389,6 +2400,71 @@
       if (chartInvGrowthModal) chartInvGrowthModal.destroy();
       chartInvGrowthModal = new Chart(ctxGrowth, { type: 'line', data: { labels: growthLabels, datasets: [{ label: 'Invested Amount', data: growthValues, borderColor: '#10b981', tension: 0.3, borderWidth:2, pointRadius:0 }] }, options: { maintainAspectRatio: false, plugins: { legend: { display:false } }, scales: { y: { beginAtZero: false, ticks: { callback: (v)=>fmt(v).replace('₹','') } }, x:{ display:false } } } });
     }
+  }
+  function renderInvestmentHeatmapChart(treemapData) {
+    const ctx = document.getElementById('investmentHeatmapChart').getContext('2d');
+
+    // Destroy previous instance
+    if (investmentHeatmapChart) {
+      investmentHeatmapChart.destroy();
+    }
+    
+    investmentHeatmapChart = new Chart(ctx, {
+      type: 'treemap',
+      data: {
+        datasets: [{
+          label: 'Investment Allocation Heatmap',
+          tree: treemapData,
+          key: 'value', // Data point value key (e.g., total invested amount)
+          groups: ['group'], // Key used for grouping (Major Bucket)
+          spacing: 2,
+          borderWidth: 1,
+          borderColor: 'rgba(255, 255, 255, 0.5)',
+          backgroundColor: (context) => {
+            // Coloring based on parent group (Major Bucket)
+            const groupName = context.raw.g || 'Other';
+            let color = '#ccc';
+            if (groupName === 'Equities') color = '#22c55e'; // Green
+            if (groupName === 'Digital Assets') color = '#3b82f6'; // Blue
+            if (groupName === 'Real Assets') color = '#f97316'; // Orange
+            if (groupName === 'Fixed Income') color = '#facc15'; // Yellow
+            return color;
+          },
+          labels: {
+            display: true,
+            // Format to show Group (Major Bucket) and Value
+            formatter: (context) => [context.raw.g, `$${context.raw.v.toFixed(0)}`],
+            font: {
+              size: 12,
+              weight: 'bold'
+            },
+            color: 'white'
+          }
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Asset Allocation Heatmap (by Subcategory)',
+            font: { size: 16, weight: '600' }
+          },
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: (items) => {
+                const item = items[0].raw;
+                // Item.r is the subcategory (child group)
+                return `${item.g} - ${item.r}`; 
+              },
+              label: (context) => `Amount: $${context.parsed.value.toFixed(2)}`
+            }
+          }
+        }
+      }
+    });
   }
 
   // ---------- SETTINGS (METHODS, INCOME, CATEGORIES, CC LIMIT) ----------
@@ -3045,6 +3121,218 @@
   window.resetExpenseDrilldown = resetExpenseDrilldown;
   window.removeMarket = removeMarket;
   window.deleteCategory = deleteCategory;
+</script>
+<script>
+(function () {
+  'use strict';
+
+  /* Defensive helper to get element safely */
+  function $id(id) { return document.getElementById(id); }
+  function on(el, ev, fn) { if (!el) return; el.addEventListener(ev, fn); }
+
+  /* Remove auth overlay and unblur main */
+  function hideAuthGate() {
+    const auth = $id('authGate');
+    const main = document.querySelector('main');
+    if (auth) auth.classList.remove('show');
+    if (main) main.style.filter = 'none';
+  }
+
+  /* Toggle mobile sidebar */
+  function toggleSidebarMobile() {
+    const aside = document.querySelector('aside#mainSidebar');
+    if (!aside) return;
+    aside.classList.toggle('mobile-open');
+    const btn = $id('mobileMenuBtn');
+    if (btn) btn.setAttribute('aria-expanded', aside.classList.contains('mobile-open'));
+  }
+
+  /* Basic sample chart/heatmap initializers (safe no-op if Chart not present) */
+  function safeInitCharts() {
+    try {
+      if (typeof initCharts === 'function') {
+        initCharts();
+        if (typeof updateChartsWithFiltered === 'function') updateChartsWithFiltered(null);
+      } else {
+        // Minimal fallback: create empty Chart instances if canvases exist and Chart is available
+        if (window.Chart) {
+          const cums = $id('cumulativeChart');
+          if (cums && !cums.__chart) {
+            cums.__chart = new Chart(cums.getContext('2d'), { type: 'line', data: { labels: [], datasets: [{ data: [] }] }, options: { responsive: true, maintainAspectRatio: false } });
+          }
+          const dist = $id('distributionChart');
+          if (dist && !dist.__chart) {
+            dist.__chart = new Chart(dist.getContext('2d'), { type: 'doughnut', data: { labels: [], datasets: [{ data: [] }] }, options: { responsive: true } });
+          }
+        }
+      }
+    } catch (err) {
+      console.error('safeInitCharts error', err);
+    }
+  }
+
+  function safeInitHeatmap() {
+    try {
+      if (typeof initHeatmapGrid === 'function') {
+        initHeatmapGrid();
+        if (typeof renderHeatmap === 'function') renderHeatmap();
+      } else {
+        // If no heatmap functions, ensure grid exists visually
+        const grid = $id('heatmapGrid');
+        if (grid && grid.children.length === 0) {
+          // create a small placeholder grid (6x12)
+          const rows = 6, cols = 12;
+          grid.innerHTML = '';
+          for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+              const cell = document.createElement('div');
+              cell.className = 'heatmap-cell';
+              cell.dataset.row = r;
+              cell.dataset.col = c;
+              const inner = document.createElement('div');
+              inner.className = 'heatmap-cell-inner';
+              inner.textContent = '';
+              cell.appendChild(inner);
+              grid.appendChild(cell);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('safeInitHeatmap error', err);
+    }
+  }
+
+  /* Attach UI handlers */
+  function attachHandlers() {
+    // Auth buttons
+    on($id('loginBtn'), 'click', function () { hideAuthGate(); });
+    on($id('guestBtn'), 'click', function () { hideAuthGate(); });
+
+    // Sample / import / export
+    on($id('sampleBtn'), 'click', function () {
+      if (typeof loadSampleData === 'function') {
+        loadSampleData(12);
+      } else {
+        console.warn('loadSampleData not found');
+      }
+    });
+
+    on($id('exportBtn'), 'click', function () {
+      // If exportEntriesCSV exists, call it; otherwise fallback to console
+      if (typeof exportEntriesCSV === 'function') {
+        exportEntriesCSV();
+      } else {
+        console.warn('exportEntriesCSV not found; implement CSV export or use developer console.');
+      }
+    });
+
+    on($id('importDataBtn'), 'click', function () {
+      // If you have an import handler, call it; otherwise show a prompt
+      if (typeof importEntriesCSV === 'function') {
+        // you may implement a file input flow here
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.csv,text/csv';
+        input.onchange = function (e) {
+          const f = e.target.files && e.target.files[0];
+          if (f) importEntriesCSV(f);
+        };
+        input.click();
+      } else {
+        alert('Import not implemented in this build. Use Load sample or developer console.');
+      }
+    });
+
+    // Sidebar quick add index
+    on($id('sidebarAddIndexBtn'), 'click', function () {
+      const sel = $id('sidebarIndexSelect');
+      if (!sel) return;
+      const label = sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].text : sel.value;
+      const tickerWrap = $id('tickerWrap');
+      if (!tickerWrap) return;
+      const item = document.createElement('div');
+      item.className = 'ticker-item';
+      item.innerHTML = `<span class="symbol">${label.split(' ')[0]}</span><span class="change-down">0.00%</span>`;
+      tickerWrap.appendChild(item);
+    });
+
+    // Sidebar mobile toggle
+    on($id('mobileMenuBtn'), 'click', toggleSidebarMobile);
+
+    // Nav analytics click (example: scroll to analytics area or open modal)
+    on($id('navAnalytics'), 'click', function () {
+      const el = $id('cumulativeCard') || document.querySelector('.graphs-4grid');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    // Heatmap cell click delegation (if grid exists)
+    const grid = $id('heatmapGrid');
+    if (grid) {
+      grid.addEventListener('click', function (ev) {
+        const cell = ev.target.closest('.heatmap-cell');
+        if (!cell) return;
+        const row = parseInt(cell.dataset.row, 10);
+        const col = parseInt(cell.dataset.col, 10);
+        if (typeof applyHeatmapFilter === 'function') {
+          applyHeatmapFilter(row, col);
+        } else {
+          console.log('Heatmap cell clicked', row, col);
+        }
+      });
+    }
+
+    // Clear heatmap filter button
+    on($id('clearHeatmapFilter'), 'click', function () {
+      if (typeof updateChartsWithFiltered === 'function') updateChartsWithFiltered(null);
+    });
+
+    // Refresh charts
+    on($id('refreshChartsBtn'), 'click', function () {
+      if (typeof renderHeatmap === 'function') renderHeatmap();
+      if (typeof updateChartsWithFiltered === 'function') updateChartsWithFiltered(null);
+      if (typeof updateKPIs === 'function') updateKPIs();
+    });
+
+    // Toggle investment breakdown (example)
+    on($id('toggleInvBreakdown'), 'click', function () {
+      const panel = $id('invBreakdownPanel');
+      if (panel) panel.classList.toggle('hidden');
+    });
+
+    // View categories (example)
+    on($id('viewCategoriesBtn'), 'click', function () {
+      alert('View subcategories: implement modal or panel here.');
+    });
+  }
+
+  /* Run initialization on DOM ready */
+  document.addEventListener('DOMContentLoaded', function () {
+    // If auth gate is shown by default, keep it until user clicks login/guest.
+    // But remove blur if authGate is hidden already.
+    const auth = $id('authGate');
+    if (!auth || !auth.classList.contains('show')) {
+      const main = document.querySelector('main');
+      if (main) main.style.filter = 'none';
+    }
+
+    // Initialize charts and heatmap safely
+    safeInitCharts();
+    safeInitHeatmap();
+
+    // Attach UI handlers
+    attachHandlers();
+
+    // Optional: enable keyboard navigation for heatmap if function exists
+    if (typeof enableHeatmapKeyboardNavigation === 'function') {
+      try { enableHeatmapKeyboardNavigation(); } catch (e) { console.warn(e); }
+    }
+
+    // Final console hint
+    console.info('UI initialized. If charts or heatmap still do not render, check console for errors.');
+  });
+
+})();
 </script>
 </body>
 </html>
