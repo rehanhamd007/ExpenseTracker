@@ -7,6 +7,8 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@1,400&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- NEW: Tree Map Plugin for Heatmap -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-treemap@4.2.3/dist/chartjs-chart-treemap.min.js"></script>
 
   <!-- Firebase Compat Libraries -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -625,8 +627,8 @@
               <div class="multiselect-dropdown" id="expenseMultiselectDropdown">
                   <div id="expenseCheckboxes" style="max-height:200px; overflow-y:auto;"></div>
                   <div class="ms-actions">
-                      <button class="btn-outline" style="padding:4px 8px; font-size:11px;" id="msClear">Clear</button>
-                      <button class="btn-primary" style="padding:4px 8px; font-size:11px;" id="msApply">Apply</button>
+                      <button class="btn-outline" style="padding:4px 8px; font-size:11px" id="msClear">Clear</button>
+                      <button class="btn-primary" style="padding:4px 8px; font-size:11px" id="msApply">Apply</button>
                   </div>
               </div>
           </div>
@@ -836,76 +838,49 @@
   </div>
 </div>
 
-<div id="analyticsModal" class="modal">
-  <div class="modal-content">
-    <div class="action-header" style="border-radius:12px 12px 0 0">
-      <div class="card-title" style="color:white">Advanced financial analytics</div>
-      <button class="btn-outline" id="closeAnalytics" style="background:transparent; color:white; border-color:white; padding:4px 10px">Close</button>
-    </div>
-    <div class="modal-pad" id="analyticsContent">
-      <div id="analyticsFilters">
-        <div class="filter-group">
-          <h3 style="margin-top:0; font-size:16px;">Deep Dive Filters</h3>
-          <div class="analytics-filter-grid">
-            <div>
-              <label>Date range</label>
-              <select id="dateFilter" onchange="renderAdvancedCharts()">
-                <option value="6">Last 6 months</option>
-                <option value="12">Last 12 months</option>
-                <option value="all">All time</option>
-              </select>
-            </div>
-            <div>
-              <label>Investment Group</label>
-              <select id="anlInvGroup" onchange="updateAnlSubDropdown(); renderAdvancedCharts()"></select>
-            </div>
-            <div>
-              <label>Investment Sub-type</label>
-              <select id="anlInvSub" onchange="renderAdvancedCharts()"><option value="">All Types</option></select>
-            </div>
-            <div>
-              <label>Chart type</label>
-              <select id="chartType" onchange="renderAdvancedCharts()">
-                <option value="line">Line chart</option>
-                <option value="bar">Bar chart</option>
-              </select>
+<div style="display:flex; flex-direction:column; gap:20px; height:100%;">
+    
+    <!-- UPDATED GRID: Top 2 Charts (Growth + Heatmap) side by side -->
+    <div class="dashboard-grid" style="flex: 0 0 auto;">
+       <!-- Cumulative Growth (Now half width using col-span-2) -->
+       <div class="card col-span-2">
+          <div class="card-header"><div class="card-title">Cumulative Growth</div></div>
+          <div class="card-body" style="padding-top:10px;">
+            <div style="height:260px; width:100%; position:relative">
+              <canvas id="chartNetWorth"></canvas>
             </div>
           </div>
-        </div>
-      </div>
+       </div>
+       <!-- NEW Heatmap Chart (Right side, half width) -->
+       <div class="card col-span-2">
+          <div class="card-header"><div class="card-title">Category Heatmap</div></div>
+          <div class="card-body" style="padding-top:10px;">
+            <div style="height:260px; width:100%; position:relative">
+              <canvas id="chartHeatmap"></canvas>
+            </div>
+          </div>
+       </div>
+    </div>
 
-      <div style="display:flex; flex-direction:column; gap:20px; height:100%;">
-          <div class="card" style="flex: 0 0 auto;">
-            <div class="card-header"><div class="card-title">Cumulative Growth</div></div>
-            <div class="card-body" style="padding-top:10px;">
-              <div style="height:260px; width:100%; position:relative">
-                <canvas id="chartNetWorth"></canvas>
+    <!-- Bottom 2 Charts -->
+    <div class="dashboard-grid" style="flex:1;">
+       <div class="card col-span-2">
+          <div class="card-header"><div class="card-title">Distribution</div></div>
+          <div class="card-body" style="padding-top:10px;">
+              <div style="height:100%; min-height:250px; position:relative;">
+                  <canvas id="chartInvTypesModal"></canvas>
               </div>
-            </div>
           </div>
-
-          <div class="dashboard-grid" style="flex:1;">
-             <div class="card col-span-2">
-                <div class="card-header"><div class="card-title">Distribution</div></div>
-                <div class="card-body" style="padding-top:10px;">
-                    <div style="height:100%; min-height:250px; position:relative;">
-                        <canvas id="chartInvTypesModal"></canvas>
-                    </div>
-                </div>
-             </div>
-             <div class="card col-span-2">
-                <div class="card-header"><div class="card-title">Growth Trend</div></div>
-                <div class="card-body" style="padding-top:10px;">
-                    <div style="height:100%; min-height:250px; position:relative;">
-                        <canvas id="chartInvGrowthModal"></canvas>
-                    </div>
-                </div>
-             </div>
+       </div>
+       <div class="card col-span-2">
+          <div class="card-header"><div class="card-title">Growth Trend</div></div>
+          <div class="card-body" style="padding-top:10px;">
+              <div style="height:100%; min-height:250px; position:relative;">
+                  <canvas id="chartInvGrowthModal"></canvas>
+              </div>
           </div>
-      </div>
-
+       </div>
     </div>
-  </div>
 </div>
 
 <div id="importModal" class="modal">
@@ -2032,13 +2007,13 @@
     let currentDate = new Date(start.getFullYear(), start.getMonth(), 1);
     const today = new Date();
     while (currentDate <= today) {
-      const key = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, '0')}`;
+      const key = `${currentDate.getFullYear()}-${(currentDate.getMonth() + 1).toString().padStart(2, 0)}`;
       monthlyData[key] = { income: 0, expense: 0, investment: 0, month: currentDate.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' }) };
       currentDate.setMonth(currentDate.getMonth() + 1);
     }
     filteredData.forEach(d => {
       const date = new Date(d.date);
-      const key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+      const key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, 0)}`;
       if (monthlyData[key]) {
         const amount = Number(d.amount);
         if (d.type === 'income') monthlyData[key].income += amount;
@@ -2326,6 +2301,8 @@
   let chartNetWorth = null;
   let chartInvTypesModal = null;
   let chartInvGrowthModal = null;
+  let chartHeatmap = null;
+  
   function renderAdvancedCharts() {
     if (typeof Chart === 'undefined') return;
     const range = document.getElementById('dateFilter').value;
@@ -2389,6 +2366,86 @@
       if (chartInvGrowthModal) chartInvGrowthModal.destroy();
       chartInvGrowthModal = new Chart(ctxGrowth, { type: 'line', data: { labels: growthLabels, datasets: [{ label: 'Invested Amount', data: growthValues, borderColor: '#10b981', tension: 0.3, borderWidth:2, pointRadius:0 }] }, options: { maintainAspectRatio: false, plugins: { legend: { display:false } }, scales: { y: { beginAtZero: false, ticks: { callback: (v)=>fmt(v).replace('₹','') } }, x:{ display:false } } } });
     }
+    // NEW: Render Heatmap (Treemap)
+    if (chartHeatmap) chartHeatmap.destroy();
+    const ctxHeatmap = document.getElementById('chartHeatmap')?.getContext('2d');
+    if (ctxHeatmap && typeof Chart.controllers.treemap !== 'undefined') {
+      // Prepare data for treemap: each subcategory with its amount
+      const heatmapData = [];
+      invs.forEach(inv => {
+        const subcat = inv.investmentSub || inv.investmentGroup || 'Uncategorized';
+        const amount = Number(inv.amount);
+        if (amount > 0) {
+          heatmapData.push({
+            label: subcat,
+            value: amount
+          });
+        }
+      });
+      
+      // Aggregate by subcategory
+      const aggregated = {};
+      heatmapData.forEach(item => {
+        if (!aggregated[item.label]) {
+          aggregated[item.label] = 0;
+        }
+        aggregated[item.label] += item.value;
+      });
+      
+      const treeData = Object.entries(aggregated).map(([label, value]) => ({
+        label,
+        value
+      }));
+      
+      chartHeatmap = new Chart(ctxHeatmap, {
+        type: 'treemap',
+        data: {
+          datasets: [{
+            tree: treeData,
+            key: 'value',
+            groups: ['label'],
+            spacing: 1,
+            borderWidth: 2,
+            borderColor: 'rgba(255,255,255,0.3)',
+            backgroundColor(ctx) {
+              if (!ctx.raw) return 'transparent';
+              const colors = getColorPalette(20);
+              const index = ctx.dataIndex % colors.length;
+              return colors[index] + 'cc'; // Add transparency
+            },
+            labels: {
+              display: true,
+              formatter(ctx) {
+                if (!ctx.raw) return '';
+                return ctx.raw._data.label;
+              },
+              color: '#fff',
+              font: {
+                size: 11,
+                weight: 'bold'
+              }
+            }
+          }]
+        },
+        options: {
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title(ctx) {
+                  return ctx[0].raw._data.label;
+                },
+                label(ctx) {
+                  const val = ctx.raw.v;
+                  return 'Amount: ' + fmt(val);
+                }
+              }
+            }
+          }
+        }
+      });
+    } 
   }
 
   // ---------- SETTINGS (METHODS, INCOME, CATEGORIES, CC LIMIT) ----------
